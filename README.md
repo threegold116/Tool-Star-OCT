@@ -38,10 +38,10 @@
 ### 📊 Overall Performance
 
 <p align="center">
-  <img src="figures/performance.png" width="100%" />
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/5f60be15-6992-413e-a405-a72e3b352fc1" />
 </p>
 
-As shown above, WebThinker consistently outperforms competing approaches on both knowledge-intensive complex reasoning benchmarks (GPQA, GAIA, WebWalkerQA, HLE) and open-ended reasoning tasks for report generation. Our WebThinker-32B with QwQ-32B as backbone reasoning model achieves superior performance across all tasks.
+As shown above, Tool-Star demonstrates strong overall reasoning performance across more than 10 challenging computational reasoning tasks (e.g., AIME24 and MATH500) and knowledge-intensive reasoning tasks (e.g., WebWalker and HotpotQA), while ensuring both efficiency and reliability in tool usage..
 
 ### ✨ The WebThinker Framework
 
