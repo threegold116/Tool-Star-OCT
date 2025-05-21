@@ -24,17 +24,16 @@
 - **[May 21, 2025]**: 📄 Our paper is now available on **[arXiv]()** and **[Hugging Face]()**.
 - **[May 21, 2025]**: 🚀 Full codebase released. Tool-Star supports multiple Tools with several open-source models like Qwen2.5-3B-Instruct.
 
-## 🎬 Demo
 
-<div align="center">
-    <video src="https://github.com/user-attachments/assets/a38e82ec-5aed-4efe-a8b8-e9ee2d97e9b9" />
-</div>
 
 ## 💡 Overview
 
-**WebThinker** is a deep research framework fully powered by large reasoning models (LRMs). WebThinker enables LRMs to **autonomously search**, **deeply explore web pages**, and **draft research reports**, all within their thinking process.
+**Tool-Star** is a **reinforcement learning-based framework** designed to empower LLMs to autonomously invoke **multiple external tools** during stepwise reasoning. Specifically, Tool-Star integrates six types of tools into the reasoning process (three for training and three for inference-time optimization) and incorporates systematic designs in both data synthesis and training algorithms.
 
-Unlike existing open-source deep search agents that typically employ retrieval-augmented generation (RAG) with predefined workflows, WebThinker allows the reasoning model itself to perform actions during thinking, achieving **end-to-end task execution** in a single generation.
+<p align="center">
+<img width="1012" alt="image" src="https://github.com/user-attachments/assets/edb21f58-7a18-47b9-8b1c-9522f7c9c56d" />
+</p>
+
 
 ### 📊 Overall Performance
 
