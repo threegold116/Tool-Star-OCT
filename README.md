@@ -4,19 +4,16 @@
 
 <div align="center"> 
 
-[![Notion](https://img.shields.io/badge/Notion-WebThinker-red?style=flat&logo=notion&logoColor=white)](https://foremost-beechnut-8ed.notion.site/WebThinker-Empowering-Large-Reasoning-Models-with-Deep-Research-Capability-d13158a27d924a4b9df7f9ab94066b64) 
-[![Paper](https://img.shields.io/badge/Paper-arXiv-b5212f.svg?logo=arxiv)](https://arxiv.org/abs/2504.21776)
-[![Paper](https://img.shields.io/badge/Paper-Hugging%20Face-yellow?logo=huggingface)](https://huggingface.co/papers/2504.21776)
+[![Paper](https://img.shields.io/badge/Paper-arXiv-b5212f.svg?logo=arxiv)]()
+[![Paper](https://img.shields.io/badge/Paper-Hugging%20Face-yellow?logo=huggingface)]()
 [![License](https://img.shields.io/badge/LICENSE-MIT-green.svg)](https://opensource.org/licenses/MIT) 
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/) 
-[![X (formerly Twitter) URL](https://img.shields.io/twitter/url?url=https%3A%2F%2Fx.com%2FKevin_GuoweiXu%2Fstatus%2F1858338565463421244)](https://x.com/kakakbibibi/status/1917768235069628823)
+[![X (formerly Twitter) URL](https://img.shields.io/twitter/url?url=https%3A%2F%2Fx.com%2FKevin_GuoweiXu%2Fstatus%2F1858338565463421244)]()
 </div>
 
 <p align="center">
-🤗 <a href="https://huggingface.co/lixiaoxi45/WebThinker-QwQ-32B" target="_blank">WebThinker-QwQ-32B</a> ｜
-🤗 <a href="https://huggingface.co/lixiaoxi45/WebThinker-R1-7B" target="_blank">WebThinker-R1-7B</a> ｜
-🤗 <a href="https://huggingface.co/lixiaoxi45/WebThinker-R1-14B" target="_blank">WebThinker-R1-14B</a> ｜
-🤗 <a href="https://huggingface.co/lixiaoxi45/WebThinker-R1-32B" target="_blank">WebThinker-R1-32B</a>
+🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-3B" target="_blank">Tool-Star-Qwen-3B</a> ｜
+🤗 <a href="dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
 </p>
 
 
