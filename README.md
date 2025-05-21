@@ -111,7 +111,7 @@ bash ./examples/train_full/train_sft.sh
 
 ---
 
-### 2. RL Stage
+### 2. Self-Critic RL Stage
 
 
 在这一步中，我们将加载冷启动的数据进行GRPO训练，我们参考ReCall与VERL框架进行RL训练，
@@ -131,7 +131,7 @@ pip install -r requirements.txt
 
 
 
-**2. Training**
+**2. Vanilla RL Training**
 
 Our training framework is based on [verl](https://github.com/volcengine/verl) and [ReCall](https://github.com/Agent-RL/ReCall), a powerful reinforcement learning framework for LLMs. We deeply customize the verl code to fit our needs, and the modified version of verl is under the `src/verl` directory. The example of training scripts are under `scripts/train`.
 
@@ -207,7 +207,9 @@ bash run_tool_star.sh
 
 
 
-对于Self-Critic DPO的数据部分，您可以参考论文中Appendix B.1的训练算法以及Appendix E.2的数据格式流程自行在RL过程中，使用保存的ckpt对RL以及SFT的训练数据进行自采样，reward数据的构建。我们同样提供了基于Llama Factory的DPO训练代码供您参考
+**2. Self-Critic DPO Training**
+
+我们的实测中完成SFT+Vanilla RL基本已可以基本复现Tool-Star的性能（参考消融实验），如果您想要继续完成Self-Critic DPO训练，数据部分您可以参考论文中Appendix B.1的训练算法以及Appendix E.2的数据格式流程自行在RL过程中，使用保存的ckpt对RL以及SFT的训练数据进行自采样，reward数据的构建。我们同样提供了基于Llama Factory的DPO训练代码供您参考
 
 并请完善好`LLaMA-Factory-main/examples/train_lora/qwen_lora_dpo_2.yaml`的路径信息。在完善好信息后，就可以进行一键运行如下脚本进行微调：
 
