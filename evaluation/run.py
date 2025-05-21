@@ -1,30 +1,38 @@
 from ast import arg, parse
+from dis import Instruction
+import enum
 import json 
 from math import fabs
 from operator import concat
 import random
 import math
 
+# from re_search import last_boxed_only_string
+# from test import batch_search
+# from test import batch_search
 from vllm import LLM, SamplingParams
 import torch
 from tqdm import tqdm
 import argparse
 import re
 import time
+import datetime
 from transformers import AutoTokenizer
 from typing import List, Dict, Optional, final, Union
+import requests
+import os
 from python_executor import PythonExecutor
 from tools.web_search_main import deep_search
 from tools.debug_code import debug_code_function
-from vllm.lora.request import LoRARequest
+from tools.rollback_code import rollback
+from tools.refine_code import refine
 
 import re
 
-# from utils import *
 from utils import *
 
 class Inference():
-    def __init__(self, model, tokenizer, params_config, task, dataset_name, output_path, batch_size=4, counts=100, prompt_type='code_search', use_debug=False, use_rollback=False, use_lora=False, lora_path=None):
+    def __init__(self, model, tokenizer, params_config, task, dataset_name, output_path, batch_size=4, counts=100, prompt_type='code_search', use_debug=False, use_rollback=False, use_refiner=False):
         self.model = model
         self.tokenizer = tokenizer
         self.params_config = SamplingParams(**params_config)
@@ -36,17 +44,16 @@ class Inference():
         self.prompt_type = prompt_type
         self.use_debug = use_debug
         self.use_rollback = use_rollback
-        self.use_lora = use_lora
-        self.lora_path = lora_path
+        self.use_refiner = use_refiner
         self.prompt_template = ''
         self.max_python_times = 3
         self.max_search_times = 3
+        self.max_debug_times = 1
+        self.max_refine_times = 1
         self.max_rollback_times = 1
         self.questions = []
         self.answers = []
         self.executor = PythonExecutor(get_answer_from_stdout=True)
-        if self.use_lora:
-            self.lora_request = LoRARequest('my_lora', 1, self.lora_path)
         if self.prompt_type == 'code_search':
             self.prompt_template = """
 You are a helpful assistant that can solve the given question step by step with the help of the wikipedia search tool and python interpreter tool. \
@@ -54,7 +61,6 @@ Given a question, you need to first think about the reasoning process in the min
 During thinking, you can invoke the wikipedia search tool to search and python interpreter tool to calculate the math problem for fact information about specific topics if needed. \
 The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags respectively, \
 and the search query and result are enclosed within <search> </search> and <result> </result> tags respectively. \
-After receiving the search or python result, you should continue your reasoning process begin with <think>. \
 For example, <think> This is the reasoning process. </think> <search> search query here </search> <result> search result here </result> \
 <think> This is the reasoning process. </think> <python> python code here </python> <result> python interpreter result here </result> \
 <think> This is the reasoning process. </think> <answer> The final answer is \\[ \\boxed{answer here} \\] </answer>. \
@@ -64,17 +70,12 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
             self.prompt_template = """
 You are a helpful assistant that can solve the given question step by step with the help of the wikipedia search tool. \
 Given a question, you need to first think about the reasoning process in the mind and then provide the answer. \
-During thinking, you can invoke the wikipedia search tool to search for fact information about specific topics if needed. You can use the search tool for multiple times. Once you get the search result, continue your reasoning process. If the existing information is not enough for answering the question, you can continue to use the search tool. However, when you get enough information, you should provide the final answer with the format: \
-<answer> The final answer is \\[ \\boxed{answer here} \\] </answer>.
+During thinking, you can invoke the wikipedia search tool to search for fact information about specific topics if needed. \
 The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags respectively, \
 and the search query and result are enclosed within <search> </search> and <result> </result> tags respectively. \
 For example, <think> This is the reasoning process. </think> <search> search query here </search> <result> search result here </result> \
-<think> This is the reasoning process. </think> <search> search query here </search> <result> search result here </result> \
 <think> This is the reasoning process. </think> <answer> The final answer is \\[ \\boxed{answer here} \\] </answer>. \
-In the last part of the answer, the final exact answer is enclosed within \\boxed{} with latex format, and the length of the answer should be less than 10 tokens. 
-Remember: 
-- When search result is returned, continue your reasoning process.
-- You should generate your final answer with the format: <answer> The final answer is \\[ \\boxed{answer here} \\] </answer>.
+In the last part of the answer, the final exact answer is enclosed within \\boxed{} with latex format.
 """
         elif self.prompt_type == 'math':
             self.prompt_template = """
@@ -94,7 +95,7 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
         questions = self.questions[:total_examples]
         answers = self.answers[:total_examples]
         num_batches = math.ceil(len(questions) / self.batch_size)
-        print(f"Dataset: {self.dataset_name} Total examples: {total_examples}, Batch size: {self.batch_size}, Batch counts: {num_batches}")
+        print(f"dataset {self.dataset_name} all counts: {total_examples}, batch size: {self.batch_size}, bath counts: {num_batches}")
         
         for batch_idx in tqdm(range(num_batches), desc=f"Processing batches"):
             start_idx = batch_idx * self.batch_size
@@ -120,29 +121,23 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                 )
             
             outputs = []
-            generating = list(range(len(prompts)))
-            completed = []  
+            generating = list(range(len(prompts))) 
+            completed = [] 
             concat_prompts_outputs = prompts.copy()  
             python_rounds = [0 for _ in range(len(prompts))]
             search_rounds = [0 for _ in range(len(prompts))]
             rollback_rounds = [0 for _ in range(len(prompts))]
+            debug_rounds = [0 for _ in range(len(prompts))]
+            refine_rounds = [0 for _ in range(len(prompts))]
             
             while generating:
                 input_prompts = [concat_prompts_outputs[i] for i in generating]
                 self.params_config.stop = ['</python>', '</search>']
-                if not self.use_lora:
-                    initial_outputs = self.model.generate(
-                        input_prompts,
-                        self.params_config,
-                        use_tqdm=False,
-                    )
-                else:
-                    initial_outputs = self.model.generate(
-                        input_prompts,
-                        self.params_config,
-                        use_tqdm=False,
-                        lora_request=self.lora_request
-                    )
+                initial_outputs = self.model.generate(
+                    input_prompts,
+                    self.params_config,
+                    use_tqdm=False,
+                )
                 outputs = [output.outputs[0].text for output in initial_outputs]
                 python_indices = []
                 search_indices = []
@@ -195,20 +190,31 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                         if report == "Done":
                             concat_prompts_outputs[idx] += f'<result>\n{result}\n</result>'
                         else:
-                            if self.use_rollback and rollback_rounds[idx] < self.max_rollback_times:
-                                pass
-                            else:
-                                if not self.use_debug:
+                            if not self.use_debug:
+                                if not self.use_rollback or rollback_rounds[idx] >= self.max_rollback_times:
                                     concat_prompts_outputs[idx] += f'<result>\n{report}\n</result>'
                                 else:
-                                    print(f'=========== wrong code: {report}, try to debug =============')
+                                    concat_prompts_outputs[idx] = rollback(concat_prompts_outputs[idx])
+                                    print(f'=========== code error: {report}, try to rollback =============')
+                                    rollback_rounds[idx] += 1
+                            else:
+                                if debug_rounds[idx] >= self.max_debug_times:
+                                    if not self.use_rollback or rollback_rounds[idx] >= self.max_rollback_times:
+                                        concat_prompts_outputs[idx] += f'<result>\n{report}\n</result>'
+                                    else:
+                                        concat_prompts_outputs[idx] = rollback(concat_prompts_outputs[idx])
+                                        print(f'=========== code error: {report}, try to rollback =============')
+                                        rollback_rounds[idx] += 1
+                                else:
+                                    print(f'=========== code error: {report}, try to debug =============')
                                     refine_code = debug_code_function(python_contents[i], report)
+                                    debug_rounds[idx] += 1
                                     result, report = self.executor.apply(refine_code)
                                     if report == "Done":
-                                        print(f'=========== debug success, and the result is: {result} =============')
+                                        print(f'=========== debug success, the result is: {result}=============')
                                         concat_prompts_outputs[idx] += f'<result>\n{result}\n</result>'
                                     else:
-                                        print(f'=========== wrong code: {report}, debug error =============')
+                                        print(f'=========== code error: {report}, debug error =============')
                                         concat_prompts_outputs[idx] += f'<result>\n{report}\n</result>'
                     
                 if search_indices:
@@ -243,7 +249,19 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                                     print(f"search error: {e}")
                                     concat_prompts_outputs[idx] += f'<result>\n\n</result>'
                     print('search end')
-                    
+                
+                for i in generating:
+                    current_sequence = concat_prompts_outputs[i]
+                    if not self.use_refiner or refine_rounds[i] >= self.max_refine_times:
+                        continue
+                    sequence_tokens = self.tokenizer.encode(current_sequence)
+                    if len(sequence_tokens) >= 8192:
+                        print(f"current length of tokens is more than 8192, begin to refine")
+                        concat_prompts_outputs[i] = refine(prompts[i], current_sequence)
+                        print(f"===================== refine result =====================")
+                        print(concat_prompts_outputs[i])
+                        print(f"=====================================================")
+                        refine_rounds[i] += 1
 
                 if text_generating_indices:
                     generate_results = []
@@ -253,19 +271,11 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                         )
                         concat_prompts_outputs[i] += content
                     self.params_config.stop = None
-                    if not self.use_lora:
-                        output_texts = self.model.generate(
-                            generate_results,
-                            self.params_config,
-                            use_tqdm=False,
-                        )
-                    else:
-                        output_texts = self.model.generate(
-                            generate_results,
-                            self.params_config,
-                            use_tqdm=False,
-                            lora_request=self.lora_request
-                        )
+                    output_texts = self.model.generate(
+                        generate_results,
+                        self.params_config,
+                        use_tqdm=False,
+                    )
                     for i in range(len(output_texts)):
                         text = output_texts[i].outputs[0].text
                         concat_prompts_outputs[text_generating_indices[i][0]] += text
@@ -275,16 +285,16 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                     for i, content in other_indices:
                         concat_prompts_outputs[i] += content
                         completed.append(i)
+
                 
                 generating = [i for i in generating if i not in completed]
-            
+
             extracted_answers = []
             for i in range(len(concat_prompts_outputs)):
                 text = concat_prompts_outputs[i][len(prompts[i]):]
                 # Extract answer using the last occurrence of <answer>...</answer>
                 # This ensures we get the latest answer in case there are multiple sections
                 last_answer_end = text.rfind('</answer>')
-                final_answer = text
                 if last_answer_end != -1:
                     # Find the corresponding opening tag before this closing tag
                     temp_text = text[:last_answer_end]
@@ -310,12 +320,10 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                     final_answer = last_boxed_only_string(boxed_answer)
                     if final_answer and final_answer.startswith("\\boxed{") and final_answer.endswith("}"):
                         final_answer = final_answer[7:-1]  # Extract content between \\boxed{ and }
-                if final_answer and final_answer.startswith("\\text{") and final_answer.endswith("}"):
-                    final_answer = final_answer[6:-1]
                 extracted_answers.append(final_answer)
             
             for i in range(len(batch_samples)):
-                print(f"Batch: {batch_idx}, Data {i}: extract answer: {extracted_answers[i]}")
+                print(f"batch {batch_idx}, data {i}: refine result: {extracted_answers[i]}")
                 res.append(
                     {
                         "Prompt": prompts[i], "Full_output": concat_prompts_outputs[i][len(prompts[i]):], "Output": extracted_answers[i], "answer": golden_answers[i]
@@ -325,10 +333,10 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
         with open(self.output_path, 'w', encoding='utf-8') as f:
             json.dump(res, f, indent=4, ensure_ascii=False)
             f.close()
-        print(f"Results have been saved to {self.output_path}")
+        print(f"results have been saved to {self.output_path}")
 
     def load_datas(self):
-        data_path = f'data/{self.dataset_name}/test.jsonl'
+        data_path = f'evaluation/data/{self.dataset_name}/test.jsonl'
         print(json.dumps(
             {
                 'dataset': self.dataset_name, 'output': self.output_path,
@@ -425,8 +433,6 @@ def load_model(config):
                 max_model_len=config['max_input_len'],
                 gpu_memory_utilization=config['gpu_use'],
                 tensor_parallel_size=config['gpu_num'],
-                enable_lora=True,
-                max_lora_rank=8,
             )
     tokenizer = AutoTokenizer.from_pretrained(config['model_path'], trust_remote_code=True)
     return model, tokenizer
@@ -448,7 +454,7 @@ if __name__ == "__main__":
     argument_parser.add_argument(
         "--temperature",
         type=float,
-        default=0.7,
+        default=0,
     )
     argument_parser.add_argument(
         "--max_tokens",
@@ -500,16 +506,11 @@ if __name__ == "__main__":
         action='store_true',
     )
     argument_parser.add_argument(
-        "--data_path",
-        type=str,
-        default=None
-    )
-    argument_parser.add_argument(
-        "--use_lora",
+        "--use_refiner",
         action='store_true',
     )
     argument_parser.add_argument(
-        "--lora_path",
+        "--data_path",
         type=str,
         default=None
     )
@@ -547,7 +548,6 @@ if __name__ == "__main__":
         prompt_type=args.prompt_type,
         use_debug=args.use_debug,
         use_rollback=args.use_rollback,
-        use_lora=args.use_lora,
-        lora_path=args.lora_path,
+        use_refiner=args.use_refiner,
     )
     inference.run()
