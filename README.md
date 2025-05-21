@@ -53,18 +53,15 @@ As shown below, Tool-Star demonstrates strong overall reasoning performance acro
 
 
 
-### 1. Cold-Start SFT Stage
+### Cold-Start SFT Stage
 
 **1. Environment Setup**
 
-在这一步骤中，我们将讲述如何进行工具调用冷启动SFt阶段。我们使用Llama Factory仓库进行冷启动，所以请您首先配置好llama factory的环境
-
-
-
+在这一步骤中，我们将讲述如何进行工具调用冷启动SFT阶段。我们使用Llama Factory仓库进行冷启动，所以请您首先配置好[llama factory](https://github.com/hiyouga/LLaMA-Factory)的环境
 
 首先请从先[🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K)上下载好你的SFT数据集并放在`LLaMA-Factory-main/data/final_sft_edition9.json`位置，并在‘dataset_info.json’中进行数据集定义。
 
-并请完善好`LLaMA-Factory-main/examples/train_full/qwen_sft_tool_star.yaml`的路径信息，内容如下：
+并请完善好`LLaMA-Factory-main/examples/train_full/qwen_sft_tool_star.yaml`的路径信息，文件内容如下：
 ```bash
 ### model
 model_name_or_path: {your_path_to_model}/Qwen2.5-3B-Instruct
@@ -102,7 +99,7 @@ bf16: true
 ddp_timeout: 180000000
 ```
 
-完善好信息后，就可以进行一键运行如下脚本进行微调：
+在完善好信息后，您可以使用如下指令进行微调：
 
 ```bash
 cd LLaMA-Factory-main
@@ -111,10 +108,10 @@ bash ./examples/train_full/train_sft.sh
 
 ---
 
-### 2. Self-Critic RL Stage
+### Self-Critic RL Stage
 
 
-在这一步中，我们将加载冷启动的数据进行GRPO训练，我们参考ReCall与VERL框架进行RL训练，
+在这一步中，我们将加载冷启动的数据进行GRPO训练，我们参考[ReCall](https://github.com/Agent-RL/ReCall)与[VERL](https://github.com/volcengine/verl)框架进行RL训练，
 
 
 **1. Environment Setup**
@@ -133,11 +130,7 @@ pip install -r requirements.txt
 
 **2. Vanilla RL Training**
 
-Our training framework is based on [verl](https://github.com/volcengine/verl) and [ReCall](https://github.com/Agent-RL/ReCall), a powerful reinforcement learning framework for LLMs. We deeply customize the verl code to fit our needs, and the modified version of verl is under the `src/verl` directory. The example of training scripts are under `scripts/train`.
-
-Firstly, you 需要补全`scripts/train/run_tool_star.sh`中的信息：
-
-
+Our training framework is based on [verl](https://github.com/volcengine/verl) and [ReCall](https://github.com/Agent-RL/ReCall). The example of training scripts are under `scripts/train`. Firstly, you 需要补全`scripts/train/run_tool_star.sh`中的信息：
 
 export PYTHONPATH=/src/verl:$PYTHONPATH
 export MKL_SERVICE_FORCE_INTEL=1
@@ -164,7 +157,7 @@ bash scripts/train/train.sh \
     --test_files {path_to_test_file}/grpo_mix_test.parquet
 ```
 
-因为在rollout过程中涉及到websearch的检索的调用，所以请您及时配置好‘/src/verl/verl/workers/rollout/vllm_rollout/web_search/web_search_main.py’中‘deep_search_snippet()’函数的检索api:
+因为在rollout过程中涉及到bing web检索的调用，所以请您及时配置好‘/src/verl/verl/workers/rollout/vllm_rollout/web_search/web_search_main.py’中‘deep_search_snippet()’函数的检索api:
 ```python
 def deep_search_snippet(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key="your bing api key", bing_endpoint="https://api.bing.microsoft.com/v7.0/search"):
     args = Namespace(
@@ -188,12 +181,10 @@ def deep_search_snippet(search_query, top_k=10, use_jina=False, jina_api_key="em
         concurrent_limit=200
     )
 ```
-Replace `bing_subscription_key`, `bing_endpoint`, and `api_base_url` with your own values.
+Replace `bing_subscription_key`, `bing_endpoint`, and `api_base_url` with your own values. 在该文件中我们提供了多种websearch的模式可供您选择，
 
 
-
-
-之后请你直接运行以下脚本以进行训练：
+之后请您可以直接运行以下脚本以进行训练：
 
 
 ```bash
@@ -209,13 +200,33 @@ bash run_tool_star.sh
 
 **2. Self-Critic DPO Training**
 
-我们的实测中完成SFT+Vanilla RL基本已可以基本复现Tool-Star的性能（参考消融实验），如果您想要继续完成Self-Critic DPO训练，数据部分您可以参考论文中Appendix B.1的训练算法以及Appendix E.2的数据格式流程自行在RL过程中，使用保存的ckpt对RL以及SFT的训练数据进行自采样，reward数据的构建。我们同样提供了基于Llama Factory的DPO训练代码供您参考
+我们的实测中完成SFT+Vanilla RL基本已可以基本复现Tool-Star的性能（参考消融实验），因此我们认为以下操作为可选部分
 
-并请完善好`LLaMA-Factory-main/examples/train_lora/qwen_lora_dpo_2.yaml`的路径信息。在完善好信息后，就可以进行一键运行如下脚本进行微调：
+如果您想要继续完成Self-Critic DPO训练，请您参考论文中Appendix B.1的训练算法以及Appendix E.2的数据格式流程自行在RL过程中，使用保存的ckpt对RL以及SFT的训练数据进行自采样reward数据的构建。我们同样提供了基于[llama factory](https://github.com/hiyouga/LLaMA-Factory)的DPO训练代码供您参考
+
+请完善好`LLaMA-Factory-main/examples/train_lora/qwen_lora_dpo_2.yaml`的路径信息，并将合成的DPO数据放在`LLaMA-Factory-main/data/‘路径下。您可以参考一下脚本就进行训练：
 
 ```bash
 cd LLaMA-Factory-main
 bash ./examples/train_lora/train_dpo.sh
+```
+
+---
+
+
+
+### TIR Evaluation
+
+
+**1. Environment Setup**
+```bash
+# Create conda environment
+conda create -n tool_star python=3.9
+conda activate tool_star
+
+# Install requirements
+cd tool_star
+pip install -r requirements.txt
 ```
 
 
@@ -245,9 +256,6 @@ python host_wiki.py \
     --num_retriever {num_retriever} \  
     --port {port}
 ```
-
-
-
 
 
 
@@ -415,6 +423,8 @@ Parameter explanations:
 
 
 
+
+
 ## 📄 Citation
 
 If you find this work helpful, please cite our paper:
@@ -422,7 +432,9 @@ If you find this work helpful, please cite our paper:
 
 ```
 
+## 🤝 Acknowledge
 
+This training implementation is based on [verl](https://github.com/volcengine/verl) and [ReCall](https://github.com/Agent-RL/ReCall) and the evaluation is based on [WebThinker](https://github.com/RUC-NLPIR/WebThinker) and [Search-o1](https://github.com/sunnynexus/Search-o1) and [FlashRAG](https://github.com/RUC-NLPIR/FlashRAG). The python interpreter is referenced on [ToRA](https://github.com/microsoft/ToRA) and [ToRL](https://github.com/GAIR-NLP/ToRL). models are trained based on [Qwen2.5](https://qwenlm.github.io/blog/qwen2.5/). We sincerely appreciate their contributions to the open-source community.
 
 
 
