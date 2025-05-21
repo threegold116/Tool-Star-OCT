@@ -50,7 +50,7 @@ As shown below, Tool-Star demonstrates strong overall reasoning performance acro
 
 # 🏃 Quick Start for Training
 
-## Cold-Start SFT Stage
+## ❄️ Cold-Start SFT Stage
 
 ### 1. Environment Setup
 
@@ -106,7 +106,7 @@ bash ./examples/train_full/train_sft.sh
 
 ---
 
-## Self-Critic RL Stage
+## 🔥 Self-Critic RL Stage
 
 In this step, we will load the cold-start data for GRPO training. We reference the [ReCall](https://github.com/Agent-RL/ReCall) and [VERL](https://github.com/volcengine/verl) frameworks for RL training.
 
@@ -205,7 +205,7 @@ bash ./examples/train_lora/train_dpo.sh
 
 ---
 
-## TIR Evaluation
+## ✅ TIR Evaluation
 
 ### 1. Environment Setup
 
@@ -434,4 +434,5 @@ This project is released under the [MIT License](LICENSE).
 
 ## 📞 Contact
 
+For any questions or feedback, please reach out to us at dongguanting@ruc.edu.cn.
 For any questions or feedback, please reach out to us at [xiaoxi_li@ruc.edu.cn](xiaoxi_li@ruc.edu.cn).
