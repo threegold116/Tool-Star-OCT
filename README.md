@@ -37,13 +37,13 @@
 
 
 ### 📊 Overall Performance
+As shown below, Tool-Star demonstrates strong overall reasoning performance across more than 10 challenging computational reasoning tasks (e.g., AIME24 and MATH500) and knowledge-intensive reasoning tasks (e.g., WebWalker and HotpotQA), while ensuring both efficiency and reliability in tool usage.
 
 
 <p align="center">
 <img width="100%" alt="image" src="https://github.com/user-attachments/assets/5f60be15-6992-413e-a405-a72e3b352fc1" />
 </p>
 
-As shown above, Tool-Star demonstrates strong overall reasoning performance across more than 10 challenging computational reasoning tasks (e.g., AIME24 and MATH500) and knowledge-intensive reasoning tasks (e.g., WebWalker and HotpotQA), while ensuring both efficiency and reliability in tool usage..
 
 ### ✨ The WebThinker Framework
 
