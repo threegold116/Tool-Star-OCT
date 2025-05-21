@@ -48,31 +48,92 @@ As shown below, Tool-Star demonstrates strong overall reasoning performance acro
 
 
 
-## 🔧 Installation
 
-###  Environment Setup
-```bash
-# Create conda environment
-conda create -n webthinker python=3.9
-conda activate webthinker
+## 🏃 Quick Start for Training
 
-# Install requirements
-cd WebThinker-main
-pip install -r requirements.txt
-```
 
-## 🏃 Quick Start
+
+### 1. Cold-Start SFT
 
 **1. Environment Setup**
+
+在这一步骤中，我们将讲述如何进行工具调用冷启动SFt阶段。我们使用Llama Factory仓库进行冷启动，所以请您首先配置好llama factory的环境
+
+
+
+
+首先请从先[🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K)上下载好你的SFT数据集并放在`LLaMA-Factory-main/data/final_sft_edition9.json`位置，并在‘dataset_info.json’中进行数据集定义。
+
+并请完善好`LLaMA-Factory-main/examples/train_full/qwen_sft_tool_star.yaml`的路径信息，内容如下：
+```bash
+### model
+model_name_or_path: {your_path_to_model}/Qwen2.5-3B-Instruct
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: full
+deepspeed: examples/deepspeed/ds_z3_config.json  # choices: [ds_z0_config.json, ds_z2_config.json, ds_z3_config.json]
+
+### dataset
+dataset: final_sft_edition9
+template: qwen
+cutoff_len: 15000
+max_samples: 1000000
+overwrite_cache: true
+preprocessing_num_workers: 16
+
+### output
+output_dir: {your_save_path}/Qwen2.5-3B-Instruct-final_sft_edition10-52
+logging_steps: 10
+save_steps: 2000
+plot_loss: true
+overwrite_output_dir: true
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 4
+learning_rate: 7.0e-6
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+ddp_timeout: 180000000
+```
+
+完善好信息后，就可以进行一键运行如下脚本进行微调：
+
+```bash
+cd LLaMA-Factory-main
+bash ./examples/train_full/train_sft.sh
+```
+
+
+
+### 2. RL Stage
+
+
+在这一步中，我们将加载冷启动的数据进行GRPO训练，我们使用VERL框架进行RL训练，
+
+
+**1. Environment Setup**
+请您首先配好VERL的环境，请你在配好VERL环境的基础上安装我们的环境：
 ```bash
 # Create conda environment
-conda create -n tool_star python=3.9
+conda create -n tool_star python=3.10
 conda activate tool_star
 
 # Install requirements
 cd tool_star
 pip install -r requirements.txt
 ```
+
+**2. Environment Setup**
+
+
+
+
 
 **2. Qwen2.5-72B-Instruct deployment**
 
@@ -97,6 +158,13 @@ python host_wiki.py \
     --num_retriever {num_retriever} \  
     --port {port}
 ```
+
+
+
+
+
+
+
 
 **4. Inference Your Model**
 
