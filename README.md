@@ -45,17 +45,6 @@ As shown below, Tool-Star demonstrates strong overall reasoning performance acro
 </p>
 
 
-### ✨ The WebThinker Framework
-
-![Model Comparison](figures/framework.png)
-
-**WebThinker** enables reasoning models to autonomously conduct web searches and web page navigations to acquire external knowledge during their reasoning process. This approach significantly reduces the time and costs associated with information gathering for researchers in knowledge-intensive fields. Furthermore, WebThinker allows LRMs to draft section content while thinking and searching, producing comprehensive, customized reports that directly address users' research questions.
-
-**Key Features:**
-- We introduce a **Deep Web Explorer** that empowers LRMs to search, navigate pages by clicking interactive elements (like links or buttons), and extract relevant information. Based on initial search results, the LRM can initiate follow-up searches and traverse deeper links until it collects all relevant information.
-- For scientific reporting, our **Autonomous Think-Search-and-Draft** strategy integrates real-time knowledge seeking with report creation. We equip LRMs with three specialized tools: (1) drafting content for specific chapters, (2) checking the current report, and (3) editing the report—ensuring reports remain comprehensive, coherent, and adaptive to new insights.
-- We're developing **RL-based training strategies** to optimize end-to-end task performance by leveraging large-scale reasoning trajectories from complex tasks. Using accuracy of reasoning, tool usage, and final outputs, we construct preference pairs for online DPO training, enabling the model to progressively improve its research capabilities.
-
 
 
 ## 🔧 Installation
