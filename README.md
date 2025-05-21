@@ -53,7 +53,7 @@ As shown below, Tool-Star demonstrates strong overall reasoning performance acro
 
 
 
-### 1. Cold-Start SFT
+### 1. Cold-Start SFT Stage
 
 **1. Environment Setup**
 
@@ -109,12 +109,12 @@ cd LLaMA-Factory-main
 bash ./examples/train_full/train_sft.sh
 ```
 
-
+---
 
 ### 2. RL Stage
 
 
-在这一步中，我们将加载冷启动的数据进行GRPO训练，我们使用VERL框架进行RL训练，
+在这一步中，我们将加载冷启动的数据进行GRPO训练，我们参考ReCall与VERL框架进行RL训练，
 
 
 **1. Environment Setup**
@@ -129,7 +129,92 @@ cd tool_star
 pip install -r requirements.txt
 ```
 
-**2. Environment Setup**
+
+
+**2. Training**
+
+Our training framework is based on [verl](https://github.com/volcengine/verl) and [ReCall](https://github.com/Agent-RL/ReCall), a powerful reinforcement learning framework for LLMs. We deeply customize the verl code to fit our needs, and the modified version of verl is under the `src/verl` directory. The example of training scripts are under `scripts/train`.
+
+Firstly, you 需要补全`scripts/train/run_tool_star.sh`中的信息：
+
+
+
+export PYTHONPATH=/src/verl:$PYTHONPATH
+export MKL_SERVICE_FORCE_INTEL=1
+export MKL_THREADING_LAYER=GNU
+
+```bash
+bash scripts/train/train.sh \
+    --train_batch_size 128 \
+    --ppo_mini_batch_size 16 \
+    --rollout_n 8 \
+    --apply_chat True \
+    --prompt_template_name re_search_template_sys \
+    --actor_model_path {your_actor_model_path} \
+    --project_name {your_project_name} \
+    --experiment_name {your_experiment_name} \
+    --nnodes 1 \
+    --n_gpus_per_node 8 \
+    --save_freq 10 \
+    --test_freq 10 \
+    --total_epochs 2 \
+    --wandb_api_key {your_wandb_api_key} \
+    --save_path {your_save_path} \
+    --train_files {path_to_train_file}/grpo_mix_train_shuffle.parquet \
+    --test_files {path_to_test_file}/grpo_mix_test.parquet
+```
+
+因为在rollout过程中涉及到websearch的检索的调用，所以请您及时配置好‘/src/verl/verl/workers/rollout/vllm_rollout/web_search/web_search_main.py’中‘deep_search_snippet()’函数的检索api:
+```python
+def deep_search_snippet(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key="your bing api key", bing_endpoint="https://api.bing.microsoft.com/v7.0/search"):
+    args = Namespace(
+        dataset_name='qa',
+        split='test',
+        subset_num=-1,
+        max_search_limit=15,
+        top_k=top_k,  
+        use_jina=use_jina,  
+        jina_api_key=jina_api_key,  
+        temperature=0.7,
+        top_p=0.8,
+        min_p=0.05,
+        top_k_sampling=20,
+        repetition_penalty=1.05,
+        max_tokens=4096,
+        bing_subscription_key=bing_subscription_key, 
+        bing_endpoint=bing_endpoint, 
+        eval=False,
+        seed=1742208600,
+        concurrent_limit=200
+    )
+```
+Replace `bing_subscription_key`, `bing_endpoint`, and `api_base_url` with your own values.
+
+
+
+
+之后请你直接运行以下脚本以进行训练：
+
+
+```bash
+cd ./Tool_Star_RL/scripts/train/
+bash run_tool_star.sh
+```
+
+
+对于rollout过程的核心代码请参考‘/src/verl/verl/workers/rollout/vllm_rollout/vllm_rollout.py’，对于reward计算部分的核心代码请你参考'/Tool_Star_RL/src/verl/verl/utils/reward_score'，您可以根据自己的需求进行修改。
+
+
+
+
+对于Self-Critic DPO的数据部分，您可以参考论文中Appendix B.1的训练算法以及Appendix E.2的数据格式流程自行在RL过程中，使用保存的ckpt对RL以及SFT的训练数据进行自采样，reward数据的构建。我们同样提供了基于Llama Factory的DPO训练代码供您参考
+
+并请完善好`LLaMA-Factory-main/examples/train_lora/qwen_lora_dpo_2.yaml`的路径信息。在完善好信息后，就可以进行一键运行如下脚本进行微调：
+
+```bash
+cd LLaMA-Factory-main
+bash ./examples/train_lora/train_dpo.sh
+```
 
 
 
