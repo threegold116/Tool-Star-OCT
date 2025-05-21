@@ -13,19 +13,16 @@
 
 <p align="center">
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-3B" target="_blank">Tool-Star-Qwen-3B</a> ｜
-🤗 <a href="dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
+🤗 <a href="https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
 </p>
 
 
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.</h5>
 
 ## 📣 Latest News
-
-- **[May 9, 2025]**: The brief introduction of WebThinker can be found on platforms like **[X](https://x.com/kakakbibibi/status/1917768235069628823)**, **[Zhihu](https://zhuanlan.zhihu.com/p/1903981050780192911)**, and **[WeChat](https://mp.weixin.qq.com/s/lVrTZQLmrJkkG5QYcEZTFA)**.
-- **[May 1, 2025]**: 🤗 **[WebThinker Model Collection](https://huggingface.co/collections/lixiaoxi45/webthinker-6812d5fd1287ee53d68f0557)** is now available on Hugging Face. You can deploy our optimized models for your deep research tasks.
-- **[May 1, 2025]**: 📄 Our paper is now available on **[arXiv](https://arxiv.org/abs/2504.21776)** and **[Hugging Face](https://huggingface.co/papers/2504.21776)**.
-- **[March 31, 2025]**: 🎉 **[WebThinker Notion Page](https://foremost-beechnut-8ed.notion.site/WebThinker-Empowering-Large-Reasoning-Models-with-Deep-Research-Capability-d13158a27d924a4b9df7f9ab94066b64)** launched with comprehensive project details.
-- **[March 31, 2025]**: 🚀 Full codebase released. WebThinker now supports deep research with open-source reasoning models like QwQ-32B.
+🔥 We released an our cold-star SFT and RL dataset for tool-integrated reasoninhg. Checkout **[Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K)** and **[RL-dataset]()** here.
+- **[May 1, 2025]**: 📄 Our paper is now available on **[arXiv]()** and **[Hugging Face]()**.
+- **[May 21, 2025]**: 🚀 Full codebase released. Tool-Star supports multiple Tools with several open-source models like Qwen2.5-3B-Instruct.
 
 ## 🎬 Demo
 
