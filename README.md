@@ -28,6 +28,8 @@
 
 ## 💡 Overview
 
+---
+
 **Tool-Star** is a **reinforcement learning-based framework** designed to empower LLMs to autonomously invoke **multiple external tools** during stepwise reasoning. Specifically, Tool-Star integrates six types of tools into the reasoning process (three for training and three for inference-time optimization) and incorporates systematic designs in both data synthesis and training algorithms.
 
 <p align="center">
@@ -37,6 +39,7 @@
 
 ### 📊 Overall Performance
 
+---
 
 <p align="center">
 <img width="100%" alt="image" src="https://github.com/user-attachments/assets/5f60be15-6992-413e-a405-a72e3b352fc1" />
