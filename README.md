@@ -263,24 +263,7 @@ Parameter explanations:
 
 If you find this work helpful, please cite our paper:
 ```bibtex
-@article{Li2025WebThinker,
-  author       = {Xiaoxi Li and
-                  Jiajie Jin and
-                  Guanting Dong and
-                  Hongjin Qian and
-                  Yutao Zhu and
-                  Yongkang Wu and
-                  Ji{-}Rong Wen and
-                  Zhicheng Dou},
-  title        = {WebThinker: Empowering Large Reasoning Models with Deep Research Capability},
-  journal      = {CoRR},
-  volume       = {abs/2504.21776},
-  year         = {2025},
-  url          = {https://arxiv.org/abs/2504.21776},
-  doi          = {10.48550/ARXIV.2504.21776},
-  eprinttype    = {arXiv},
-  eprint       = {2504.21776}
-}
+
 ```
 
 
