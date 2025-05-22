@@ -257,7 +257,7 @@ python host_wiki.py \
 
 ### 4. Inference Your Model
 
-In this section, we infer answers using a trained model. We support five types of mathematical reasoning datasets: AIME24, AIME25, GSM8K, MATH, and MATH500, as well as seven QA reasoning datasets: WebWalker, HotpotQA, 2WikiMultiHopQA, Bamboogle, MuSiQue, GAIA, and HLE.
+In this section, we infer answers using a trained model. We support five types of mathematical reasoning datasets: AIME24, AIME25, GSM8K, MATH, and MATH500, as well as seven QA reasoning datasets: WebWalker, HotpotQA, 2WikiMultiHopQA, Bamboogle, MuSiQue, GAIA, and HLE. Due to resource constraints, all models and baselines will test a maximum of 500 samples for mathematical reasoning, 200 samples for all QA datasets, and 500 samples for HLE (please refer our code).
 
 First, replace the API_URL and API key with your own in the following files:
 
