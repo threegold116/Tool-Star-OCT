@@ -110,9 +110,13 @@ bash ./examples/train_full/train_sft.sh
 
 In this step, we will load the cold-start data for GRPO training. We reference the [ReCall](https://github.com/Agent-RL/ReCall) and [VERL](https://github.com/volcengine/verl) frameworks for RL training.
 
+
 ### 1. Environment Setup
 
-First, please set up the VERL environment. After that, install our environment:
+First, please set up the [ReCall environment](https://github.com/Agent-RL/ReCall). After that, install our environment:
+
+We suggest that you follow the environment installation steps of [ReCall](https://github.com/Agent-RL/ReCall)(very good open-sourced codebase!). On this basis, you can install our additional environment as follow: 
+
 
 ```bash
 # Create conda environment
@@ -190,11 +194,11 @@ bash run_tool_star.sh
 
 For the core code of the rollout process, please refer to `/src/verl/verl/workers/rollout/vllm_rollout/vllm_rollout.py`, and for the reward calculation part, refer to `/Tool_Star_RL/src/verl/verl/utils/reward_score`. You can modify them according to your needs.
 
-### 3. Self-Critic DPO Training
+### 3. Self-Critic DPO Training (Optional)
 
-In our experiments, completing SFT + Vanilla RL has been sufficient to reproduce Tool-Star's performance (refer to the ablation study). Therefore, we consider the following operations as optional.
+In our experiments, completing SFT + Vanilla RL has been sufficient to almost reproduce Tool-Star's performance (refer to the ablation study).
 
-If you wish to proceed with Self-Critic DPO training, please refer to the training algorithm in Appendix B.1 of the paper and the data format process in Appendix E.2. You can self-sample reward data using the saved checkpoints for RL and SFT training data. We also provide DPO training code based on [Llama Factory](https://github.com/hiyouga/LLaMA-Factory) for your reference.
+If you wish to proceed with Self-Critic DPO training, please refer to the training algorithm in **Appendix B.1** of the paper and the data format process in** Appendix E.2**. You can self-sample reward data using the saved checkpoints for RL and SFT training data. We also provide DPO training code based on [Llama Factory](https://github.com/hiyouga/LLaMA-Factory) for your reference.
 
 Please complete the path information in `LLaMA-Factory-main/examples/train_lora/qwen_lora_dpo_2.yaml` and place the synthesized DPO data in `LLaMA-Factory-main/data/`. You can then run the following script for training:
 
@@ -219,9 +223,15 @@ cd tool_star
 pip install -r requirements.txt
 ```
 
-### 2. Qwen2.5-72B-Instruct Deployment
+### 2. LLM Service Deployment
 
-In this step, we will deploy the Qwen2.5-72B-Instruct model. This model is used for functions such as code debugging, refinement, and evaluating the accuracy of generated answers in subsequent steps.
+In this step, we will use the VLLM framework to deploy additional large language models (LLMs). This includes deploying an LLM as a judging model to evaluate the accuracy of the generated answers in the subsequent steps, as well as deploying inference-time tools such as code debugging and chain refinement.
+
+- We use Qwen2.5-72B-Instruct as the judging model.
+
+- We use Qwen2.5-3B-Instruct, which has the same parameter scale as the base model, as the foundation for the inference-time tools.
+
+For the specific deployment, you can refer to the following script.
 
 ```bash
 cd evaluation
@@ -309,7 +319,7 @@ def debug_code_function(code, error, api_key="your_api_key"):
     ...
 ```
 
-Then, start the inference:
+Then, start the inference. We recommend that you use the default parameters as:
 
 ```bash
 cd evaluation
@@ -322,8 +332,8 @@ python run.py \
     --dataset_name math \
     --task math \
     --gpu_use 0.95 \
-    --max_tokens 16384 \
-    --max_input_len 16384 \
+    --max_tokens 16384 \ #you can change this, 8192 is enough for most tasks
+    --max_input_len 16384 \ #you can change this, 8192 is enough for most tasks
     --output_path /path/to/your_results/your_exp_math_result.json \
     --counts 500 \
     --batch_size 100 \
@@ -342,7 +352,8 @@ python run.py \
 - `--batch_size`: Batch size for parallel inference.
 - `--use_debug`: Enable the debug mechanism.
 
-**Additional Parameters:**
+**Additional Parameters （Optional）:**
+
 - `--use_rollback`: Whether to use the rollback mechanism.
 - `--use_refiner`: Whether to use the refine mechanism.
 
