@@ -14,7 +14,7 @@
 <p align="center">
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-3B" target="_blank">Tool-Star-Qwen-3B</a> ｜
 🤗 <a href="https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
-🤗 <a href="https://github.com/dongguanting/Tool-Star/blob/main/Tool_Star_RL/mix_grpo/grpo_mix_train.parquet" target="_blank">Multi-Tool-RL-10K</a> ｜
+🤗 <a href="https://github.com/dongguanting/Tool-Star/blob/main/Tool_Star_RL/mix_grpo/grpo_mix_train.parquet" target="_blank">Multi-Tool-RL-10K</a>
 </p>
 
 
