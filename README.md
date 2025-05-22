@@ -309,20 +309,6 @@ def debug_code_function(code, error, api_key="your_api_key"):
     ...
 ```
 
-In `evaluation/tools/refine_code.py`:
-
-```python
-def refine(prompt, response):
-
-    API_BASE_URL = "your_api_base_url"
-    MODEL_NAME = "Qwen2.5-7B-Instruct"
-    client = OpenAI(
-        api_key="empty",
-        base_url=API_BASE_URL,
-    )
-    ...
-```
-
 Then, start the inference:
 
 ```bash
@@ -359,6 +345,21 @@ python run.py \
 **Additional Parameters:**
 - `--use_rollback`: Whether to use the rollback mechanism.
 - `--use_refiner`: Whether to use the refine mechanism.
+
+
+In `evaluation/tools/refine_code.py`:
+
+```python
+def refine(prompt, response):
+
+    API_BASE_URL = "your_api_base_url"
+    MODEL_NAME = "Qwen2.5-7B-Instruct"
+    client = OpenAI(
+        api_key="empty",
+        base_url=API_BASE_URL,
+    )
+    ...
+```
 
 ### 5. Calculate Metrics
 
