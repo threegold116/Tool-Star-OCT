@@ -14,6 +14,7 @@
 <p align="center">
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-3B" target="_blank">Tool-Star-Qwen-3B</a> ｜
 🤗 <a href="https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
+🤗 <a href="https://github.com/dongguanting/Tool-Star/blob/main/Tool_Star_RL/mix_grpo/grpo_mix_train.parquet" target="_blank">Multi-Tool-RL-10K</a> ｜
 </p>
 
 
@@ -132,7 +133,7 @@ pip install -r requirements.txt
 ### 2. Vanilla RL Training
 
 Our training framework is based on [verl](https://github.com/volcengine/verl) and [ReCall](https://github.com/Agent-RL/ReCall). The training scripts can be found under `scripts/train`. First, you need to complete the information in `scripts/train/run_tool_star.sh`, 
-we have provided both train parquet and test parquet for RL:
+we have provided both [train parquet](https://github.com/dongguanting/Tool-Star/blob/main/Tool_Star_RL/mix_grpo/grpo_mix_train.parquet) and [test parquet](https://github.com/dongguanting/Tool-Star/blob/main/Tool_Star_RL/mix_grpo/grpo_mix_test.parquet) for RL:
 
 ```bash
 export PYTHONPATH=/src/verl:$PYTHONPATH
