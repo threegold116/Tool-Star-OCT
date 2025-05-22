@@ -352,7 +352,9 @@ python run.py \
 - `--batch_size`: Batch size for parallel inference.
 - `--use_debug`: Enable the debug mechanism.
 
-**Additional Parameters （Optional）:**
+**Additional Parameters（Optional）:**
+
+In practical, only in the cases of HLE and GAIA is there a possibility of exceeding the length limit, you can use refiner. Generally, it won't occur in other situations.  
 
 - `--use_rollback`: Whether to use the rollback mechanism.
 - `--use_refiner`: Whether to use the refine mechanism.
