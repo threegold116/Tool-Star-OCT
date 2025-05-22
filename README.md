@@ -201,7 +201,7 @@ For the core code of the rollout process, please refer to `/src/verl/verl/worker
 
 In our experiments, completing SFT + Vanilla RL has been sufficient to almost reproduce Tool-Star's performance (refer to the ablation study).
 
-If you wish to proceed with Self-Critic DPO training, please refer to the training algorithm in **Appendix B.1** of the paper and the data format process in** Appendix E.2**. You can self-sample reward data using the saved checkpoints for RL and SFT training data. We also provide DPO training code based on [Llama Factory](https://github.com/hiyouga/LLaMA-Factory) for your reference.
+If you wish to proceed with Self-Critic DPO training, please refer to the training algorithm in **Appendix B.1** of the paper and the data format process in **Appendix E.2**. You can self-sample reward data using the saved checkpoints for RL and SFT training data. We also provide DPO training code based on [Llama Factory](https://github.com/hiyouga/LLaMA-Factory) for your reference.
 
 Please complete the path information in `LLaMA-Factory-main/examples/train_lora/qwen_lora_dpo_2.yaml` and place the synthesized DPO data in `LLaMA-Factory-main/data/`. You can then run the following script for training:
 
