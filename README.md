@@ -214,6 +214,8 @@ bash ./examples/train_lora/train_dpo.sh
 
 ## ✅ TIR Evaluation
 
+If you have already trained a model, you can refer to the following process for TIR capability evaluation. Of course, you can also download our checkpoint **[🤗Tool-Star-Qwen-3B](https://huggingface.co/dongguanting/Tool-Star-Qwen-3B)** for directly testing.
+
 ### 1. Environment Setup
 
 ```bash
