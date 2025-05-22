@@ -449,5 +449,4 @@ This project is released under the [MIT License](LICENSE).
 
 ## 📞 Contact
 
-For any questions or feedback, please reach out to us at dongguanting@ruc.edu.cn.
-For any questions or feedback, please reach out to us at [xiaoxi_li@ruc.edu.cn](xiaoxi_li@ruc.edu.cn).
+For any questions or feedback, please reach out to us at [dongguanting@ruc.edu.cn](dongguanting@ruc.edu.cn).
