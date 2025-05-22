@@ -1,0 +1,6 @@
+{"time":"2025-03-10T17:18:38.854008586+08:00","level":"INFO","msg":"main: starting server","port-filename":"/tmp/tmpo2lth2_v/port-34542.txt","pid":34542,"log-level":0,"disable-analytics":false,"shutdown-on-parent-exit":false}
+{"time":"2025-03-10T17:18:38.855406394+08:00","level":"INFO","msg":"Will exit if parent process dies.","ppid":34542}
+{"time":"2025-03-10T17:18:38.855367692+08:00","level":"INFO","msg":"server is running","addr":{"IP":"127.0.0.1","Port":39441,"Zone":""}}
+{"time":"2025-03-10T17:18:39.048078941+08:00","level":"INFO","msg":"connection: ManageConnectionData: new connection created","id":"127.0.0.1:48754"}
+{"time":"2025-03-10T17:18:39.953001915+08:00","level":"INFO","msg":"handleInformInit: received","streamId":"6zqo0wbs","id":"127.0.0.1:48754"}
+{"time":"2025-03-10T17:18:40.171243608+08:00","level":"INFO","msg":"handleInformInit: stream started","streamId":"6zqo0wbs","id":"127.0.0.1:48754"}

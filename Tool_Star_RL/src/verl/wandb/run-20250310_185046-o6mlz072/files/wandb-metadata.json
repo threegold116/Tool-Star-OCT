@@ -1,0 +1,103 @@
+{
+  "os":  "Linux-4.18.0-80.7.1.el8_0.x86_64-x86_64-with-glibc2.17",
+  "python":  "CPython 3.11.10",
+  "startedAt":  "2025-03-10T10:50:46.821683Z",
+  "args":  [
+    "--node-ip-address=10.0.0.1",
+    "--node-manager-port=33065",
+    "--object-store-name=/tmp/ray/session_2025-03-10_18-49-05_267955_19857/sockets/plasma_store",
+    "--raylet-name=/tmp/ray/session_2025-03-10_18-49-05_267955_19857/sockets/raylet",
+    "--redis-address=None",
+    "--metrics-agent-port=47696",
+    "--runtime-env-agent-port=63244",
+    "--logging-rotate-bytes=536870912",
+    "--logging-rotate-backup-count=5",
+    "--runtime-env-agent-port=63244",
+    "--gcs-address=10.0.0.1:63123",
+    "--session-name=session_2025-03-10_18-49-05_267955_19857",
+    "--temp-dir=/tmp/ray",
+    "--webui=127.0.0.1:8265",
+    "--cluster-id=6e4a34ef5963e5fce562193c03463af48f203a49db44e7e5626e20b1",
+    "--startup-token=4",
+    "--worker-launch-time-ms=1741603748924",
+    "--node-id=b4a51884f73d614c777def065e7840b2b90830605f2bd752509826fb",
+    "--runtime-env-hash=1830736042"
+  ],
+  "program":  "/home/u2024001021/anaconda3/envs/EasyRL/lib/python3.11/site-packages/ray/_private/workers/default_worker.py",
+  "git":  {
+    "remote":  "https://github.com/Agent-RL/ReSearch.git",
+    "commit":  "12f6cb1c891b497c180ade2f147b9bbb781d461c"
+  },
+  "email":  "dongguanting@126.com",
+  "root":  "/home/u2024001021/ReSearch/verl",
+  "host":  "workstation",
+  "executable":  "/home/u2024001021/anaconda3/envs/EasyRL/bin/python3",
+  "cpu_count":  64,
+  "cpu_count_logical":  64,
+  "gpu":  "NVIDIA A800-SXM4-80GB",
+  "gpu_count":  8,
+  "disk":  {
+    "/":  {
+      "total":  "84014424064",
+      "used":  "84217856"
+    }
+  },
+  "memory":  {
+    "total":  "1030792151040"
+  },
+  "cpu":  {
+    "count":  64,
+    "countLogical":  64
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA A800-SXM4-80GB",
+      "memoryTotal":  "85899345920",
+      "cudaCores":  6912,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A800-SXM4-80GB",
+      "memoryTotal":  "85899345920",
+      "cudaCores":  6912,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A800-SXM4-80GB",
+      "memoryTotal":  "85899345920",
+      "cudaCores":  6912,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A800-SXM4-80GB",
+      "memoryTotal":  "85899345920",
+      "cudaCores":  6912,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A800-SXM4-80GB",
+      "memoryTotal":  "85899345920",
+      "cudaCores":  6912,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A800-SXM4-80GB",
+      "memoryTotal":  "85899345920",
+      "cudaCores":  6912,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A800-SXM4-80GB",
+      "memoryTotal":  "85899345920",
+      "cudaCores":  6912,
+      "architecture":  "Ampere"
+    },
+    {
+      "name":  "NVIDIA A800-SXM4-80GB",
+      "memoryTotal":  "85899345920",
+      "cudaCores":  6912,
+      "architecture":  "Ampere"
+    }
+  ],
+  "cudaVersion":  "12.0"
+}
