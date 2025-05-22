@@ -439,9 +439,7 @@ If you find this work helpful, please cite our paper:
 
 ## 🤝 Acknowledge
 
-This training implementation is based on [verl](https://github.com/volcengine/verl) and [ReCall](https://github.com/Agent-RL/ReCall) and the evaluation is based on [WebThinker](https://github.com/RUC-NLPIR/WebThinker) and [Search-o1](https://github.com/sunnynexus/Search-o1) and [FlashRAG](https://github.com/RUC-NLPIR/FlashRAG). The python interpreter is referenced on [ToRA](https://github.com/microsoft/ToRA) and [ToRL](https://github.com/GAIR-NLP/ToRL). models are trained based on [Qwen2.5](https://qwenlm.github.io/blog/qwen2.5/). We sincerely appreciate their contributions to the open-source community.
-
-
+This training implementation builds upon [verl](https://github.com/volcengine/verl) and [ReCall](https://github.com/Agent-RL/ReCall). For evaluation, we rely on [WebThinker](https://github.com/RUC-NLPIR/WebThinker), [Search-o1](https://github.com/sunnynexus/Search-o1), and [FlashRAG](https://github.com/RUC-NLPIR/FlashRAG). The Python interpreter design references [ToRA](https://github.com/microsoft/ToRA) and [ToRL](https://github.com/GAIR-NLP/ToRL), while our models are trained using [Qwen2.5](https://qwenlm.github.io/blog/qwen2.5/). We express our sincere gratitude to these projects for their invaluable contributions to the open-source community. 
 
 
 ## 📄 License
