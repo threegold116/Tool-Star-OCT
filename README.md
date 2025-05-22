@@ -26,6 +26,12 @@
 - **[May 21, 2025]**: 📄 Our paper is now available on **[arXiv]()** and **[Hugging Face]()** daily paper.
 - **[May 21, 2025]**: 🚀 Full codebase released. Tool-Star supports multiple Tools with several open-source models like Qwen2.5-3B-Instruct.
 
+## :mag_right: Roadmap
+
+Tool-star is still under development and there are many issues and room for improvement. We will continue to update. And we also sincerely welcome contributions on this open-source toolkit.
+
+- [] Support larger parameter size LLM (e.g. 7B, 32B)
+- [] Provide More Tools for improving Inference
 
 
 ## 💡 Overview
