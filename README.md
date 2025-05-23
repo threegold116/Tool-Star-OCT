@@ -22,6 +22,7 @@
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.</h5>
 
 ## 📣 Latest News
+- **[May 21, 2025]**: The brief introduction of Tool-Star can be found on platforms like **[X](https://x.com/kakakbibibi/status/1925774362017210796)**.
 - **[May 21, 2025]**: 🔥 We released an our cold-star SFT and RL dataset for tool-integrated reasoning. Checkout **[🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K)** and **[Multi-Tool-RL-10K](https://github.com/dongguanting/Tool-Star/blob/main/Tool_Star_RL/mix_grpo/grpo_mix_train.parquet)** here.
 - **[May 21, 2025]**: 🔥 We released our Tool-Star-Qwen-3B checkpoint. Checkout **[🤗Tool-Star-Qwen-3B](https://huggingface.co/dongguanting/Tool-Star-Qwen-3B)** here.
 - **[May 21, 2025]**: 📄 Our paper is now available on **[arXiv](https://arxiv.org/pdf/2505.16410)** and **[Hugging Face](https://huggingface.co/papers/2505.16410)** daily paper.
