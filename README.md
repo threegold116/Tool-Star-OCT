@@ -322,7 +322,7 @@ In `evaluation/tools/debug_code.py`:
 def debug_code_function(code, error, api_key="your_api_key"):
 
     API_BASE_URL = api_key
-    MODEL_NAME = "Qwen2.5-72B-Instruct"
+    MODEL_NAME = "Qwen2.5-7B-Instruct"
     client = OpenAI(
         api_key="empty",
         base_url=API_BASE_URL,
