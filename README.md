@@ -4,7 +4,7 @@
 
 <div align="center"> 
 
-[![Paper](https://img.shields.io/badge/Paper-arXiv-b5212f.svg?logo=arxiv)]()
+[![Paper](https://img.shields.io/badge/Paper-arXiv-b5212f.svg?logo=arxiv)](https://arxiv.org/abs/2505.16410)
 [![Paper](https://img.shields.io/badge/Paper-Hugging%20Face-yellow?logo=huggingface)]()
 [![License](https://img.shields.io/badge/LICENSE-MIT-green.svg)](https://opensource.org/licenses/MIT) 
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/) 
@@ -443,7 +443,15 @@ python evaluate/scripts/evaluate.py \
 
 If you find this work helpful, please cite our paper:
 ```bibtex
-
+@misc{dong2025tool,
+      title={Tool-Star: Empowering LLM-Brained Multi-Tool Reasoner via Reinforcement Learning}, 
+      author={Guanting Dong and Yifei Chen and Xiaoxi Li and Jiajie Jin and Hongjin Qian and Yutao Zhu and Hangyu Mao and Guorui Zhou and Zhicheng Dou and Ji-Rong Wen},
+      year={2025},
+      eprint={2505.16410},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2505.16410}, 
+}
 ```
 
 ## 🤝 Acknowledge
