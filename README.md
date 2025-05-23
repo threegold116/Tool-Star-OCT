@@ -1,5 +1,5 @@
 <div align=center>
-<img src="https://github.com/dongguanting/Tool-Star/blob/main/img/image.png" width="150px">
+<img src="https://github.com/dongguanting/Tool-Star/blob/main/img/image.png" width="120px">
 </div>
 
 
