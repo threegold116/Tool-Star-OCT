@@ -1,3 +1,7 @@
+<div align=center>
+<img src="https://github.com/dongguanting/Tool-Star/blob/main/img/image.png" width="150px">
+</div>
+
 
 
 <h1 align="center"> 🔧✨ Tool-Star: Empowering LLM-Brained Multi-Tool Reasoner via Reinforcement Learning</a></h1>
