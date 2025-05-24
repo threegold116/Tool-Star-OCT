@@ -71,6 +71,12 @@ As shown below, Tool-Star demonstrates strong overall reasoning performance acro
 
 In this step, we will describe how to perform a cold start for the SFT stage using the Llama Factory repository. Please first set up the environment for [Llama Factory](https://github.com/hiyouga/LLaMA-Factory).
 
+```bash
+git clone --depth 1 https://github.com/hiyouga/LLaMA-Factory.git
+cd LLaMA-Factory
+pip install -e ".[metrics]"
+```
+
 1. Download your SFT dataset from [🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K) and place it in `LLaMA-Factory-main/data/final_sft_edition9.json`. Define the dataset in `dataset_info.json`.
 
 2. Complete the path information in `LLaMA-Factory-main/examples/train_full/qwen_sft_tool_star.yaml`. The file content should be as follows:
