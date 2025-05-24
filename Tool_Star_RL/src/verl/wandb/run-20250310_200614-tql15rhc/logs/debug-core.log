@@ -1,6 +1,0 @@
-{"time":"2025-03-10T20:06:12.952045442+08:00","level":"INFO","msg":"main: starting server","port-filename":"/tmp/tmpf5avj2b6/port-61150.txt","pid":61150,"log-level":0,"disable-analytics":false,"shutdown-on-parent-exit":false}
-{"time":"2025-03-10T20:06:12.953023862+08:00","level":"INFO","msg":"Will exit if parent process dies.","ppid":61150}
-{"time":"2025-03-10T20:06:12.952995326+08:00","level":"INFO","msg":"server is running","addr":{"IP":"127.0.0.1","Port":41767,"Zone":""}}
-{"time":"2025-03-10T20:06:13.066584271+08:00","level":"INFO","msg":"connection: ManageConnectionData: new connection created","id":"127.0.0.1:40352"}
-{"time":"2025-03-10T20:06:14.207085998+08:00","level":"INFO","msg":"handleInformInit: received","streamId":"tql15rhc","id":"127.0.0.1:40352"}
-{"time":"2025-03-10T20:06:14.330508657+08:00","level":"INFO","msg":"handleInformInit: stream started","streamId":"tql15rhc","id":"127.0.0.1:40352"}
