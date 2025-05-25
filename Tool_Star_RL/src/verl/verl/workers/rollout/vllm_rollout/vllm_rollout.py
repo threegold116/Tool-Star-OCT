@@ -25,7 +25,7 @@ When working with Megatron:
 - After inference, all the parameters that doesn't belong to this pp rank is freed.
 """
 import sys
-sys.path.append('/share/project/dgt/ReSearch-main-batch-jjj/src/verl/verl/workers/rollout/vllm_rollout/')
+sys.path.append('{your_path}/Tool_Star_RL/src/verl/verl/workers/rollout/vllm_rollout/') # for importing web_search
 from typing import List
 from contextlib import contextmanager
 from omegaconf import DictConfig
@@ -48,8 +48,7 @@ from verl.third_party.vllm import parallel_state as vllm_ps
 from vllm import SamplingParams
 
 
-from web_search.web_search_main import deep_search_dgt,deep_search_jjj,deep_search_dgt_with_summarize,deep_search_jjj_summarize
-
+from web_search.web_search_main import deep_search_snippet,deep_search_browser,deep_search_browser_summarize
 
 # TODO
 # 1. support pp in vllm
@@ -268,7 +267,7 @@ class vLLMRolloutWithSearch(vLLMRollout):
         if len(query) == 0:
             return 'invalid query'
 
-        url = f'{local search URL}/batch_search'
+        url = f'1234/batch_search' #your local search path
         if isinstance(query, str):
             query = [query]
         data = {'query': query, 'top_n': top_n}
