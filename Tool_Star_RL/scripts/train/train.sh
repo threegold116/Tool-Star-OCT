@@ -67,7 +67,7 @@ fi
 
 
 
-export PYTHONPATH={the_path_of_your_verl}/src/verl:$PYTHONPATH
+export PYTHONPATH={your_path}/Tool-Star-main/Tool_Star_RL/src/verl:$PYTHONPATH
 echo $PYTHONPATH
 
 python3 -m verl.trainer.main_ppo \
