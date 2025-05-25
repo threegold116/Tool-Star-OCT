@@ -101,6 +101,9 @@ cd LLaMA-Factory
 pip install -e ".[metrics]"
 ```
 
+### 2. Fine-Tuning Model
+
+
 1. Download your SFT dataset from [🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K) and place it in `LLaMA-Factory-main/data/final_sft_edition9.json`. Define the dataset in `dataset_info.json`.
 
 2. Complete the path information in `LLaMA-Factory-main/examples/train_full/qwen_sft_tool_star.yaml`. The file content should be as follows:
