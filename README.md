@@ -134,8 +134,7 @@ In this step, we will load the cold-start data for GRPO training. We reference t
 
 ### 1. Environment Setup
 
-First, please set up the [ReCall environment](https://github.com/Agent-RL/ReCall/). It is worth noting that at the beginning of our project, we used the [ReSearch](https://github.com/Agent-RL/ReCall/tree/re-search) version branch for coding.
-On this basis, you can install our additional environment as follow: 
+ you can install our additional environment as follow: 
 
 ```bash
 #create env
@@ -154,7 +153,10 @@ pip3 install -e .
 pip install -r ./Tool-Star/requirements.txt
 
 ```
-Please refer to [requirements.txt](https://github.com/dongguanting/Tool-Star/blob/main/requirements.txt) carefully. It is important to note that vLLM<= 0.6.3 and torch==2.4.0 (seem versions will not work.). You can also install a compatible flash_attention package from [here](https://github.com/Dao-AILab/flash-attention/releases).
+Please refer to [requirements.txt](https://github.com/dongguanting/Tool-Star/blob/main/requirements.txt) carefully. It is important to note that **vLLM<= 0.6.3 and torch==2.4.0 (seem versions will not work.)**. You can also install a compatible flash_attention package from [here](https://github.com/Dao-AILab/flash-attention/releases).
+
+If you encounter ray or other RL environment issues, we **highly recommend that you first try to run the RL training code for [ReCall](https://github.com/Agent-RL/ReCall/tree/re-search) or [Verl](https://github.com/volcengine/verl) successfully**, then further aligning with our [requirements.txt](https://github.com/dongguanting/Tool-Star/blob/main/requirements.txt).
+
 
 ### 2. Vanilla RL Training
 
