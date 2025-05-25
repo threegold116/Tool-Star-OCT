@@ -138,10 +138,23 @@ First, please set up the [ReCall environment](https://github.com/Agent-RL/ReCall
 On this basis, you can install our additional environment as follow: 
 
 ```bash
-# Install requirements
-pip install -r requirements.txt
+#create env
+conda create -n toolstar python==3.10
+conda activate toolstar
+
+# install torch & flash-atten
+pip3 install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124
+pip3 install flash-attn --no-build-isolation
+
+# install RL basic env
+cd Tool_Star_RL
+pip3 install -e .
+
+# This is our RL env freeze file. You can install it as a supplement or use it for checking.
+pip install -r ./Tool-Star/requirements.txt
+
 ```
-Please refer to my [requirements.txt](https://github.com/dongguanting/Tool-Star/blob/main/requirements.txt) carefully. It is important to note that VLLM should be version 0.6.3 or lower, and you need to install a compatible flash_attention package from [here](https://github.com/Dao-AILab/flash-attention/releases).
+Please refer to [requirements.txt](https://github.com/dongguanting/Tool-Star/blob/main/requirements.txt) carefully. It is important to note that vLLM<= 0.6.3 and torch==2.4.0 (seem versions will not work.). You can also install a compatible flash_attention package from [here](https://github.com/Dao-AILab/flash-attention/releases).
 
 ### 2. Vanilla RL Training
 
