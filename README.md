@@ -33,12 +33,40 @@
 - **[May 21, 2025]**: 📄 Our paper is now available on **[arXiv](https://arxiv.org/pdf/2505.16410)** and **[Hugging Face](https://huggingface.co/papers/2505.16410)** daily paper.
 - **[May 21, 2025]**: 🚀 Full codebase released. Tool-Star supports multiple Tools with several open-source models like Qwen2.5-3B-Instruct.
 
+
 ## :mag_right: Roadmap
 
 Tool-star is still under development and there are many issues and room for improvement. We will continue to update. And we also sincerely welcome contributions on this open-source toolkit.
 - [ ] Release tiny LLM version (e.g. 0.5B, 1.5B) **------> Will be updated before next week** 🤝!
 - [ ] Support larger parameter size LLM (e.g. 7B, 32B)
 - [ ] Support More Reasoning Tools
+
+
+## Table of Contents
+
+- [Tool-Star](#🔧✨tool-star-empowering-llm-brained-multi-tool-reasoner-via-reinforcement-learning)
+  - [Overall Performance](#-overall-performance)
+- [Quick Start](#-quick-start-for-training)
+  - [Cold-Start SFT Stage](#-cold-start-sft-stage)
+    - [Environment Setup](#1-environment-setup)
+    - [Fine-Tuning Model](#2-fine-tuning-model)
+  - [Self-Critic RL Stage](#-self-critic-rl-stage)
+    - [Environment Setup](#1-environment-setup-1)
+    - [Vanilla RL Training](#2-vanilla-rl-training)
+    - [Optional: Self-Critic DPO Training](#3-self-critic-dpo-training-optional)
+  - [TIR Evaluation](#-tir-evaluation)
+    - [Environment Setup](#1-environment-setup-2)
+    - [LLM Service Deployment](#2-llm-service-deployment)
+    - [Retriever Serving Deployment](#3-retriever-serving-deployment)
+    - [Inference Your Model](#4-inference-your-model)
+    - [Calculate Metrics](#5-calculate-metrics)
+- [Citation](#-citation)
+- [Acknowledgments](#-acknowledge)
+- [License](#-license)
+- [Contact](#-contact)
+- [Star History](#star-history)
+
+
 
 
 ## 💡 Overview
