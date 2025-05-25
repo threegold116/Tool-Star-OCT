@@ -134,20 +134,14 @@ In this step, we will load the cold-start data for GRPO training. We reference t
 
 ### 1. Environment Setup
 
-First, please set up the [ReCall environment](https://github.com/Agent-RL/ReCall). After that, install our environment:
-
-We suggest that you follow the environment installation steps of [ReCall](https://github.com/Agent-RL/ReCall)(very good open-sourced codebase!). On this basis, you can install our additional environment as follow: 
-
+First, please set up the [ReCall environment](https://github.com/Agent-RL/ReCall/). It is worth noting that at the beginning of our project, we used the [ReSearch](https://github.com/Agent-RL/ReCall/tree/re-search) version branch for coding.
+On this basis, you can install our additional environment as follow: 
 
 ```bash
-# Create conda environment
-conda create -n tool_star python=3.10
-conda activate tool_star
-
 # Install requirements
-cd tool_star
 pip install -r requirements.txt
 ```
+Please refer to my [requirements.txt](https://github.com/dongguanting/Tool-Star/blob/main/requirements.txt) carefully. It is important to note that VLLM should be version 0.6.3 or lower, and you need to install a compatible flash_attention package from [here](https://github.com/Dao-AILab/flash-attention/releases).
 
 ### 2. Vanilla RL Training
 
