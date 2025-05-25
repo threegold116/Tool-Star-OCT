@@ -61,10 +61,6 @@ Tool-star is still under development and there are many issues and room for impr
     - [Inference Your Model](#4-inference-your-model)
     - [Calculate Metrics](#5-calculate-metrics)
 - [Citation](#-citation)
-- [Acknowledgments](#-acknowledge)
-- [License](#-license)
-- [Contact](#-contact)
-- [Star History](#star-history)
 
 
 
