@@ -150,7 +150,7 @@ cd Tool_Star_RL
 pip3 install -e .
 
 # This is our RL env freeze file. You can install it as a supplement or use it for checking.
-pip install -r ./Tool-Star/requirements.txt
+pip install -r ./Tool-Star-main/requirements.txt
 
 ```
 Please refer to [requirements.txt](https://github.com/dongguanting/Tool-Star/blob/main/requirements.txt) carefully. It is important to note that **vLLM<= 0.6.3 and torch==2.4.0 (seem versions will not work.)**. You can also install a compatible flash_attention package from [here](https://github.com/Dao-AILab/flash-attention/releases).
@@ -249,11 +249,11 @@ If you have already trained a model, you can refer to the following process for 
 
 ```bash
 # Create conda environment
-conda create -n tool_star python=3.9
+conda create -n tool_star python=3.10
 conda activate tool_star
 
 # Install requirements
-cd tool_star
+cd Tool-Star-main
 pip install -r requirements.txt
 ```
 
