@@ -158,6 +158,7 @@ Please refer to [requirements.txt](https://github.com/dongguanting/Tool-Star/blo
 If you encounter ray or other RL environment issues, we **highly recommend that you first try to run the RL training code for [ReCall](https://github.com/Agent-RL/ReCall/tree/re-search) or [Verl](https://github.com/volcengine/verl) successfully**, then further aligning with our [requirements.txt](https://github.com/dongguanting/Tool-Star/blob/main/requirements.txt).
 
 
+
 ### 2. Vanilla RL Training
 
 Our training framework is based on [verl](https://github.com/volcengine/verl) and [ReCall](https://github.com/Agent-RL/ReCall). The training scripts can be found under `scripts/train`. First, you need to complete the information in `scripts/train/run_tool_star.sh`, 
