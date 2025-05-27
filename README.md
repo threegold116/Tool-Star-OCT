@@ -256,7 +256,7 @@ For the core code of the rollout process, please refer to `/src/verl/verl/worker
 For the trained RL checkpoint, you can follow the code below to convert the weights to Hugging Face format：
 ```bash
 # Merge RL weights and save in the same path.
-python //Tool_Star_RL/model_merger.py \
+python /Tool_Star_RL/model_merger.py \
     --local_dir /{your_checkpoint_path}/global_step_{your_RL_step}/actor/ \
 ```
 
