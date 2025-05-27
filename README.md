@@ -147,7 +147,7 @@ ddp_timeout: 180000000
 
 After completing the information, you can fine-tune the model using the following command:
 
-```bash
+```python
 cd LLaMA-Factory-main
 bash ./examples/train_full/train_sft.sh
 ```
