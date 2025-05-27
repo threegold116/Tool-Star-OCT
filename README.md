@@ -253,6 +253,14 @@ bash run_tool_star.sh
 
 For the core code of the rollout process, please refer to `/src/verl/verl/workers/rollout/vllm_rollout/vllm_rollout.py`, and for the reward calculation part, refer to `/Tool_Star_RL/src/verl/verl/utils/reward_score`. You can modify them according to your needs.
 
+For the trained RL checkpoint, you can follow the code below to convert the weights to Hugging Face format：
+```bash
+# Merge RL weights and save in the same path.
+python //Tool_Star_RL/model_merger.py \
+    --local_dir /{your_checkpoint_path}/global_step_{your_RL_step}/actor/ \
+```
+
+
 ### 3. Self-Critic DPO Training (Optional)
 
 In our experiments, completing SFT + Vanilla RL has been sufficient to almost reproduce Tool-Star's performance (refer to the ablation study).
