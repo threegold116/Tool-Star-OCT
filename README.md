@@ -20,6 +20,8 @@
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-0.5B" target="_blank">Tool-Star-Qwen-0.5B</a> ｜
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-1.5B" target="_blank">Tool-Star-Qwen-1.5B</a> ｜
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-3B" target="_blank">Tool-Star-Qwen-3B</a> ｜
+  </p>
+  <p align="center">
 🤗 <a href="https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
 🤗 <a href="https://huggingface.co/datasets/dongguanting/Multi-Tool-RL-10K" target="_blank">Multi-Tool-RL-10K</a>
 </p>
