@@ -38,7 +38,7 @@
 
 Tool-star is still under development and there are many issues and room for improvement. We will continue to update. And we also sincerely welcome contributions on this open-source toolkit.
 - [x] Release tiny LLM version (e.g. 0.5B, 1.5B)
-- [ ] Support concurrent tool calls
+- [x] Support concurrent tool calls -----> (It is now in testing. Soon will update!)
 - [ ] Support larger parameter size LLM (e.g. 7B, 32B)
 - [ ] Support More Reasoning Tools
 
