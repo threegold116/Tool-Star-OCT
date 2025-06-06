@@ -17,6 +17,8 @@
 </div>
 
 <p align="center">
+🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-0.5B" target="_blank">Tool-Star-Qwen-0.5B</a> ｜
+🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-1.5B" target="_blank">Tool-Star-Qwen-1.5B</a> ｜
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-3B" target="_blank">Tool-Star-Qwen-3B</a> ｜
 🤗 <a href="https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
 🤗 <a href="https://huggingface.co/datasets/dongguanting/Multi-Tool-RL-10K" target="_blank">Multi-Tool-RL-10K</a>
@@ -26,6 +28,7 @@
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.</h5>
 
 ## 📣 Latest News
+- **[May 21, 2025]**: 🔥 We released our Tool-Star-Qwen-0.5B & 1.5B checkpoint. Checkout **[🤗Tool-Star-Qwen-0.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-0.5B)** & **[🤗Tool-Star-Qwen-1.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-1.5B)** here.
 - **[May 21, 2025]**: The brief introduction of Tool-Star can be found on platforms like **[X](https://x.com/_akhaliq/status/1925924431676821698), [Zhihu](https://zhuanlan.zhihu.com/p/1911573573602115645) and [Wechat](https://mp.weixin.qq.com/s/UNP3P2GEtIuYhT7Z8wIV1g?scene=1)**.
 - **[May 21, 2025]**: **[🤗 Tool-Star Collection](https://huggingface.co/collections/dongguanting/tool-star-682fd73dfa508bf3f40da032)** is now available on Hugging Face. We will keep update it!
 - **[May 21, 2025]**: 🔥 We released an our cold-star SFT and RL dataset for tool-integrated reasoning. Checkout **[🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K)** and **[Multi-Tool-RL-10K](https://huggingface.co/datasets/dongguanting/Multi-Tool-RL-10K)** here.
