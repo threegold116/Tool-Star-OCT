@@ -37,7 +37,7 @@
 ## :mag_right: Roadmap
 
 Tool-star is still under development and there are many issues and room for improvement. We will continue to update. And we also sincerely welcome contributions on this open-source toolkit.
-- [ ] Release tiny LLM version (e.g. 0.5B, 1.5B) **------> Will be updated before next week** 🤝!
+- [✅] Release tiny LLM version (e.g. 0.5B, 1.5B)
 - [ ] Support concurrent tool calls
 - [ ] Support larger parameter size LLM (e.g. 7B, 32B)
 - [ ] Support More Reasoning Tools
