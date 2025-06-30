@@ -502,7 +502,12 @@ python evaluate/scripts/evaluate.py \
 - `--extract_answer`: Whether to use exact matching (removes \text and other redundant symbols).
 
 
+## 📄 Performance of Tool-Star Model Series
 
+We present the results of Tool-Star models with sizes 0.5B, 1.5B, 3B, and 7B, all based on the Qwen2.5-Instruct series. The results from **“Self-Critic-RL”** correspond to the performance of our Tool-Star models, which are linked to our series of 🤗 open-source huggingface model checkpoints.
+
+
+<img width="531" alt="image" src="https://github.com/user-attachments/assets/108d51c1-d4ff-4045-b9cb-5829dded97da" />
 
 
 
