@@ -20,6 +20,7 @@
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-0.5B" target="_blank">Tool-Star-Qwen-0.5B</a> ｜
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-1.5B" target="_blank">Tool-Star-Qwen-1.5B</a> ｜
 🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-3B" target="_blank">Tool-Star-Qwen-3B</a> ｜
+🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-7B" target="_blank">Tool-Star-Qwen-7B</a> ｜
   </p>
   <p align="center">
 🤗 <a href="https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
@@ -30,6 +31,7 @@
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.</h5>
 
 ## 📣 Latest News
+- **[June 30, 2025]**: We have updated our **[🤗Tool-Star-Qwen-7B](https://huggingface.co/dongguanting/Tool-Star-Qwen-7B)** and refreshed the performance details of our open-source Tool-Star model series in the README. We welcome everyone to use and cite it! We will be releasing an updated version on Arxiv soon.
 - **[June 6, 2025]**: 🤗 **[Tool-Star huggingface Collection](https://huggingface.co/collections/dongguanting/tool-star-682fd73dfa508bf3f40da032)** is now available on Hugging Face. You can deploy our optimized models for your reasoning tasks.
 - **[June 6, 2025]**: We released more lightweight checkpoints of Tool-Star . Checkout **[🤗Tool-Star-Qwen-0.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-0.5B)** & **[🤗Tool-Star-Qwen-1.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-1.5B)** here.
 - **[May 21, 2025]**: The brief introduction of Tool-Star can be found on platforms like **[X](https://x.com/_akhaliq/status/1925924431676821698), [Zhihu](https://zhuanlan.zhihu.com/p/1911573573602115645) and [Wechat](https://mp.weixin.qq.com/s/UNP3P2GEtIuYhT7Z8wIV1g?scene=1)**.
@@ -44,8 +46,8 @@
 
 Tool-star is still under development and there are many issues and room for improvement. We will continue to update. And we also sincerely welcome contributions on this open-source toolkit.
 - [x] Release tiny LLM version (e.g. 0.5B, 1.5B)
-- [ ] Support larger parameter size LLM (e.g. 7B, 32B) ---> 7B is now in testing！will be released soon！
-- [ ] Support More Reasoning Tools
+- [x] Support larger parameter size LLM (e.g. 7B)
+- [ ] Support More Reasoning Tools ---> will released in our future work.
 
 
 ## Table of Contents
