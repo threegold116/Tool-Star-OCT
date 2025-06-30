@@ -511,14 +511,11 @@ python evaluate/scripts/evaluate.py \
 
 If you find this work helpful, please cite our paper:
 ```bibtex
-@misc{dong2025tool,
-      title={Tool-Star: Empowering LLM-Brained Multi-Tool Reasoner via Reinforcement Learning}, 
-      author={Guanting Dong and Yifei Chen and Xiaoxi Li and Jiajie Jin and Hongjin Qian and Yutao Zhu and Hangyu Mao and Guorui Zhou and Zhicheng Dou and Ji-Rong Wen},
-      year={2025},
-      eprint={2505.16410},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2505.16410}, 
+@article{dong2025tool,
+  title={Tool-Star: Empowering LLM-Brained Multi-Tool Reasoner via Reinforcement Learning},
+  author={Dong, Guanting and Chen, Yifei and Li, Xiaoxi and Jin, Jiajie and Qian, Hongjin and Zhu, Yutao and Mao, Hangyu and Zhou, Guorui and Dou, Zhicheng and Wen, Ji-Rong},
+  journal={arXiv preprint arXiv:2505.16410},
+  year={2025}
 }
 ```
 
