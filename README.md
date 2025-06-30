@@ -501,6 +501,7 @@ python evaluate/scripts/evaluate.py \
 - `--use_llm`: Whether to use the LLM-as-judge mechanism.
 - `--extract_answer`: Whether to use exact matching (removes \text and other redundant symbols).
 
+---
 
 ## 📄 Performance of Tool-Star Models
 
