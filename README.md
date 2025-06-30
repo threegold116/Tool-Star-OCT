@@ -32,7 +32,6 @@
 
 ## 📣 Latest News
 - **[June 30, 2025]**: We have updated our **[🤗Tool-Star-Qwen-7B](https://huggingface.co/dongguanting/Tool-Star-Qwen-7B)** and refreshed the performance details of our open-source Tool-Star model series in the README. We welcome everyone to use and cite it! We will be releasing an updated version on Arxiv soon.
-- **[June 6, 2025]**: 🤗 **[Tool-Star huggingface Collection](https://huggingface.co/collections/dongguanting/tool-star-682fd73dfa508bf3f40da032)** is now available on Hugging Face. You can deploy our optimized models for your reasoning tasks.
 - **[June 6, 2025]**: We released more lightweight checkpoints of Tool-Star . Checkout **[🤗Tool-Star-Qwen-0.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-0.5B)** & **[🤗Tool-Star-Qwen-1.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-1.5B)** here.
 - **[May 21, 2025]**: The brief introduction of Tool-Star can be found on platforms like **[X](https://x.com/_akhaliq/status/1925924431676821698), [Zhihu](https://zhuanlan.zhihu.com/p/1911573573602115645) and [Wechat](https://mp.weixin.qq.com/s/UNP3P2GEtIuYhT7Z8wIV1g?scene=1)**.
 - **[May 21, 2025]**: **[🤗 Tool-Star Collection](https://huggingface.co/collections/dongguanting/tool-star-682fd73dfa508bf3f40da032)** is now available on Hugging Face. We will keep update it!
