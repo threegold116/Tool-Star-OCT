@@ -67,7 +67,7 @@ Tool-star is still under development and there are many issues and room for impr
     - [Retriever Serving Deployment](#3-retriever-serving-deployment)
     - [Inference Your Model](#4-inference-your-model)
     - [Calculate Metrics](#5-calculate-metrics)
-  - [Performance of Tool-Star Model Series](#Performance of Tool-Star Model Series)
+  - [Performance of Tool-Star Models](#performance-of-tool-star-models)
 - [Citation](#-citation)
 
 
@@ -502,7 +502,7 @@ python evaluate/scripts/evaluate.py \
 - `--extract_answer`: Whether to use exact matching (removes \text and other redundant symbols).
 
 
-## 📄 Performance of Tool-Star Model Series
+## 📄 Performance of Tool-Star Models
 
 We present the results of our Tool-Star model checkpoints with sizes 0.5B, 1.5B, 3B, and 7B, all based on the Qwen2.5-Instruct series. The results of **“Self-Critic-RL”** setting correspond to our series of 🤗 open-source huggingface model checkpoints.
 
