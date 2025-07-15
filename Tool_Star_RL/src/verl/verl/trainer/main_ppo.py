@@ -19,8 +19,10 @@ from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 import ray
 import hydra
 import os
-
-
+#THREEGOLDCHANGE: 设置随机种子  
+import random
+random.seed(42)
+#THREEGOLDCHANGE
 @hydra.main(config_path='config', config_name='ppo_trainer', version_base=None)
 def main(config):
     run_ppo(config)
@@ -30,14 +32,25 @@ def run_ppo(config, compute_score=None):
     # Initialize Ray
     if ray.is_initialized():
         ray.shutdown()
+    
+    print(__file__)
     # 使用用户目录下的临时文件夹而不是系统文件夹
     temp_dir = os.path.join(os.path.expanduser("~"), "ray_tmp")
     os.makedirs(temp_dir, exist_ok=True)
-    ray.init(
-        runtime_env={'env_vars': {'TOKENIZERS_PARALLELISM': 'true', 'NCCL_DEBUG': 'WARN'}},
-        num_cpus=10,
-        _temp_dir=temp_dir  # 指定临时目录
-    )
+    # ray.init(
+    #     runtime_env={'env_vars': {'TOKENIZERS_PARALLELISM': 'true', 'NCCL_DEBUG': 'WARN'}},
+    #     num_cpus=10,
+    #     _temp_dir=temp_dir  # 指定临时目录
+    # )
+    info=ray.init(
+        address="local",
+        runtime_env={'env_vars': 
+            {'TOKENIZERS_PARALLELISM': 'true', 
+             'NCCL_DEBUG': 'WARN',
+             'RAY_DEBUG_POST_MORTEM': '1',
+             "RAY_DEBUG":"1"}}
+        )
+    print(info)
 
     ray.get(main_task.remote(config, compute_score))
 
@@ -50,7 +63,8 @@ def main_task(config, compute_score=None):
     from omegaconf import OmegaConf
     pprint(OmegaConf.to_container(config, resolve=True))  # resolve=True will eval symbol values
     OmegaConf.resolve(config)
-
+    if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+        breakpoint()
     # download the checkpoint from hdfs
     local_path = copy_local_path_from_hdfs(config.actor_rollout_ref.model.path)
 
@@ -122,14 +136,17 @@ def main_task(config, compute_score=None):
         raise NotImplementedError
     
     save_path = config.data.get('save_path', None)
-    
+    # THREEGOLDCHANGE:增加mix rules和qa_mode，只考虑re_search reward manager的情况
+    mix_rules = config.reward_model.get('mix_rules', False)
+    qa_rule = config.reward_model.get('qa_rule', "f1_score")
+    # THREEGOLDCHANGE
     if save_path is not None:
         open(save_path, 'w').close()
-        reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=0, compute_score=compute_score, save_path=save_path)
-        val_reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=1, compute_score=compute_score, save_path=save_path)
+        reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=0, compute_score=compute_score, save_path=save_path, mix_rules=mix_rules,qa_rule=qa_rule)
+        val_reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=1, compute_score=compute_score, save_path=save_path, mix_rules=mix_rules,qa_rule=qa_rule)
     else:
-        reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=0, compute_score=compute_score)
-        val_reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=1, compute_score=compute_score)
+        reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=0, compute_score=compute_score, mix_rules=mix_rules,qa_rule=qa_rule)
+        val_reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=1, compute_score=compute_score, mix_rules=mix_rules,qa_rule=qa_rule)
 
     resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
 

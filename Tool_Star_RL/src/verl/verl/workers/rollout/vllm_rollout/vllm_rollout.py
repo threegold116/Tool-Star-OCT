@@ -48,7 +48,7 @@ from verl.third_party.vllm import parallel_state as vllm_ps
 from vllm import SamplingParams
 
 
-from web_search.web_search_main import deep_search_snippet,deep_search_browser,deep_search_browser_summarize
+from .web_search.web_search_main import deep_search_snippet,deep_search_browser,deep_search_browser_summarize
 
 # TODO
 # 1. support pp in vllm
@@ -267,7 +267,7 @@ class vLLMRolloutWithSearch(vLLMRollout):
         if len(query) == 0:
             return 'invalid query'
 
-        url = f'1234/batch_search' #your local search path
+        url = f'http://0.0.0.0:8000/batch_search' #your local search path
         if isinstance(query, str):
             query = [query]
         data = {'query': query, 'top_n': top_n}
@@ -379,6 +379,14 @@ class vLLMRolloutWithSearch(vLLMRollout):
             
             # Add counter to track search/python calls for each sample
             call_counters = [0] * len(curr_inputs)
+            
+            # THREEGOLDCHANGE:增加对工具调用的统计
+            valid_action, is_search, is_python = [], [], []
+            for i in range(len(curr_inputs)):   
+                valid_action.append(0)
+                is_search.append(0)
+                is_python.append(0)
+            # THREEGOLDCHANGE
 
             # collect the result mask of each rollout
             result_mask_list = [[] for _ in range(len(curr_inputs))]
@@ -406,7 +414,7 @@ class vLLMRolloutWithSearch(vLLMRollout):
                 # process each output
                 new_active_indices = []
                 for i, idx in enumerate(active_indices):
-                    print(f"--------------------------------batch样本第：{i}样本--------------------------------")
+                    print(f"--------------------------------batch样本第：{i}样本 第{call_counters[idx]}次工具调用--------------------------------")
                     output_ids = outputs[0][i].tolist()
                     if self.tokenizer.eos_token_id in output_ids:
                         first_eos_idx = output_ids.index(self.tokenizer.eos_token_id)
@@ -424,7 +432,7 @@ class vLLMRolloutWithSearch(vLLMRollout):
                     if finish_reason == 'stop' and isinstance(stop_reason, str) and '</search>' in stop_reason:
                         # need to search
                         ## check if we've exceeded the call limit
-                        if call_counters[idx] >= 3:
+                        if call_counters[idx] >= self.config.get("max_calling_times", 3):
                             # exceed limit, directly truncate and add EOS token
                             print(f"--------------------------------tool call limit reached, truncating with EOS--------------------------------")
                             # Add the current output truncated and append EOS
@@ -435,7 +443,11 @@ class vLLMRolloutWithSearch(vLLMRollout):
                             result_mask_list[idx] += [1] * len(output_ids)
                             # Don't add to new_active_indices to skip further generation
                             continue
-                            
+                        # THREEGOLDCHANGE:增加对工具调用的统计
+                        valid_action[idx] += 1
+                        is_search[idx] += 1
+                        # THREEGOLDCHANGE
+                        
                         call_counters[idx] += 1
                         ## truncate from the first pad token
                         output_ids = output_ids[:first_pad_idx]
@@ -452,7 +464,7 @@ class vLLMRolloutWithSearch(vLLMRollout):
                     if finish_reason == 'stop' and isinstance(stop_reason, str) and '</python>' in stop_reason:
                         # need to execute the python code
                         ## check if we've exceeded the call limit
-                        if call_counters[idx] >= 3:
+                        if call_counters[idx] >= self.config.get("max_calling_times", 3):
                             # exceed limit, directly truncate and add EOS token
                             print(f"--------------------------------tool call limit reached, truncating with EOS--------------------------------")
                             # Add the current output truncated and append EOS
@@ -463,7 +475,11 @@ class vLLMRolloutWithSearch(vLLMRollout):
                             result_mask_list[idx] += [1] * len(output_ids)
                             # Don't add to new_active_indices to skip further generation
                             continue
-                            
+                        # THREEGOLDCHANGE:增加对工具调用的统计
+                        valid_action[idx] += 1
+                        is_python[idx] += 1
+                        # THREEGOLDCHANGE
+                          
                         call_counters[idx] += 1
                         output_ids = output_ids[:first_pad_idx]
                         output_str = self.tokenizer.decode(output_ids)
@@ -498,19 +514,37 @@ class vLLMRolloutWithSearch(vLLMRollout):
                     # print("---------------------wikisearch------------------")
                     # search_results = self.batch_search(search_queries) # wiki search
                     #-------------------------local search mode------------
-
                     '''Here, we use web search snippets to accelerate the training process (we recommend this mode). It is worth noting that in web_search/web_search_main.py, we support multiple web search modes, including "Web Search + Browser" and "Web Search + Browser + Summarize". '''
                     print(f"search queries: {search_queries}")
-                    print("---------------------websearch------------------")
-                    search_results = []
-                    for query in search_queries:
-                        result = deep_search_snippet(query)
-                        search_results.append(result)
+                    # print("---------------------websearch------------------")
+                    # search_results = []
+                    # for query in search_queries:
+                    #     result = deep_search_snippet(query)
+                    #     search_results.append(result)
+                    # THREEGOLDCHANGE
+                    search_mode = self.config.get("search_mode", "wikipedia")
+                    if search_mode == "wikipedia":
+                        print("---------------------localsearch------------------")
+                        search_results = self.batch_search(search_queries,top_n=self.config.top_n) # wiki search
+                    elif search_mode == "web_search":
+                        search_results = []
+                        for query in search_queries:
+                            result = deep_search_snippet(query)
+                            search_results.append(result)
+                    else:
+                        raise ValueError(f"Invalid search mode: {search_mode}")
+                    # THREEGOLDCHANGE
                     print("--------------context retrieved------------------")
                     print("search results 1 as example: ", search_results[0])
-                    
 
                     for idx, result in zip(search_indices, search_results):
+                        # THREEGOLDCHANGE:增加observation长度控制
+                        result_ids = self.tokenizer.encode(result)
+                        if len(result_ids) > self.config.max_obs_length:
+                            print(f"[WARNING] OBSERVATION TOO LONG, CONSIDER CHANGING YOUR CONFIG, {len(result_ids)} & {self.config.max_obs_length}")            
+                            result_ids = result_ids[:self.config.max_obs_length]
+                        result = self.tokenizer.decode(result_ids)
+                        # THREEGOLDCHANGE
                         # update the output, add the search result
                         output_ids = self.tokenizer.encode(f" <result>\n{result}\n</result>")
                         curr_inputs[idx] += output_ids
@@ -519,6 +553,13 @@ class vLLMRolloutWithSearch(vLLMRollout):
                     python_results = self.batch_python(python_queries)
                     print(f"python results: {python_results}")
                     for idx, result in zip(python_indices, python_results):
+                        # THREEGOLDCHANGE:增加observation长度控制
+                        result_ids = self.tokenizer.encode(result)
+                        if len(result_ids) > self.config.max_obs_length:
+                            print(f"[WARNING] OBSERVATION TOO LONG, CONSIDER CHANGING YOUR CONFIG, {len(result_ids)} & {self.config.max_obs_length}")            
+                            result_ids = result_ids[:self.config.max_obs_length]
+                        result = self.tokenizer.decode(result_ids)
+                        # THREEGOLDCHANGE
                         output_ids = self.tokenizer.encode(f" <result>\n{result}\n</result>")
                         curr_inputs[idx] += output_ids
                         result_mask_list[idx] += [0] * len(output_ids)
@@ -585,8 +626,13 @@ class vLLMRolloutWithSearch(vLLMRollout):
             'input_ids': seq,  # here input_ids become the whole sentences
             'attention_mask': attention_mask,
             'loss_mask': loss_mask,
-            'position_ids': position_ids
-        }, batch_size=batch_size)
+            'position_ids': position_ids,
+            #THREEGOLDCHANGE:增加对工具调用的统计
+            'valid_action': torch.tensor(valid_action, device=ori_input_ids.device),
+            'is_search': torch.tensor(is_search, device=ori_input_ids.device),
+            'is_python': torch.tensor(is_python, device=ori_input_ids.device)
+            #THREEGOLDCHANGE
+        }, batch_size=batch_size)        
 
         # free vllm cache engine
         if self.config.free_cache_engine:

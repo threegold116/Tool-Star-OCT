@@ -21,12 +21,14 @@ class ReSearchRewardManagerWithSave():
     """The reward manager.
     """
 
-    def __init__(self, tokenizer, num_examine, compute_score=None, save_path=None) -> None:
+    def __init__(self, tokenizer, num_examine, compute_score=None, save_path=None,mix_rules=False,qa_rule="f1_score") -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.compute_score = compute_score or _default_compute_score
         self.save_path = save_path
-
+        # THREEGOLDCHANGE:增加mix rules和qa_mode
+        self.mix_rules = mix_rules
+        self.qa_rule = qa_rule
     def __call__(self, data: DataProto, curr_save_path=None):
         """We will expand this function gradually based on the available datasets"""
 
@@ -67,12 +69,23 @@ class ReSearchRewardManagerWithSave():
             ground_truth = data_item.non_tensor_batch['reward_model']['ground_truth']
 
             data_source = data_item.non_tensor_batch['data_source']
-
+            
+            # THREEGOLDCHANGE:增加对工具调用的统计
+            is_search = data.batch["is_search"][i]
+            is_python =data.batch["is_python"][i]
+            abality = data_item.non_tensor_batch['ability']
+            # THREEGOLDCHANGE
+            
             score = self.compute_score(
                 data_source=data_source,
                 tokenizer=self.tokenizer,
                 solution_str=sequences_str,
                 ground_truth=ground_truth,
+                is_search=is_search,
+                is_python=is_python,
+                abality=abality,
+                mix_rules=self.mix_rules,
+                qa_rule=self.qa_rule
             )
             if isinstance(score, tuple):
                 score, reason = score
@@ -86,7 +99,9 @@ class ReSearchRewardManagerWithSave():
                     'sequences_str': sequences_str,
                     'ground_truth': ground_truth,
                     'score': score,
-                    'reason': reason
+                    'reason': reason,
+                    "is_search": is_search.item(),
+                    "is_python": is_python.item(),
                 }
                 save_file.write(json.dumps(save_json_line, ensure_ascii=False) + '\n')
 

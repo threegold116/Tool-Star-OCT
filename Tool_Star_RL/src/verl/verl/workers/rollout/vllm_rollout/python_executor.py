@@ -114,7 +114,7 @@ class PythonExecutor:
             
             # 移除所有前导空格
             code = code.strip()
-            
+            print(f"timeout_length: {timeout_length}")
             if get_answer_from_stdout:
                 program_io = io.StringIO()
                 with redirect_stdout(program_io):

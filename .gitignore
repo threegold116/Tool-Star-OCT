@@ -1,0 +1,13 @@
+sft_checkpoints/*
+verl_checkpoints/*
+transfer_checkpoints/*
+re.md
+*.pyc
+**/output/
+**/.vscode/
+**/wandb/
+**/verl_checkpoints/
+**/sft_checkpoints/
+**/transfer_checkpoints/
+**/final_sft_edition9_v2.json
+case.json

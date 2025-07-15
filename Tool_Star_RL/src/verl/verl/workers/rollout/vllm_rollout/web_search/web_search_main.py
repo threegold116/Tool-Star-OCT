@@ -4,18 +4,19 @@ import sys
 from urllib.parse import urljoin
 import time 
 from argparse import Namespace
-from web_search.bing_search import bing_web_search
-from web_search.bing_search import extract_relevant_info
-from web_search.webpage_utils import extract_text_from_urls, extract_snippet_with_context, error_indicators
+from .bing_search import bing_web_search
+from .bing_search import extract_relevant_info
+from .webpage_utils import extract_text_from_urls, extract_snippet_with_context, error_indicators
 import re
 import asyncio
 from openai import OpenAI
 # from deep_search_dgt import deep_search_dgt
 from transformers import AutoTokenizer
 
+BING_API_KEY = "E16JgNwG9667ymey3HQIK8x9exvf56wVT9I2W5N3"
+BING_ENDPOINT = "https://api.myhispreadnlp.com/v7.0/search"
 
-
-def deep_search_snippet(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key="your bing api key", bing_endpoint="https://api.bing.microsoft.com/v7.0/search"):
+def deep_search_snippet(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key=BING_API_KEY, bing_endpoint=BING_ENDPOINT):
     # 根据函数参数构建 args
     args = Namespace(
         dataset_name='qa',
@@ -68,7 +69,7 @@ def deep_search_snippet(search_query, top_k=10, use_jina=False, jina_api_key="em
 
     return extracted_info
 
-def deep_search_browser(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key="your bing api key", bing_endpoint="https://api.bing.microsoft.com/v7.0/search"):
+def deep_search_browser(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key=BING_API_KEY, bing_endpoint="https://api.bing.microsoft.com/v7.0/search"):
     # workflow: search + 获取所有网页信息 + 根据snippet提取
     # 根据函数参数构建 args
     args = Namespace(
@@ -162,7 +163,7 @@ def deep_search_browser(search_query, top_k=10, use_jina=False, jina_api_key="em
 
     return formatted_documents
 
-def deep_search_browser_summarize(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key="your bing api key", bing_endpoint="https://api.bing.microsoft.com/v7.0/search"):
+def deep_search_browser_summarize(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key=BING_API_KEY, bing_endpoint="https://api.bing.microsoft.com/v7.0/search"):
     # workflow: search + 获取所有网页信息 + 根据snippet提取
     # 根据函数参数构建 args
     args = Namespace(
