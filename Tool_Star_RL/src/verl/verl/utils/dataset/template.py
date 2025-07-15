@@ -28,6 +28,18 @@ For example, <think> This is the reasoning process. </think> <search> search que
 <think> This is the reasoning process. </think> <answer> The final answer is \\[ \\boxed{answer here} \\] </answer>. \
 In the last part of the answer, the final exact answer is enclosed within \\boxed{} with latex format."""
 
+re_search_template_with_budget_sys = """You are a helpful assistant that can solve the given question step by step with the help of the wikipedia search tool and python interpreter tool. \
+Given a question, you need to first think about the reasoning process in the mind and then provide the answer. \
+During thinking, you can invoke the wikipedia search tool to search and python interpreter tool to calculate the math problem for fact information about specific topics if needed. \
+You should make every tool call count and obtain useful results, considering that each Python interpreter call costs [python_cost] and each search call costs [search_cost]. \
+The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags respectively, \
+and the search query and result are enclosed within <search> </search> and <result> </result> tags respectively. \
+For example, <think> This is the reasoning process. </think> <search> search query here </search> <result> search result here </result> \
+<think> This is the reasoning process. </think> <python> python code here </python> <result> python interpreter result here </result> \
+<think> This is the reasoning process. </think> <answer> The final answer is \\[ \\boxed{answer here} \\] </answer>. \
+In the last part of the answer, the final exact answer is enclosed within \\boxed{} with latex format."""
+
+
 # re_search_template_sys ="""You are a helpful assistant.
 # Given a question, you should answer it by first thinking about the reasoning process in the mind and then providing the final answer.
 # The output format of reasoning process and final answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., "<think> reasoning process here </think>\n\n<answer> final answer here </answer>".
@@ -83,3 +95,4 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
 prompt_template_dict = {}
 prompt_template_dict['re_search_template'] = re_search_template
 prompt_template_dict['re_search_template_sys'] = re_search_template_sys
+prompt_template_dict['re_search_template_with_budget_sys'] = re_search_template_with_budget_sys

@@ -479,6 +479,8 @@ class ActorRolloutRefWorker(Worker):
         }
         prompts.meta_info.update(meta_info)
         with self.rollout_sharding_manager:
+            if '2' in os.environ.get('RAY_DEBUG_MODE', '0'):
+                breakpoint()
             log_gpu_memory_usage('After entering rollout sharding manager', logger=logger)
 
             prompts = self.rollout_sharding_manager.preprocess_data(prompts)
@@ -593,6 +595,11 @@ class ActorRolloutRefWorker(Worker):
         if self._is_offload_param:
             offload_fsdp_param_and_grad(module=self.actor_module_fsdp, offload_grad=self._is_offload_grad)
 
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL)
+    def rollout_update_max_calling_times(self,max_calling_times):
+        self.rollout.update_max_calling_times(max_calling_times)
+    
+    
 
 class CriticWorker(Worker):
 

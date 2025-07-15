@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import random
 from omegaconf import ListConfig
 import os
 from typing import List, Union
@@ -23,7 +24,6 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from transformers import AutoTokenizer, PreTrainedTokenizer
 from verl.utils.fs import copy_local_path_from_hdfs
-
 from verl.utils.model import compute_position_id_with_mask
 import verl.utils.torch_functional as verl_F
 
@@ -155,9 +155,18 @@ class RLHFDataset(Dataset):
         row_dict = self.dataframe.iloc[item].to_dict()
 
         chat = row_dict.pop(self.prompt_key)
-
+        #THREEGOLDCHANGE:增加随机Budget
+        if self.prompt_template_name == 're_search_template_with_budget_sys':
+            python_cost = random.randint(1, 10)
+            search_cost = random.randint(1, 10)
+            prompt_template = self.prompt_template.replace('[python_cost]', str(python_cost)).replace('[search_cost]', str(search_cost))
+            row_dict['python_cost'] = torch.tensor(python_cost)
+            row_dict['search_cost'] = torch.tensor(search_cost)
+        else:
+            prompt_template = self.prompt_template
+        #THREEGOLDCHANGE:增加随机Budget
         if self.apply_chat:
-            chat = [{'role': 'system', 'content': self.prompt_template}, 
+            chat = [{'role': 'system', 'content': prompt_template}, 
                     {'role': 'user', 'content': chat}]
             prompt = self.tokenizer.apply_chat_template(chat, add_generation_prompt=True, tokenize=False)
         else:

@@ -114,7 +114,25 @@ def apply_kl_penalty(data: DataProto, kl_ctrl: core_algos.AdaptiveKLController, 
     metrics = {'critic/kl': current_kl, 'critic/kl_coeff': beta}
 
     return data, metrics
-
+#THREEGOLDCHANGE:计算oct奖励
+def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct'):
+    token_level_scores = data.batch['token_level_scores']
+    # compute the oct reward cofficent
+    if oct_penalty == 'times':
+        old,avg_call_times = core_algos.oct_times_penalty(data,oct_smooth=oct_ctrl.smooth)  # (batch_size, response_length)
+        print(f"old: {old}")
+        oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+        metrics = {'actor/avg_call_times': avg_call_times,"actor/oct_coff":oct_ctrl.cofficient,"actor/oct":torch.mean(oct_token_level_scores).item()}
+    elif oct_penalty == 'budget':
+        old,avg_call_costs = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth)  # (batch_size, response_length)
+        print(f"old: {old}")
+        oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+        metrics = {'actor/avg_call_costs': avg_call_costs,"actor/oct_coff":oct_ctrl.cofficient,"actor/oct":torch.mean(oct_token_level_scores).item()}
+    else:
+        raise NotImplementedError
+    data.batch['token_level_scores'] = oct_token_level_scores
+    return data, metrics
+#THREEGOLDCHANGE
 
 def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_repeat=1):
     # prepare response group
@@ -376,7 +394,13 @@ class RayPPOTrainer(object):
             self.use_critic = False
         else:
             raise NotImplementedError
-
+        #THREEGOLDCHANGE
+        #define oct control
+        if self.config.actor_rollout_ref.actor.use_oct_cofficient:
+            self.oct_ctrl = core_algos.OctController(init_cofficient=config.actor_rollout_ref.actor.oct_coef,
+                                                    init_smooth=config.actor_rollout_ref.actor.oct_smooth,
+                                                    tokenizer=self.tokenizer)
+        #THREEGOLDCHANGE:this is oct init
         self._validate_config()
         self._create_dataloader()
 
@@ -841,7 +865,9 @@ class RayPPOTrainer(object):
 
         # we start from step 1
         self.global_steps += 1
-
+        #THREEGOLDCHANGE: progressive calling times
+        if self.config.trainer.progressive_calling_times_stages>0:
+            self.phase_start = 0
         for epoch in range(self.config.trainer.total_epochs):
             for batch_dict in self.train_dataloader:
                 metrics = {}
@@ -916,7 +942,18 @@ class RayPPOTrainer(object):
                         # we combine with rule-based rm
                         reward_tensor = self.reward_fn(batch, os.path.join(self.config.trainer.rollout_save_path, f'train_{self.global_steps}.jsonl'))
                         batch.batch['token_level_scores'] = reward_tensor
-
+                        
+                        # THREEGOLDCHANGE: 计算oct折扣因子
+                        # apply oct_penalty if availale:
+                        if self.config.actor_rollout_ref.actor.use_oct_cofficient:
+                            batch, oct_metrics = apply_oct_penalty(batch,
+                                                                 oct_ctrl=self.oct_ctrl,
+                                                                 oct_penalty=self.config.algorithm.oct_penalty)
+                            metrics.update(oct_metrics)
+                        else:
+                            batch.batch['token_level_scores'] = batch.batch['token_level_scores']
+                        # THREEGOLDCHANGE
+                        
                         # compute rewards. apply_kl_penalty if available
                         if not self.config.actor_rollout_ref.actor.get('use_kl_loss', False):
                             batch, kl_metrics = apply_kl_penalty(batch,
@@ -981,3 +1018,15 @@ class RayPPOTrainer(object):
                         with _timer('save_checkpoint', timing_raw):
                             self._save_checkpoint()
                     return
+                # THREEGOLDCHANGE: progressive calling times
+                if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+                    breakpoint()
+                if self.config.trainer.progressive_calling_times_stages>0:
+                    if self.global_steps - self.phase_start >= self.total_training_steps * (1/self.config.trainer.progressive_calling_times_stages):
+                        self.phase_start = self.global_steps
+                        self.config.actor_rollout_ref.rollout.max_calling_times += 1
+                        self.actor_rollout_wg.rollout_update_max_calling_times(self.config.actor_rollout_ref.rollout.max_calling_times)
+                        print(f"--------------------------------progressive calling times add from {self.config.actor_rollout_ref.rollout.max_calling_times-1} to {self.config.actor_rollout_ref.rollout.max_calling_times}--------------------------------")
+                        if self.config.actor_rollout_ref.actor.use_oct_cofficient:
+                            self.oct_ctrl.smooth += 1
+                            print(f"--------------------------------oct smooth add from {self.oct_ctrl.smooth-1} to {self.oct_ctrl.smooth}--------------------------------")                            

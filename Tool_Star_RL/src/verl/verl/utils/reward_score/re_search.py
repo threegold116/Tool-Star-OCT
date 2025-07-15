@@ -210,7 +210,37 @@ def get_f1_score(prediction: str, ground_truths: Union[str, List[str]]):
     
     return final_metric['f1']
 
-def compute_score(tokenizer, solution_str, ground_truth) -> float:
+# THREEGOLDCHANGE: 增加exact match score
+def normalize_answer(s):
+    def remove_articles(text):
+        return re.sub(r"\b(a|an|the)\b", " ", text)
+
+    def white_space_fix(text):
+        return " ".join(text.split())
+
+    def remove_punc(text):
+        exclude = set(string.punctuation)
+        return "".join(ch for ch in text if ch not in exclude)
+
+    def lower(text):
+        return text.lower()
+
+    return white_space_fix(remove_articles(remove_punc(lower(s))))
+
+
+def em_check(prediction, golden_answers):
+    if isinstance(golden_answers, str):
+        golden_answers = [golden_answers]
+    normalized_prediction = normalize_answer(prediction)
+    score = 0
+    for golden_answer in golden_answers:
+        golden_answer = normalize_answer(golden_answer)
+        if golden_answer == normalized_prediction:
+            score = 1
+            break
+    return score
+# THREEGOLDCHANGE
+def compute_score(tokenizer, solution_str, ground_truth, is_search=0, is_python=0,qa_rule="f1_score") -> float:
     # handling both the base model and the instruction-tuned model
     if "<|im_start|>assistant\n" in solution_str:
         solution_str_split = solution_str.split("<|im_start|>assistant\n")
@@ -238,21 +268,33 @@ def compute_score(tokenizer, solution_str, ground_truth) -> float:
     else:
         print(f"--------------------------------cannot extract answer--------------------------------")
         return -1, f'cannot extract answer'
-
-    f1_score = get_f1_score(answer, ground_truth)
-    print(f"f1_score: {f1_score},answer: {answer},ground_truth: {ground_truth}")
+    
+    # THREEGOLDCHANGE: 增加exact match score
+    acc_score = 0
+    if qa_rule=="f1_score":
+        f1_score = get_f1_score(answer, ground_truth)
+        acc_score = f1_score
+    elif qa_rule=="em_score":
+        em_score = em_check(answer, ground_truth)
+        acc_score = em_score
+    else:
+        raise ValueError(f"Invalid qa rule mode: {qa_rule}")
+    
+    print(f"{qa_rule}: {acc_score},answer: {answer},ground_truth: {ground_truth}")
     # import pdb
     # pdb.set_trace()
-    if f1_score > 0 and "</search>" in response and "</python>" in response:
+    # THREEGOLDCHANGE:从token变成实际调用
+    # if f1_score > 0 and "</search>" in response and "</python>" in response:
+    if acc_score > 0 and is_search and is_python:
         print(f"--------------------------------correct answer with multi tool call--------------------------------")
-        f1_score= f1_score + 0.1
-        return f1_score, f'correct answer and calling search and python at the same time， get score: {f1_score}'
-    elif f1_score > 0:
+        acc_score= acc_score + 0.1
+        return acc_score, f'correct answer and calling search and python at the same time， get {qa_rule}: {f1_score}'
+    elif acc_score > 0:
         print(f"--------------------------------correct answer--------------------------------")
-        return f1_score, f'correct answer, get f1 score: {f1_score}'
+        return acc_score, f'correct answer, get {qa_rule}: {acc_score}'
     else:
         print(f"--------------------------------wrong answer--------------------------------")
-        return 0, f'wrong answer but good format: {answer}'
+        return 0, f'wrong answer but good format: {qa_rule}'
 
 
 if __name__ == "__main__":

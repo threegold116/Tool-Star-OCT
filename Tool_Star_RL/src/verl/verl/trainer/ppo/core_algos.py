@@ -24,6 +24,23 @@ from collections import defaultdict
 
 import verl.utils.torch_functional as verl_F
 
+# THREEGOLDCHANGE:存储OCT的相关参数
+class OctController:
+    """
+    Oct controller described in the paper:
+    https://arxiv.org/pdf/2504.14870
+    """
+
+    def __init__(self, init_cofficient, init_smooth,tokenizer):
+        self.cofficient = init_cofficient
+        self.smooth = init_smooth
+        self.tokenizer = tokenizer
+
+    # def update(self, current_cot, n_steps):
+    #     target = self.target
+    #     proportional_error = np.clip(current_cot / target - 1, -0.2, 0.2)
+    #     mult = 1 + proportional_error * n_steps / self.horizon
+    #     self.value *= mult
 
 class AdaptiveKLController:
     """
@@ -336,3 +353,106 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
         raise NotImplementedError
 
     raise NotImplementedError
+
+
+
+def oct_budget_penalty(data,oct_smooth):
+    # 1.get_strings
+    tool_calling_costs = []
+    search_times = data.batch.get("is_search",None)
+    python_times = data.batch.get("is_python",None)
+    search_cost = data.batch.get("search_cost",None)
+    python_cost = data.batch.get("python_cost",None)
+    
+    for i in range(len(data)):
+        tool_calling_costs.append(search_cost[i]*search_times[i]+python_cost[i]*python_times[i])
+
+    # 2.group_by_index
+    index = data.non_tensor_batch['uid']
+    id2calling_costs = defaultdict(list)
+    token_level_scores = data.batch['token_level_scores']
+    id2min_calling_costs = {}
+    oct_scores = torch.zeros((data.batch.batch_size[0]), dtype=torch.float32)
+    calling_costs_sum = 0
+    with torch.no_grad():
+        bsz = data.batch.batch_size[0]
+        for i in range(bsz):
+            calling_costs_sum += tool_calling_costs[i]
+            #只取score>0的calling times
+            if torch.sum(token_level_scores[i])>0:
+                id2calling_costs[index[i]].append(tool_calling_costs[i])
+        for idx in id2calling_costs:
+            if len(id2calling_costs[idx]) == 1:
+                id2min_calling_costs[idx] = id2calling_costs[idx][0]
+            elif len(id2calling_costs[idx]) > 1:
+                id2min_calling_costs[idx] = min(id2calling_costs[idx])
+            else:
+                raise ValueError(f"no calling costs in prompt index: {idx}")
+        def map_to_2n(calling_cost,optim_cost):# 3.map calling_cost to 2*optim_cost
+            if calling_cost == 0 and optim_cost == 0:
+                return 0
+            elif optim_cost== 0:
+                return calling_cost
+            else:
+                return 2*optim_cost*calling_cost/(optim_cost+calling_cost)
+        for i in range(bsz): # 4. compute oct_scores
+            if torch.sum(token_level_scores[i])<=0:
+                oct_scores[i] = torch.tensor(1.0)
+                continue
+            optim_cost = id2min_calling_costs[index[i]] #n
+            calling_cost = tool_calling_costs[i] #m
+            oct_smooth_budget = oct_smooth*max(python_cost[i],search_cost[i]) 
+            map_costs = map_to_2n(calling_cost=calling_cost,optim_cost=optim_cost)
+            if map_costs==0 and optim_cost==0:
+                oct_scores[i] = torch.tensor(1.0)
+            elif optim_cost==0:
+                oct_scores[i] = torch.cos(torch.tensor(calling_cost*torch.pi/(2*calling_cost+oct_smooth_budget)))
+            else:
+                oct_scores[i] = torch.sin(torch.tensor(map_costs*torch.pi/(2*optim_cost)))
+    return oct_scores, calling_costs_sum/bsz
+
+
+
+def oct_times_penalty(data,oct_smooth):
+    # 1.get_strings
+    calling_times = []
+    valid_actions = data.batch.get("valid_action",None)
+    for i in range(len(data)):
+        calling_times.append(valid_actions[i])
+
+    # 2.group_by_index
+    index = data.non_tensor_batch['uid']
+    id2calling_times = defaultdict(list)
+    id2min_calling_times = {}
+    oct_scores = torch.zeros((data.batch.batch_size[0]), dtype=torch.float32)
+    calling_times_sum = 0
+    with torch.no_grad():
+        bsz = data.batch.batch_size[0]
+        for i in range(bsz):
+            calling_times_sum += calling_times[i]
+            id2calling_times[index[i]].append(calling_times[i])
+        for idx in id2calling_times:
+            if len(id2calling_times[idx]) == 1:
+                id2min_calling_times[idx] = id2calling_times[idx][0]
+            elif len(id2calling_times[idx]) > 1:
+                id2min_calling_times[idx] = min(id2calling_times[idx])
+            else:
+                raise ValueError(f"no calling costs in prompt index: {idx}")
+        def map_to_2n(calling_time,optim_time):# 3.map calling_time to 2*optim_time
+            if calling_time == 0 and optim_time == 0:
+                return 0
+            elif optim_time== 0:
+                return calling_time
+            else:
+                return 2*optim_time*calling_time/(optim_time+calling_time)
+        for i in range(bsz): # 4. compute oct_scores
+            optim_time = id2min_calling_times[index[i]] #n
+            calling_time = calling_times[i] #m
+            map_times = map_to_2n(calling_time=calling_time,optim_time=optim_time)
+            if map_times==0 and optim_time==0:
+                oct_scores[i] = torch.tensor(1.0)
+            elif optim_time==0:
+                oct_scores[i] = torch.cos(torch.tensor(calling_time*torch.pi/(2*calling_time+oct_smooth)))
+            else:
+                oct_scores[i] = torch.sin(torch.tensor(map_times*torch.pi/(2*optim_time)))
+    return oct_scores, calling_times_sum/bsz

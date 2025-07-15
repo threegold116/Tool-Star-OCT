@@ -310,7 +310,7 @@ def bing_web_search(query, subscription_key, endpoint, market='en-US', language=
         dict: JSON response of the search results. Returns empty dict if all retries fail.
     """
     headers = {
-        "Ocp-Apim-Subscription-Key": subscription_key
+        "x-api-key": subscription_key
     }
     params = {
         "q": query,
@@ -587,11 +587,11 @@ if __name__ == "__main__":
     query = "Structure of dimethyl fumarate"
     
     # Subscription key and endpoint for Bing Search API
-    BING_SUBSCRIPTION_KEY = "YOUR_BING_SUBSCRIPTION_KEY"
+    BING_SUBSCRIPTION_KEY = "E16JgNwG9667ymey3HQIK8x9exvf56wVT9I2W5N38"
     if not BING_SUBSCRIPTION_KEY:
         raise ValueError("Please set the BING_SEARCH_V7_SUBSCRIPTION_KEY environment variable.")
     
-    bing_endpoint = "https://api.bing.microsoft.com/v7.0/search"
+    bing_endpoint = "https://api.myhispreadnlp.com/v7.0/search"
     
     # Perform the search
     print("Performing Bing Web Search...")
