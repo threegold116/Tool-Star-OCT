@@ -21,16 +21,20 @@ bash scripts/train/train.sh \
     --experiment_name $EXPERIMENT_NAME \
     --nnodes 1 \
     --n_gpus_per_node 2 \
+    --n_gpus_per_node 2 \
     --search_mode wikipedia \
-    --save_freq 10 \
-    --test_freq 10 \
+    --save_freq 100 \
+    --test_freq 100 \
     --total_epochs 2 \
     --save_path /share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/verl_checkpoints/$EXPERIMENT_NAME \
     --train_files $DATA_PATH/grpo_mix_train_shuffle.parquet \
     --test_files $DATA_PATH/grpo_mix_test.parquet \
     --top_n 3\
-    --max_calling_times 2 \
+    --max_calling_times 3 \
     --mix_rules True \
     --qa_rule em_score \
-    --progressive_calling_times_stages 5000 \
+    --is_multi_tool False \
+    --progressive_calling_times_stages 3 \
     # --wandb_api_key {your_wandb_api_key} \
+    
+

@@ -862,7 +862,9 @@ class RayPPOTrainer(object):
             logger.log(data=val_metrics, step=self.global_steps)
             if self.config.trainer.get('val_only', False):
                 return
-
+        # THREEGOLDCHANGE: progressive calling times
+        if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+            breakpoint()
         # we start from step 1
         self.global_steps += 1
         #THREEGOLDCHANGE: progressive calling times

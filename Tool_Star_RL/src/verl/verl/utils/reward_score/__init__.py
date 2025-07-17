@@ -14,7 +14,7 @@
 # from . import gsm8k, math, prime_math, prime_code
 
 
-def _default_compute_score(data_source, tokenizer,solution_str, ground_truth, is_search, is_python, abality,mix_rules=False,qa_rule="f1_score"):
+def _default_compute_score(data_source, tokenizer,solution_str, ground_truth, is_search, is_python, abality,mix_rules=False,qa_rule="f1_score",is_multi_tool=False):
     print(f"--------------------------------compute_score开始--------------------------------")
     # import pdb
     # pdb.set_trace()
@@ -45,12 +45,12 @@ def _default_compute_score(data_source, tokenizer,solution_str, ground_truth, is
         print(f"--------------------------------data_source not found--------------------------------")
         print(f"data_source: {data_source}")
         from . import re_search
-        res = re_search.compute_score(tokenizer, solution_str, ground_truth, is_search=is_search, is_python=is_python,qa_rule=qa_rule)
+        res = re_search.compute_score(tokenizer, solution_str, ground_truth, is_search=is_search, is_python=is_python,qa_rule=qa_rule,is_multi_tool=is_multi_tool)
         # THREEGOLDCHANGE:增加mix rules
         if mix_rules and abality in ["math"]:
             from . import re_search_math
             old_res = res
-            res = re_search_math.compute_score(tokenizer, solution_str, ground_truth, reward_type='format_calling',is_search=is_search,is_python=is_python)
+            res = re_search_math.compute_score(tokenizer, solution_str, ground_truth, reward_type='format_calling',is_search=is_search,is_python=is_python,is_multi_tool=is_multi_tool)
             # assert res[0] <= old_res[0] #f1_score和exact_match的分数对比
         # THREEGOLDCHANGE
     return res

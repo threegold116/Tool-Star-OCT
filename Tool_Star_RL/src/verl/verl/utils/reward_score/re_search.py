@@ -240,7 +240,7 @@ def em_check(prediction, golden_answers):
             break
     return score
 # THREEGOLDCHANGE
-def compute_score(tokenizer, solution_str, ground_truth, is_search=0, is_python=0,qa_rule="f1_score") -> float:
+def compute_score(tokenizer, solution_str, ground_truth, is_search=0, is_python=0,qa_rule="f1_score",is_multi_tool=False) -> float:
     # handling both the base model and the instruction-tuned model
     if "<|im_start|>assistant\n" in solution_str:
         solution_str_split = solution_str.split("<|im_start|>assistant\n")
@@ -285,7 +285,7 @@ def compute_score(tokenizer, solution_str, ground_truth, is_search=0, is_python=
     # pdb.set_trace()
     # THREEGOLDCHANGE:从token变成实际调用
     # if f1_score > 0 and "</search>" in response and "</python>" in response:
-    if acc_score > 0 and is_search and is_python:
+    if acc_score > 0 and is_search and is_python and is_multi_tool:
         print(f"--------------------------------correct answer with multi tool call--------------------------------")
         acc_score= acc_score + 0.1
         return acc_score, f'correct answer and calling search and python at the same time， get {qa_rule}: {f1_score}'
