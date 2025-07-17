@@ -117,7 +117,7 @@ def correctness_score_default(tokenizer, response, gt):
         return 0.1, f'format good but wrong answer'
 
 # THREEGOLDCHANGE:和re_search保持一致
-def correctness_format_calling_score(tokenizer, response, gt, is_search, is_python):
+def correctness_format_calling_score(tokenizer, response, gt, is_search, is_python,is_multi_tool=False):
     if "<|im_start|>assistant\n" in response:
         response_split = response.split("<|im_start|>assistant\n")
     else:
@@ -148,7 +148,7 @@ def correctness_format_calling_score(tokenizer, response, gt, is_search, is_pyth
         return -1, f'cannot extract answer'
     equiv_score = is_equiv(answer, ground_truth)
     print(f"equiv_score: {equiv_score},answer: {answer},ground_truth: {ground_truth}")
-    if equiv_score>0 and is_search and is_python:
+    if equiv_score>0 and is_search and is_python and is_multi_tool:
         print(f"--------------------------------correct answer with multi tool call--------------------------------")
         equiv_score= equiv_score + 0.1
         return equiv_score, f'correct answer and calling search and python at the same time， get equiv_score: {equiv_score}'
@@ -166,7 +166,7 @@ def correctness_score_v2(response, gt):
     pred = matches[-1][:-1]
     return 1.0 if is_equiv(pred, gt) else -0.5
 
-def compute_score(tokenizer, solution_str, ground_truth, reward_type,is_search=0,is_python=0) -> float:      
+def compute_score(tokenizer, solution_str, ground_truth, reward_type,is_search=0,is_python=0,is_multi_tool=False) -> float:      
     if reward_type=='default':
         try:     
             
@@ -187,7 +187,7 @@ def compute_score(tokenizer, solution_str, ground_truth, reward_type,is_search=0
     #THREEGOLDCHANGE:和re_search保持一致
     elif reward_type=="format_calling":
         try:
-            return correctness_format_calling_score(tokenizer, solution_str, ground_truth, is_search, is_python)
+            return correctness_format_calling_score(tokenizer, solution_str, ground_truth, is_search, is_python,is_multi_tool)
         except TimeoutException:
             return -1.0
         except Exception as e:

@@ -21,7 +21,7 @@ class ReSearchRewardManagerWithSave():
     """The reward manager.
     """
 
-    def __init__(self, tokenizer, num_examine, compute_score=None, save_path=None,mix_rules=False,qa_rule="f1_score") -> None:
+    def __init__(self, tokenizer, num_examine, compute_score=None, save_path=None,mix_rules=False,qa_rule="f1_score",is_multi_tool=False) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.compute_score = compute_score or _default_compute_score
@@ -29,6 +29,7 @@ class ReSearchRewardManagerWithSave():
         # THREEGOLDCHANGE:增加mix rules和qa_mode
         self.mix_rules = mix_rules
         self.qa_rule = qa_rule
+        self.is_multi_tool = is_multi_tool
     def __call__(self, data: DataProto, curr_save_path=None):
         """We will expand this function gradually based on the available datasets"""
 
@@ -85,7 +86,8 @@ class ReSearchRewardManagerWithSave():
                 is_python=is_python,
                 abality=abality,
                 mix_rules=self.mix_rules,
-                qa_rule=self.qa_rule
+                qa_rule=self.qa_rule,
+                is_multi_tool=self.is_multi_tool
             )
             if isinstance(score, tuple):
                 score, reason = score
@@ -102,6 +104,7 @@ class ReSearchRewardManagerWithSave():
                     'reason': reason,
                     "is_search": is_search.item(),
                     "is_python": is_python.item(),
+                    "is_multi_tool": self.is_multi_tool
                 }
                 save_file.write(json.dumps(save_json_line, ensure_ascii=False) + '\n')
 

@@ -406,9 +406,9 @@ def oct_budget_penalty(data,oct_smooth):
             if map_costs==0 and optim_cost==0:
                 oct_scores[i] = torch.tensor(1.0)
             elif optim_cost==0:
-                oct_scores[i] = torch.cos(torch.tensor(calling_cost*torch.pi/(2*calling_cost+oct_smooth_budget)))
+                oct_scores[i] = torch.cos(calling_cost*torch.pi/(2*calling_cost+oct_smooth_budget))
             else:
-                oct_scores[i] = torch.sin(torch.tensor(map_costs*torch.pi/(2*optim_cost)))
+                oct_scores[i] = torch.sin(map_costs*torch.pi/(2*optim_cost))
     return oct_scores, calling_costs_sum/bsz
 
 
