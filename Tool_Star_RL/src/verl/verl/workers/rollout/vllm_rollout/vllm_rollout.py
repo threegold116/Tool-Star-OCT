@@ -332,7 +332,7 @@ class vLLMRolloutWithSearch(vLLMRollout):
             return ""
 
     @torch.no_grad()
-    def generate_sequences(self, prompts: DataProto, **kwargs) -> DataProto:
+    def generate_sequences_v2(self, prompts: DataProto, **kwargs) -> DataProto:
         # rebuild vllm cache engine
         if self.config.free_cache_engine:
             self.inference_engine.init_cache_engine()
@@ -398,14 +398,395 @@ class vLLMRolloutWithSearch(vLLMRollout):
                 active_max_tokens = [curr_max_tokens[i] for i in active_indices]
 
                 # generate in batch, according to active max tokens
-                with self.update_sampling_params(n=1, stop=['</search>','</python>'], max_tokens=max(active_max_tokens), detokenize=True):
+                with self.update_sampling_params(
+                    n=1, 
+                    max_tokens=max(active_max_tokens),
+                    stop_token_ids=[151644]
+                ):
+                    t1 = time.time()
+                    print(self.sampling_params)
                     outputs = self.inference_engine.generate(
                         prompts=None,
                         sampling_params=self.sampling_params,
                         prompt_token_ids=active_inputs,
                         use_tqdm=False
                     )
+                    t2 = time.time()
+                    print(f"---input shape: {len(active_inputs)} {len(active_inputs[0])} rollout time: {t2-t1}---")
+                # with self.update_sampling_params(n=1, stop=['</search>','</python>'], max_tokens=max(active_max_tokens), detokenize=True):
+                #     t1 = time.time()
+                #     print(self.sampling_params)
+                #     outputs2 = self.inference_engine.generate(
+                #         prompts=None,
+                #         sampling_params=self.sampling_params,
+                #         prompt_token_ids=active_inputs,
+                #         use_tqdm=False
+                #     )
+                #     t2 = time.time()
+                #     print(f"---input shape: {len(active_inputs)} {len(active_inputs[0])} rollout2 time: {t2-t1}---")
+                # # generate in batch, according to active max tokens
+                # with self.update_sampling_params(
+                #     n=1, 
+                #     max_tokens=max(active_max_tokens),
+                #     stop_token_ids=[151644]
+                # ):
+                #     t1 = time.time()
+                #     print(self.sampling_params)
+                #     vllm_inputs = [{
+                #         'prompt_token_ids': raw_prompt_ids
+                #     } for raw_prompt_ids in active_inputs]
+                #     outputs3 = self.inference_engine.generate(
+                #         prompts=vllm_inputs,
+                #         sampling_params=self.sampling_params,
+                #         use_tqdm=False
+                #     )
+                #     t2 = time.time()
+                #     print(f"---input shape: {len(active_inputs)} {len(active_inputs[0])} rollout3 time: {t2-t1}---")
                 
+                # collect the queries to search
+                search_queries = []
+                search_indices = []
+                python_queries = []
+                python_indices = []
+                # process each output
+                new_active_indices = []
+                for i, idx in enumerate(active_indices):
+                    print(f"--------------------------------batch样本第：{i}样本 第{call_counters[idx]}次工具调用--------------------------------")
+                    
+                    # finish_reason = outputs[2][i]
+                    # stop_reason = outputs[3][i]
+                    
+                    def get_new_output_ids(output_ids,finish_reason,stop_reason):
+                        responses_str = self.tokenizer.decode(
+                            output_ids, 
+                            skip_special_tokens=True
+                        )
+                        # Process responses to stop at search operation or answer operation.
+                        new_finish_reason = finish_reason
+                        new_stop_reason = stop_reason
+                        if '</search>' in responses_str:
+                            responses_str = responses_str.split('</search>')[0] + '</search>'
+                            new_stop_reason = '</search>'
+                            new_finish_reason = 'stop'
+                        elif '</python>' in responses_str:
+                            responses_str = responses_str.split('</python>')[0] + '</python>'
+                            new_stop_reason = '</python>'
+                            new_finish_reason = 'stop'
+                        #可能和之前逻辑不一样的地方
+                        elif '</answer>' in responses_str:
+                            responses_str = responses_str.split('</answer>')[0] + '</answer>'
+                            new_finish_reason = 'stop'
+                        else:
+                            responses_str = responses_str
+                            new_stop_reason = None
+                        
+                        return self.tokenizer.encode(responses_str),new_finish_reason,new_stop_reason
+                        
+                    output_ids,finish_reason,stop_reason = get_new_output_ids(outputs[0][i],outputs[2][i],outputs[3][i])
+                    if self.tokenizer.eos_token_id in output_ids:
+                        first_eos_idx = output_ids.index(self.tokenizer.eos_token_id)
+                    else:
+                        first_eos_idx = len(output_ids)
+                    
+                    if self.tokenizer.pad_token_id in output_ids:
+                        first_pad_idx = output_ids.index(self.tokenizer.pad_token_id)
+                    else:
+                        first_pad_idx = len(output_ids) #<|endoftext|>
+                    
+
+                    if finish_reason == 'stop' and isinstance(stop_reason, str) and '</search>' in stop_reason:
+                        # need to search
+                        ## check if we've exceeded the call limit
+                        if call_counters[idx] >= self.config.get("max_calling_times", 3):
+                            # exceed limit, directly truncate and add EOS token
+                            print(f"--------------------------------tool call limit reached, truncating with EOS--------------------------------")
+                            # Add the current output truncated and append EOS
+                            output_ids = output_ids[:first_pad_idx]
+                            # Add EOS token to end the generation
+                            output_ids.append(self.tokenizer.eos_token_id)
+                            curr_inputs[idx] += output_ids
+                            result_mask_list[idx] += [1] * len(output_ids)
+                            # Don't add to new_active_indices to skip further generation
+                            continue
+                        # THREEGOLDCHANGE:增加对工具调用的统计
+                        valid_action[idx] += 1
+                        is_search[idx] += 1
+                        # THREEGOLDCHANGE
+                        
+                        call_counters[idx] += 1
+                        ## truncate from the first pad token
+                        output_ids = output_ids[:first_pad_idx]
+                        output_str = self.tokenizer.decode(output_ids)
+                        ## process the search
+                        search_content = self.extract_search_content(output_str)
+                        search_queries.append(search_content)
+                        search_indices.append(idx)
+                        new_active_indices.append(idx)
+                        ## update the current input
+                        curr_inputs[idx] += output_ids
+                        result_mask_list[idx] += [1] * len(output_ids)
+
+                    if finish_reason == 'stop' and isinstance(stop_reason, str) and '</python>' in stop_reason:
+                        # need to execute the python code
+                        ## check if we've exceeded the call limit
+                        if call_counters[idx] >= self.config.get("max_calling_times", 3):
+                            # exceed limit, directly truncate and add EOS token
+                            print(f"--------------------------------tool call limit reached, truncating with EOS--------------------------------")
+                            # Add the current output truncated and append EOS
+                            output_ids = output_ids[:first_pad_idx]
+                            # Add EOS token to end the generation
+                            output_ids.append(self.tokenizer.eos_token_id)
+                            curr_inputs[idx] += output_ids
+                            result_mask_list[idx] += [1] * len(output_ids)
+                            # Don't add to new_active_indices to skip further generation
+                            continue
+                        # THREEGOLDCHANGE:增加对工具调用的统计
+                        valid_action[idx] += 1
+                        is_python[idx] += 1
+                        # THREEGOLDCHANGE
+                          
+                        call_counters[idx] += 1
+                        output_ids = output_ids[:first_pad_idx]
+                        output_str = self.tokenizer.decode(output_ids)
+
+                        ## process the python code
+                        python_content = self.extract_python_content(output_str)
+                        python_queries.append(python_content)
+                        python_indices.append(idx)
+                        new_active_indices.append(idx)
+                        ## update the current input
+                        curr_inputs[idx] += output_ids
+                        result_mask_list[idx] += [1] * len(output_ids)
+                        
+                    elif finish_reason == 'stop' and stop_reason == None:
+                        # output eos, indicating finished; truncate from the first eos token
+                        output_ids = output_ids[:first_eos_idx+1]
+                        curr_inputs[idx] += output_ids
+                        result_mask_list[idx] += [1] * len(output_ids)
+                    elif finish_reason == 'stop' and stop_reason == self.tokenizer.pad_token_id:
+                        # for instruction model, there is a chance that the end is endoftext, not im_end, this case needs special handling
+                        output_ids = output_ids[:first_pad_idx+1]
+                        curr_inputs[idx] += output_ids
+                        result_mask_list[idx] += [1] * len(output_ids)
+                    elif finish_reason == 'stop' and stop_reason == 151644: # 151644 is the id of <|im_start|>, is a illigal stop, we stop here
+                        curr_inputs[idx] += output_ids
+                        result_mask_list[idx] += [1] * len(output_ids)
+                    elif finish_reason == 'length':
+                        # output is too long
+                        curr_inputs[idx] += output_ids
+                        result_mask_list[idx] += [1] * len(output_ids)
+
+                # batch process the search requests
+                if search_queries:
+                    '''local search mode'''
+                    # print("---------------------wikisearch------------------")
+                    # search_results = self.batch_search(search_queries) # wiki search
+                    #-------------------------local search mode------------
+                    '''Here, we use web search snippets to accelerate the training process (we recommend this mode). It is worth noting that in web_search/web_search_main.py, we support multiple web search modes, including "Web Search + Browser" and "Web Search + Browser + Summarize". '''
+                    print(f"search queries: {search_queries}")
+                    # print("---------------------websearch------------------")
+                    # search_results = []
+                    # for query in search_queries:
+                    #     result = deep_search_snippet(query)
+                    #     search_results.append(result)
+                    # THREEGOLDCHANGE
+                    search_mode = self.config.get("search_mode", "wikipedia")
+                    if search_mode == "wikipedia":
+                        print("---------------------localsearch------------------")
+                        search_results = self.batch_search(search_queries,top_n=self.config.top_n) # wiki search
+                    elif search_mode == "web_search":
+                        search_results = []
+                        for query in search_queries:
+                            result = deep_search_snippet(query)
+                            search_results.append(result)
+                    else:
+                        raise ValueError(f"Invalid search mode: {search_mode}")
+                    # THREEGOLDCHANGE
+                    t3 = time.time()
+                    print("--------------context retrieved------------------")
+                    print("search results 1 as example: ", search_results[0])
+                    print(f"---search num: {len(search_queries)} search time: {t3-t2}---")
+                    for idx, result in zip(search_indices, search_results):
+                        # THREEGOLDCHANGE:增加observation长度控制
+                        result_ids = self.tokenizer.encode(result)
+                        if len(result_ids) > self.config.max_obs_length:
+                            print(f"[WARNING] OBSERVATION TOO LONG, CONSIDER CHANGING YOUR CONFIG, {len(result_ids)} & {self.config.max_obs_length}")            
+                            result_ids = result_ids[:self.config.max_obs_length]
+                        result = self.tokenizer.decode(result_ids)
+                        # THREEGOLDCHANGE
+                        # update the output, add the search result
+                        output_ids = self.tokenizer.encode(f" <result>\n{result}\n</result>")
+                        curr_inputs[idx] += output_ids
+                        result_mask_list[idx] += [0] * len(output_ids)
+                if python_queries:
+                    python_results = self.batch_python(python_queries)
+                    print(f"python results: {python_results}")
+                    for idx, result in zip(python_indices, python_results):
+                        # THREEGOLDCHANGE:增加observation长度控制
+                        result_ids = self.tokenizer.encode(result)
+                        if len(result_ids) > self.config.max_obs_length:
+                            print(f"[WARNING] OBSERVATION TOO LONG, CONSIDER CHANGING YOUR CONFIG, {len(result_ids)} & {self.config.max_obs_length}")            
+                            result_ids = result_ids[:self.config.max_obs_length]
+                        result = self.tokenizer.decode(result_ids)
+                        # THREEGOLDCHANGE
+                        output_ids = self.tokenizer.encode(f" <result>\n{result}\n</result>")
+                        curr_inputs[idx] += output_ids
+                        result_mask_list[idx] += [0] * len(output_ids)
+                    t4 = time.time()
+                    print(f"---python num: {len(python_queries)} python time: {t4-t2}---")
+                # check if need to truncate for active indices
+                length_checked_active_indices = []
+                for idx in active_indices:
+                    assert len(curr_inputs[idx]) - len(init_inputs[idx]) == len(result_mask_list[idx]), f"curr_inputs: {len(curr_inputs[idx])}, init_inputs: {len(init_inputs[idx])}, result_mask_list: {len(result_mask_list[idx])}"
+                    if len(curr_inputs[idx]) - len(init_inputs[idx]) >= self.config.response_length:
+                        curr_inputs[idx] = init_inputs[idx] \
+                            + curr_inputs[idx][len(init_inputs[idx]):len(init_inputs[idx])+self.config.response_length]
+                        result_mask_list[idx] = result_mask_list[idx][:self.config.response_length]
+                    else:
+                        curr_max_tokens[idx] = self.config.response_length - len(curr_inputs[idx]) + len(init_inputs[idx])
+                        if idx in new_active_indices:
+                            length_checked_active_indices.append(idx)
+                active_indices = length_checked_active_indices
+
+            output_ids_list = []
+            # collect the results
+            for i, input_ids in enumerate(idx_list):
+                for j in range(self.sampling_params.n):
+                    idx = i * self.sampling_params.n + j
+                    input_len = len(input_ids)
+                    output_ids_list.append(curr_inputs[idx][input_len:])
+
+        response_list = []
+        result_mask_list_padded = []
+        for output_ids, result_mask in zip(output_ids_list, result_mask_list):
+            assert len(output_ids) == len(result_mask), f"output_ids: {len(output_ids)}, result_mask: {len(result_mask)}"
+            response = torch.tensor(output_ids, device=ori_input_ids.device)
+            response = pad_sequence_to_length(response, self.config.response_length, self.pad_token_id)
+            result_mask = torch.tensor(result_mask, device=ori_input_ids.device)
+            result_mask = pad_sequence_to_length(result_mask, self.config.response_length, 0)
+            response_list.append(response)
+            result_mask_list_padded.append(result_mask)
+        response = torch.stack(response_list, dim=0)
+        result_mask = torch.stack(result_mask_list_padded, dim=0)
+
+        if self.config.n > 1 and do_sample:
+            ori_input_ids = ori_input_ids.repeat_interleave(self.config.n, dim=0)
+            attention_mask = attention_mask.repeat_interleave(self.config.n, dim=0)
+            position_ids = position_ids.repeat_interleave(self.config.n, dim=0)
+            batch_size = batch_size * self.config.n
+        seq = torch.cat([ori_input_ids, response], dim=-1)
+
+        response_length = response.size(1)
+        delta_position_id = torch.arange(1, response_length + 1, device=position_ids.device)
+        delta_position_id = delta_position_id.unsqueeze(0).repeat(batch_size, 1)
+
+        response_position_ids = position_ids[:, -1:] + delta_position_id
+        position_ids = torch.cat([position_ids, response_position_ids], dim=-1)
+                
+        response_attention_mask = get_eos_mask(response_id=response, eos_token=eos_token_id, dtype=attention_mask.dtype)
+        attention_mask = torch.cat((attention_mask, response_attention_mask), dim=-1)
+
+        # result mask: result part is 0, other part is 1
+        loss_mask = result_mask * response_attention_mask
+        
+        # all the tp ranks should contain the same data here. data in all ranks are valid
+        batch = TensorDict({
+            'prompts': ori_input_ids,
+            'responses': response,
+            'input_ids': seq,  # here input_ids become the whole sentences
+            'attention_mask': attention_mask,
+            'loss_mask': loss_mask,
+            'position_ids': position_ids,
+            #THREEGOLDCHANGE:增加对工具调用的统计
+            'valid_action': torch.tensor(valid_action, device=ori_input_ids.device),
+            'is_search': torch.tensor(is_search, device=ori_input_ids.device),
+            'is_python': torch.tensor(is_python, device=ori_input_ids.device)
+            #THREEGOLDCHANGE
+        }, batch_size=batch_size)        
+
+        # free vllm cache engine
+        if self.config.free_cache_engine:
+            self.inference_engine.free_cache_engine()
+
+        return DataProto(batch=batch)
+
+    @torch.no_grad()
+    def generate_sequences(self, prompts: DataProto, **kwargs) -> DataProto:
+        # rebuild vllm cache engine
+        if self.config.free_cache_engine:
+            self.inference_engine.init_cache_engine()
+
+        ori_input_ids = prompts.batch['input_ids']  # (bs, prompt_length)
+
+        # left-padded attention_mask
+        attention_mask = prompts.batch['attention_mask']
+        position_ids = prompts.batch['position_ids']
+
+        # used to construct attention_mask
+        eos_token_id = prompts.meta_info['eos_token_id']
+
+        batch_size = ori_input_ids.size(0)
+
+        idx_list = []
+        # parse idx from torch.Tensor to List[List[str]]
+        for i in range(batch_size):
+            idx_list.append(_pre_process_inputs(self.pad_token_id, ori_input_ids[i]))
+
+        do_sample = prompts.meta_info.get('do_sample', True)
+        if not do_sample:
+            kwargs = {
+                'best_of': 1,
+                'top_p': 1.0,
+                'top_k': -1,
+                'min_p': 0.0,
+                'temperature': 0,
+                'n': 1  # if greedy, only 1 response
+            }
+
+        with self.update_sampling_params(**kwargs):
+            print(f"--------------------------------rollout开始--------------------------------")
+            # prepare n copies for each input
+            curr_inputs = []
+            for input_ids in idx_list:
+                for _ in range(self.sampling_params.n):
+                    curr_inputs.append(input_ids.copy())
+            init_inputs = [ids.copy() for ids in curr_inputs]
+            
+            # track the status of each input
+            curr_max_tokens = [self.sampling_params.max_tokens] * len(curr_inputs)
+            active_indices = list(range(len(curr_inputs)))
+            
+            # Add counter to track search/python calls for each sample
+            call_counters = [0] * len(curr_inputs)
+            
+            # THREEGOLDCHANGE:增加对工具调用的统计
+            valid_action, is_search, is_python = [], [], []
+            for i in range(len(curr_inputs)):   
+                valid_action.append(0)
+                is_search.append(0)
+                is_python.append(0)
+            # THREEGOLDCHANGE
+
+            # collect the result mask of each rollout
+            result_mask_list = [[] for _ in range(len(curr_inputs))]
+
+            # generate until all inputs are finished
+            while active_indices:
+                # only process the active inputs
+                active_inputs = [curr_inputs[i] for i in active_indices]
+                active_max_tokens = [curr_max_tokens[i] for i in active_indices]
+
+                with self.update_sampling_params(n=1, stop=['</search>','</python>'], max_tokens=max(active_max_tokens), detokenize=True):
+                    t1 = time.time()
+                    print(self.sampling_params)
+                    outputs = self.inference_engine.generate(
+                        prompts=None,
+                        sampling_params=self.sampling_params,
+                        prompt_token_ids=active_inputs,
+                        use_tqdm=False
+                    )
+                    t2 = time.time()
+                    print(f"---input shape: {len(active_inputs)} {len(active_inputs[0])} rollout time: {t2-t1}---")
                 # collect the queries to search
                 search_queries = []
                 search_indices = []
@@ -534,9 +915,10 @@ class vLLMRolloutWithSearch(vLLMRollout):
                     else:
                         raise ValueError(f"Invalid search mode: {search_mode}")
                     # THREEGOLDCHANGE
+                    t3 = time.time()
                     print("--------------context retrieved------------------")
                     print("search results 1 as example: ", search_results[0])
-
+                    print(f"---search num: {len(search_queries)} search time: {t3-t2}---")
                     for idx, result in zip(search_indices, search_results):
                         # THREEGOLDCHANGE:增加observation长度控制
                         result_ids = self.tokenizer.encode(result)
@@ -563,7 +945,8 @@ class vLLMRolloutWithSearch(vLLMRollout):
                         output_ids = self.tokenizer.encode(f" <result>\n{result}\n</result>")
                         curr_inputs[idx] += output_ids
                         result_mask_list[idx] += [0] * len(output_ids)
-
+                    t4 = time.time()
+                    print(f"---python num: {len(python_queries)} python time: {t4-t2}---")
                 # check if need to truncate for active indices
                 length_checked_active_indices = []
                 for idx in active_indices:
@@ -639,3 +1022,5 @@ class vLLMRolloutWithSearch(vLLMRollout):
             self.inference_engine.free_cache_engine()
 
         return DataProto(batch=batch)
+    def update_max_calling_times(self,max_calling_times):
+        self.config.max_calling_times = max_calling_times

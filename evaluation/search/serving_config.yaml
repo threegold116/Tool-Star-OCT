@@ -1,12 +1,12 @@
 # ------------------------------------------------Environment Settings------------------------------------------------#
-gpu_id: "2,3"
+gpu_id: "0,1"
 
 # -------------------------------------------------Retrieval Settings------------------------------------------------#
 # If set the name, the model path will be find in global paths
-retrieval_method: "/home/sxjiang/model/e5-base-v2"  # name or path of the retrieval model. 
-index_path: "/home/sxjiang/dataset/wiki/e5_Flat.index" # path to the indexed file
+retrieval_method: "/share/home/sxjiang/model/e5-base-v2"  # name or path of the retrieval model. 
+index_path: "/share/home/sxjiang/dataset/rag/searchr1/e5_Flat.index" # path to the indexed file
 faiss_gpu: False # whether use gpu to hold index
-corpus_path: "/home/sxjiang/dataset/wiki/wiki-18.jsonl"  # path to corpus in '.jsonl' format that store the documents
+corpus_path: "/share/home/sxjiang/dataset/rag/searchr1/wiki-18.jsonl"  # path to corpus in '.jsonl' format that store the documents
 
 
 
