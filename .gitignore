@@ -14,3 +14,4 @@ case.json
 **/run_tool_star_hit.sh
 **/serving_config_hit.yaml
 **/retriever_launch_hit.sh
+**/trace.txt

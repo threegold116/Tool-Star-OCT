@@ -869,7 +869,7 @@ class RayPPOTrainer(object):
         self.global_steps += 1
         #THREEGOLDCHANGE: progressive calling times
         if self.config.trainer.progressive_calling_times_stages>0:
-            self.phase_start = 0
+            self.phase_start = 1
         for epoch in range(self.config.trainer.total_epochs):
             for batch_dict in self.train_dataloader:
                 metrics = {}
@@ -931,7 +931,8 @@ class RayPPOTrainer(object):
                         with _timer('values', timing_raw):
                             values = self.critic_wg.compute_values(batch)
                             batch = batch.union(values)
-
+                    if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+                        breakpoint()
                     with _timer('adv', timing_raw):
                         # compute scores. Support both model and function-based.
                         # We first compute the scores using reward model. Then, we call reward_fn to combine
@@ -944,7 +945,8 @@ class RayPPOTrainer(object):
                         # we combine with rule-based rm
                         reward_tensor = self.reward_fn(batch, os.path.join(self.config.trainer.rollout_save_path, f'train_{self.global_steps}.jsonl'))
                         batch.batch['token_level_scores'] = reward_tensor
-                        
+                        if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+                            breakpoint()
                         # THREEGOLDCHANGE: 计算oct折扣因子
                         # apply oct_penalty if availale:
                         if self.config.actor_rollout_ref.actor.use_oct_cofficient:
@@ -1005,7 +1007,11 @@ class RayPPOTrainer(object):
 
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)
-
+                # THREEGOLDCHANGE: Print timing_raw
+                print(f"step {self.global_steps} timing_raw:")
+                for key,value in timing_raw.items():
+                    print(f'{key}: {value}')
+                # THREEGOLDCHANGE
                 self.global_steps += 1
 
                 if self.global_steps >= self.total_training_steps:
@@ -1032,3 +1038,5 @@ class RayPPOTrainer(object):
                         if self.config.actor_rollout_ref.actor.use_oct_cofficient:
                             self.oct_ctrl.smooth += 1
                             print(f"--------------------------------oct smooth add from {self.oct_ctrl.smooth-1} to {self.oct_ctrl.smooth}--------------------------------")                            
+                # THREEGOLDCHANGE: progressive calling times
+                            

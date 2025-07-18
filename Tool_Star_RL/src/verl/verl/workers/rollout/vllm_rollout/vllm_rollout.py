@@ -475,6 +475,7 @@ class vLLMRolloutWithSearch(vLLMRollout):
                         #可能和之前逻辑不一样的地方
                         elif '</answer>' in responses_str:
                             responses_str = responses_str.split('</answer>')[0] + '</answer>'
+                            responses_str = responses_str + self.tokenizer.eos_token
                             new_finish_reason = 'stop'
                         else:
                             responses_str = responses_str
@@ -1023,4 +1024,5 @@ class vLLMRolloutWithSearch(vLLMRollout):
 
         return DataProto(batch=batch)
     def update_max_calling_times(self,max_calling_times):
+        print(f"--------------------------------update max calling times from {self.config.max_calling_times} to {max_calling_times}--------------------------------")
         self.config.max_calling_times = max_calling_times

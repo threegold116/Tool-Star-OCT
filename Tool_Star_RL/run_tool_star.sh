@@ -7,11 +7,11 @@ export LD_LIBRARY_PATH=$HOME/miniconda3/envs/toolstar/lib/python3.10/site-packag
 export DATA_PATH=/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/mix_grpo/
 export WANDB_MODE=offline
 export BASE_MODEL='/share/home/sxjiang/myproject/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52'
-export EXPERIMENT_NAME=Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug
+export EXPERIMENT_NAME=Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128
 export WAND_PROJECT="Tool-Star-OCT"
-export RAY_DEBUG_MODE="0"
+export RAY_DEBUG_MODE="12"
 bash scripts/train/train.sh \
-    --train_batch_size 32 \
+    --train_batch_size 128 \
     --ppo_mini_batch_size 16 \
     --rollout_n 8 \
     --apply_chat True \
@@ -20,8 +20,7 @@ bash scripts/train/train.sh \
     --project_name toolstar \
     --experiment_name $EXPERIMENT_NAME \
     --nnodes 1 \
-    --n_gpus_per_node 2 \
-    --n_gpus_per_node 2 \
+    --n_gpus_per_node 8 \
     --search_mode wikipedia \
     --save_freq 100 \
     --test_freq 100 \
