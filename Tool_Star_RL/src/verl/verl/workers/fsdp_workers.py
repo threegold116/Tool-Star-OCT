@@ -428,7 +428,10 @@ class ActorRolloutRefWorker(Worker):
         data.batch = data.batch.cuda()
 
         log_gpu_memory_usage('Before update policy', logger=logger)
-
+        #THREEGOLDCHANGE: 3 refers to the actor update
+        if "3" in os.environ.get('RAY_DEBUG_MODE', '0'):
+            breakpoint()
+        #THREEGOLDCHANGE
         with self.ulysses_sharding_manager:
             data = self.ulysses_sharding_manager.preprocess_data(data=data)
             # perform training
