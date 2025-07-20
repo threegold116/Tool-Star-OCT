@@ -15,3 +15,4 @@ case.json
 **/serving_config_hit.yaml
 **/retriever_launch_hit.sh
 **/trace.txt
+**/debug.sh
