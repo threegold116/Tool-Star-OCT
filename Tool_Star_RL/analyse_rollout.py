@@ -1,7 +1,7 @@
 import jsonlines
 import os
 import json
-data_dir = "/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/verl_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128/rollout"
+data_dir = "/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/verl_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.28/rollout"
 
 
 rollout_step2metrics={}
@@ -10,6 +10,8 @@ for rollout_file in os.listdir(data_dir):
     score_sum = 0
     max_calling_times = 0
     count = 0
+    # if "87" not in rollout_file:
+    #     continue
     with jsonlines.open(os.path.join(data_dir, rollout_file)) as reader:
         for line in reader:
             count += 1

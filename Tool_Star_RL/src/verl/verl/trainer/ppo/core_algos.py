@@ -269,6 +269,9 @@ def compute_policy_loss(old_log_prob, log_prob, advantages, eos_mask, cliprange,
     if cliprange_high is None:
         cliprange_high = cliprange
     negative_approx_kl = log_prob - old_log_prob
+    #THREEGOLDCHANGE: clip negative_approx_kl to avoid overflow refer to https://github.com/volcengine/verl/blob/e5f0b2aa80aadeaa4f24905544555618bb77e0f6/verl/trainer/ppo/core_algos.py#L768
+    negative_approx_kl = torch.clamp(negative_approx_kl, min=-20.0, max=20.0)
+    #THREEGOLDCHANGE
     ratio = torch.exp(negative_approx_kl)
     ppo_kl = verl_F.masked_mean(-negative_approx_kl, eos_mask)
 
