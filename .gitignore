@@ -17,3 +17,5 @@ case.json
 **/run_tool_star_hit_origin.sh
 **/trace.txt
 **/debug.sh
+**/*.log
+**/*.json

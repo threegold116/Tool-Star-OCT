@@ -75,7 +75,6 @@ class ReSearchRewardManagerWithSave():
             is_search = data.batch["is_search"][i]
             is_python =data.batch["is_python"][i]
             abality = data_item.non_tensor_batch['ability']
-            uid = data_item.non_tensor_batch['uid']
             # THREEGOLDCHANGE
             
             score = self.compute_score(
@@ -106,7 +105,6 @@ class ReSearchRewardManagerWithSave():
                     "is_search": is_search.item(),
                     "is_python": is_python.item(),
                     "is_multi_tool": self.is_multi_tool,
-                    "uid": uid
                 }
                 save_file.write(json.dumps(save_json_line, ensure_ascii=False) + '\n')
 

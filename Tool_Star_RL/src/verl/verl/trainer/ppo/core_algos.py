@@ -242,7 +242,7 @@ def compute_rewards(token_level_scores, old_log_prob, ref_log_prob, kl_ratio):
 
 # THREEGOLDCHANGE: add clip higher
 def compute_policy_loss(old_log_prob, log_prob, advantages, eos_mask, cliprange,cliprange_low=None,
-    cliprange_high=None):
+    cliprange_high=None,radio_clip=False):
     """Adapted from https://github.com/huggingface/trl/blob/main/trl/trainer/ppo_trainer.py#L1122
 
     Args:
@@ -270,7 +270,8 @@ def compute_policy_loss(old_log_prob, log_prob, advantages, eos_mask, cliprange,
         cliprange_high = cliprange
     negative_approx_kl = log_prob - old_log_prob
     #THREEGOLDCHANGE: clip negative_approx_kl to avoid overflow refer to https://github.com/volcengine/verl/blob/e5f0b2aa80aadeaa4f24905544555618bb77e0f6/verl/trainer/ppo/core_algos.py#L768
-    negative_approx_kl = torch.clamp(negative_approx_kl, min=-20.0, max=20.0)
+    if radio_clip:
+        negative_approx_kl = torch.clamp(negative_approx_kl, min=-20.0, max=20.0)
     #THREEGOLDCHANGE
     ratio = torch.exp(negative_approx_kl)
     ppo_kl = verl_F.masked_mean(-negative_approx_kl, eos_mask)

@@ -27,6 +27,7 @@ TEST_FREQ=5
 SEARCH_MODE=wikipedia
 TOTAL_EPOCHS=2
 IS_MULTI_TOOL=False
+RADIO_CLIP=False
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -59,6 +60,7 @@ while [[ $# -gt 0 ]]; do
         --qa_rule) QA_RULE="$2"; shift 2;;
         --progressive_calling_times_stages) PROGRESSIVE_CALLING_TIMES_STAGES="$2"; shift 2;;
         --is_multi_tool) IS_MULTI_TOOL="$2"; shift 2;;
+        --radio_clip) RADIO_CLIP="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -104,6 +106,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.use_kl_loss=True \
     actor_rollout_ref.actor.kl_loss_coef=0.0 \
     actor_rollout_ref.actor.kl_loss_type=low_var_kl \
+    actor_rollout_ref.actor.radio_clip=${RADIO_CLIP} \
     actor_rollout_ref.actor.use_oct_cofficient=True \
     actor_rollout_ref.actor.fsdp_config.param_offload=False \
     actor_rollout_ref.actor.fsdp_config.grad_offload=False \
