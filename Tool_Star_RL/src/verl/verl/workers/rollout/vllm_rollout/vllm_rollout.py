@@ -475,7 +475,7 @@ class vLLMRolloutWithSearch(vLLMRollout):
                         #可能和之前逻辑不一样的地方
                         elif '</answer>' in responses_str:
                             responses_str = responses_str.split('</answer>')[0] + '</answer>'
-                            responses_str = responses_str + self.tokenizer.eos_token
+                            responses_str = responses_str + self.tokenizer.eos_token #TODO: 需要修改
                             new_finish_reason = 'stop'
                         else:
                             responses_str = responses_str

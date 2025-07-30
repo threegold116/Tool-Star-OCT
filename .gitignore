@@ -19,3 +19,5 @@ case.json
 **/debug.sh
 **/*.log
 **/*.json
+**/tempCodeRunnerFile.py
+**/*.sh

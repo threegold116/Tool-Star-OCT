@@ -44,11 +44,14 @@ def run_ppo(config, compute_score=None):
     # )
     info=ray.init(
         address="local",
+        logging_level="debug",
         runtime_env={'env_vars': 
             {'TOKENIZERS_PARALLELISM': 'true', 
              'NCCL_DEBUG': 'WARN',
-             'RAY_DEBUG_POST_MORTEM': '1',
-             "RAY_DEBUG":"1"}}
+            #  'RAY_DEBUG_POST_MORTEM': '1',
+            #  "RAY_DEBUG":"1"
+             }
+            }
         )
     print(info)
 
