@@ -132,6 +132,7 @@ python3 -m verl.trainer.main_ppo \
     reward_model.reward_manager=${REWARD_MANAGER} \
     reward_model.mix_rules=${MIX_RULES} \
     reward_model.qa_rule=${QA_RULE} \
+    reward_model.is_multi_tool=${IS_MULTI_TOOL} \
     trainer.critic_warmup=0 \
     trainer.logger="[console, wandb]" \
     trainer.project_name=${PROJECT_NAME} \

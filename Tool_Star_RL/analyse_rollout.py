@@ -31,6 +31,9 @@ def find_wrong(reson_str,sequences_str):
     return False
 
 rollout_step2metrics={}
+wrong_rollout_idx = []
+# print(data_dir)
+wrong_rollout_num_dict={}
 for rollout_file in os.listdir(data_dir):
     rollout_step = rollout_file.split("_")[1].split(".")[0]
     score_sum = 0
@@ -44,6 +47,7 @@ for rollout_file in os.listdir(data_dir):
     if str(specific_rollout_iter_num) not in rollout_file and specific_rollout_iter_num != -1:
         continue
     with jsonlines.open(os.path.join(data_dir, rollout_file)) as reader:
+        
         
         for line in reader:
             count += 1
@@ -86,5 +90,7 @@ plt.savefig(f"{result_dir}/max_length.png")
 plt.close()
 
 # print(sorted(rollout_step2metrics.items(), key=lambda x: x[0]))
+# with open(f"/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/{expertment_name}_{str(specific_rollout_iter_num)}_rollout_step2metrics.json", "w") as f:
+#     json.dump(sorted(rollout_step2metrics.items(), key=lambda x: x[0]), f,indent=4)
 # with open(f"/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/{expertment_name}_{str(specific_rollout_iter_num)}_rollout_step2metrics.json", "w") as f:
 #     json.dump(sorted(rollout_step2metrics.items(), key=lambda x: x[0]), f,indent=4)

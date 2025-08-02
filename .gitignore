@@ -23,3 +23,4 @@ case.json
 **/*.sh
 **/*.png
 **/analyse/**
+**/test.py

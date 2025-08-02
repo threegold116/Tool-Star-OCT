@@ -37,7 +37,7 @@ import time
 import requests
 from functools import wraps
 from typing import Union
-
+import re
 
 from verl.workers.rollout.vllm_rollout.python_executor import PythonExecutor
 from verl import DataProto
@@ -463,23 +463,48 @@ class vLLMRolloutWithSearch(vLLMRollout):
                         )
                         # Process responses to stop at search operation or answer operation.
                         new_finish_reason = finish_reason
-                        new_stop_reason = stop_reason
-                        if '</search>' in responses_str:
-                            responses_str = responses_str.split('</search>')[0] + '</search>'
+                        new_stop_reason = stop_reason 
+                        def match_text(responses_str):
+                            match = re.search(r'</(search|python|answer)>', responses_str)
+                            if match:
+                                tag = match.group()  # 获取匹配的标签 </s> 或 </b>
+                                cut_str = responses_str[:match.start()]  # 裁剪掉匹配位置之后的内容
+                                return cut_str, tag
+                            else:
+                                return responses_str, None  # 没有匹配到标签
+                        new_responses_str, new_tag = match_text(responses_str)
+                        if new_tag =='</search>': #Cold-Start之后的模型会输出<result>+<search>，所以我们按照(<search>,<python>,<answer>)的顺序来处理
+                            responses_str = new_responses_str + '</search>'
                             new_stop_reason = '</search>'
                             new_finish_reason = 'stop'
-                        elif '</python>' in responses_str:
-                            responses_str = responses_str.split('</python>')[0] + '</python>'
+                        elif new_tag =='</python>':
+                            responses_str = new_responses_str + '</python>'
                             new_stop_reason = '</python>'
                             new_finish_reason = 'stop'
                         #可能和之前逻辑不一样的地方
-                        elif '</answer>' in responses_str:
-                            responses_str = responses_str.split('</answer>')[0] + '</answer>'
+                        elif new_tag =='</answer>':
+                            responses_str = new_responses_str + '</answer>'
                             responses_str = responses_str + self.tokenizer.eos_token #TODO: 需要修改
                             new_finish_reason = 'stop'
                         else:
                             responses_str = responses_str
                             new_stop_reason = None
+                        # if '</search>' in responses_str: #Cold-Start之后的模型会输出<result>+<search>，所以我们按照(<search>,<python>,<answer>)的顺序来处理
+                        #     responses_str = responses_str.split('</search>')[0] + '</search>'
+                        #     new_stop_reason = '</search>'
+                        #     new_finish_reason = 'stop'
+                        # elif '</python>' in responses_str:
+                        #     responses_str = responses_str.split('</python>')[0] + '</python>'
+                        #     new_stop_reason = '</python>'
+                        #     new_finish_reason = 'stop'
+                        # #可能和之前逻辑不一样的地方
+                        # elif '</answer>' in responses_str:
+                        #     responses_str = responses_str.split('</answer>')[0] + '</answer>'
+                        #     responses_str = responses_str + self.tokenizer.eos_token #TODO: 需要修改
+                        #     new_finish_reason = 'stop'
+                        # else:
+                        #     responses_str = responses_str
+                        #     new_stop_reason = None
                         
                         return self.tokenizer.encode(responses_str),new_finish_reason,new_stop_reason
                         
