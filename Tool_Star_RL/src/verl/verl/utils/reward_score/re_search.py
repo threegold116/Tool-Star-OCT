@@ -288,7 +288,7 @@ def compute_score(tokenizer, solution_str, ground_truth, is_search=0, is_python=
     if acc_score > 0 and is_search and is_python and is_multi_tool:
         print(f"--------------------------------correct answer with multi tool call--------------------------------")
         acc_score= acc_score + 0.1
-        return acc_score, f'correct answer and calling search and python at the same time， get {qa_rule}: {f1_score}'
+        return acc_score, f'correct answer and calling search and python at the same time， get {qa_rule}: {acc_score} and multi tool reward'
     elif acc_score > 0:
         print(f"--------------------------------correct answer--------------------------------")
         return acc_score, f'correct answer, get {qa_rule}: {acc_score}'

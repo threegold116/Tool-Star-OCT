@@ -20,6 +20,7 @@ EXPERIMENT_NAME={your_experiment_name}
 NNODES=1
 N_GPUS_PER_NODE=4
 PROGRESSIVE_CALLING_TIMES_STAGES=0
+USE_OCT_COEFFICIENT=False
 SAVE_FREQ=10
 MIX_RULES=False
 QA_RULE=f1_score
@@ -64,6 +65,7 @@ while [[ $# -gt 0 ]]; do
         --radio_clip) RADIO_CLIP="$2"; shift 2;;
         --lr_warmup_steps_ratio) LR_WARMUP_STEPS_RATIO="$2"; shift 2;;
         --clip_ratio_high) CLIP_RATIO_HIGH="$2"; shift 2;;
+        --use_oct_cofficient) USE_OCT_COEFFICIENT="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -112,7 +114,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.kl_loss_type=low_var_kl \
     actor_rollout_ref.actor.radio_clip=${RADIO_CLIP} \
     actor_rollout_ref.actor.clip_ratio_high=${CLIP_RATIO_HIGH} \
-    actor_rollout_ref.actor.use_oct_cofficient=True \
+    actor_rollout_ref.actor.use_oct_cofficient=${USE_OCT_COEFFICIENT} \
     actor_rollout_ref.actor.fsdp_config.param_offload=False \
     actor_rollout_ref.actor.fsdp_config.grad_offload=False \
     actor_rollout_ref.actor.fsdp_config.optimizer_offload=False \
@@ -130,6 +132,7 @@ python3 -m verl.trainer.main_ppo \
     reward_model.reward_manager=${REWARD_MANAGER} \
     reward_model.mix_rules=${MIX_RULES} \
     reward_model.qa_rule=${QA_RULE} \
+    reward_model.is_multi_tool=${IS_MULTI_TOOL} \
     trainer.critic_warmup=0 \
     trainer.logger="[console, wandb]" \
     trainer.project_name=${PROJECT_NAME} \
