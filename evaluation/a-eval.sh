@@ -3,8 +3,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 export TOKENIZERS_PARALLELISM=true
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export VLLM_ATTENTION_BACKEND=XFORMERS
-export ALIYUN_API_KEY=sk-2030e8bbeb6b4287bc929cdc24887d7b
-export BING_API_KEY=sk-a1f9b745861145728ea6df6b06a5b91e
+
 export BING_ENDPOINT=https://api.langsearch.com/v1/web-search
 export PYTHONPATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/:$PYTHONPATH
 export CUDA_LAUNCH_BLOCKING=1
