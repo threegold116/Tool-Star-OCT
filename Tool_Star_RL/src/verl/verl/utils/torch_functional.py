@@ -112,11 +112,19 @@ def entropy_from_logits(logits: torch.Tensor):
 
 def masked_sum(values, mask, axis=None):
     """Compute mean of tensor with a masked values."""
+    #THREEGOLDCHANGE: refer to https://github.com/volcengine/verl/blob/d20e5e07e18a31b8ad3995ab7e50272ccbbb4669/verl/utils/torch_functional.py#L167
+    # valid_values = torch.where(mask.bool(), values, 0.0)
+    # return (valid_values * mask).sum(axis=axis)
+    #THREEGOLDCHANGE
     return (values * mask).sum(axis=axis)
 
 
 def masked_mean(values, mask, axis=None):
     """Compute mean of tensor with a masked values."""
+    #THREEEGOLDCHANGE: soft divide to avoid division by zero,refer to https://github.com/volcengine/verl/blob/d20e5e07e18a31b8ad3995ab7e50272ccbbb4669/verl/utils/torch_functional.py#L185
+    # s = masked_sum(values, mask, axis)
+    # return s / (mask.sum(axis=axis) + 1e-8)
+    #THREEGOLDCHANGE
     return (values * mask).sum(axis=axis) / mask.sum(axis=axis)
 
 

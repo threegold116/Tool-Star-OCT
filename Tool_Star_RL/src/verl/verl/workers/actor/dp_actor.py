@@ -147,7 +147,15 @@ class DataParallelPPOActor(BasePPOActor):
             grad_norm = self.actor_module.clip_grad_norm_(max_norm=self.config.grad_clip)
         else:
             grad_norm = torch.nn.utils.clip_grad_norm_(self.actor_module.parameters(), max_norm=self.config.grad_clip)
-        self.actor_optimizer.step()
+        # if grad_norm is not finite, skip the update
+        # THREEGOLDCHANGE: grad norm is not finite, skip the update
+        if not torch.isfinite(grad_norm):
+            print(f"WARN: grad_norm is not finite: {grad_norm}")
+            self.actor_optimizer.zero_grad()
+        else:
+            self.actor_optimizer.step()
+        # THREEGOLDCHANGE: end refer to https://github.com/volcengine/verl/blob/4ed106698b75c66d7c21a9db4312195ea326ffd0/verl/workers/actor/dp_actor.py#L285
+        # self.actor_optimizer.step()
         return grad_norm
 
     def compute_log_prob(self, data: DataProto) -> torch.Tensor:
@@ -250,6 +258,7 @@ class DataParallelPPOActor(BasePPOActor):
                 clip_ratio_high = (
                     self.config.clip_ratio_high if self.config.clip_ratio_high is not None else clip_ratio
                 )
+                radio_clip = self.config.radio_clip if self.config.radio_clip is not None else False
                 # all return: (bsz, response_length)
                 entropy, log_prob = self._forward_micro_batch(micro_batch=data, temperature=temperature)
 
@@ -259,7 +268,13 @@ class DataParallelPPOActor(BasePPOActor):
                                                                               eos_mask=response_mask,
                                                                               cliprange=clip_ratio,
                                                                               cliprange_low=clip_ratio_low,
-                                                                              cliprange_high=clip_ratio_high)
+                                                                              cliprange_high=clip_ratio_high,
+                                                                              radio_clip=radio_clip)
+                # THREEGOLDCHANGE
+                metrics['actor/mask_sum'] = torch.sum(response_mask).detach().item()
+                metrics['actor/mask_nan'] = torch.sum(torch.isnan(response_mask)).detach().item()
+                metrics['actor/old_log_prob_nan'] = torch.sum(torch.isnan(old_log_prob)).detach().item()
+                metrics['actor/log_prob_nan'] = torch.sum(torch.isnan(log_prob)).detach().item()
                 # compute entropy loss from entropy
                 entropy_loss = verl_F.masked_mean(entropy, response_mask)
 

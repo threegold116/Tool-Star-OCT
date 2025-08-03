@@ -104,7 +104,7 @@ class ReSearchRewardManagerWithSave():
                     'reason': reason,
                     "is_search": is_search.item(),
                     "is_python": is_python.item(),
-                    "is_multi_tool": self.is_multi_tool
+                    "is_multi_tool": self.is_multi_tool,
                 }
                 save_file.write(json.dumps(save_json_line, ensure_ascii=False) + '\n')
 

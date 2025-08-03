@@ -865,11 +865,34 @@ class RayPPOTrainer(object):
         # THREEGOLDCHANGE: progressive calling times
         if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
             breakpoint()
+        # THREEGOLDCHANG
+        
+        # THREEGOLDCHANGE
+        is_last_step = self.global_steps >= self.total_training_steps
+        if is_last_step:
+            print(f"All training steps are done, no need to train anymore")
+            return
+        # THREEGOLDCHANGE
+            
         # we start from step 1
         self.global_steps += 1
-        #THREEGOLDCHANGE: progressive calling times
-        if self.config.trainer.progressive_calling_times_stages>0:
-            self.phase_start = 1
+        #THREEGOLDCHANGE: progressive calling times TODO:Check oct_ctrl和progressive_calling_steps的更新
+        if self.config.trainer.progressive_calling_times_stages>0: 
+            self.phase_start = 1 #记录上一个progressive开始的位置
+            #说明时resume训练
+            if self.global_steps>1:
+                resume_steps = self.global_steps - 1
+                progressive_calling_steps = int(self.total_training_steps/self.config.trainer.progressive_calling_times_stages)
+                progressive_update_times = resume_steps//progressive_calling_steps
+                self.config.actor_rollout_ref.rollout.max_calling_times += progressive_update_times
+                self.actor_rollout_wg.rollout_update_max_calling_times(self.config.actor_rollout_ref.rollout.max_calling_times)
+                print(f"--------------------------------resume progressive calling times add from {self.config.actor_rollout_ref.rollout.max_calling_times-progressive_update_times} to {self.config.actor_rollout_ref.rollout.max_calling_times}--------------------------------")
+                if self.config.actor_rollout_ref.actor.use_oct_cofficient:
+                    self.oct_ctrl.smooth += progressive_update_times
+                    print(f"--------------------------------oct smooth add from {self.oct_ctrl.smooth-progressive_update_times} to {self.oct_ctrl.smooth}--------------------------------")           
+                self.phase_start = 1 + progressive_update_times*progressive_calling_steps
+            print(f"-------phase_start: {self.phase_start}-------")
+        #THREEGOLDCHANGE
         for epoch in range(self.config.trainer.total_epochs):
             for batch_dict in self.train_dataloader:
                 metrics = {}
@@ -953,7 +976,7 @@ class RayPPOTrainer(object):
                             batch, oct_metrics = apply_oct_penalty(batch,
                                                                  oct_ctrl=self.oct_ctrl,
                                                                  oct_penalty=self.config.algorithm.oct_penalty)
-                            metrics.update(oct_metrics)
+                            metrics.update(oct_metrics) #TODO: 增加对calling_times的logging
                         else:
                             batch.batch['token_level_scores'] = batch.batch['token_level_scores']
                         # THREEGOLDCHANGE
@@ -1011,8 +1034,6 @@ class RayPPOTrainer(object):
                 print(f"step {self.global_steps} timing_raw:")
                 for key,value in timing_raw.items():
                     print(f'{key}: {value}')
-                # THREEGOLDCHANGE
-                self.global_steps += 1
 
                 if self.global_steps >= self.total_training_steps:
 
@@ -1026,11 +1047,19 @@ class RayPPOTrainer(object):
                         with _timer('save_checkpoint', timing_raw):
                             self._save_checkpoint()
                     return
+                
+                # THREEGOLDCHANGE
+                self.global_steps += 1
+                # THREEGOLDCHANGE: should after save
+
                 # THREEGOLDCHANGE: progressive calling times
                 if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
                     breakpoint()
                 if self.config.trainer.progressive_calling_times_stages>0:
                     if self.global_steps - self.phase_start >= self.total_training_steps * (1/self.config.trainer.progressive_calling_times_stages):
+                        print(f"-------phase_start: {self.phase_start}-------")
+                        print(f"-------global_steps: {self.global_steps}-------")
+                        
                         self.phase_start = self.global_steps
                         self.config.actor_rollout_ref.rollout.max_calling_times += 1
                         self.actor_rollout_wg.rollout_update_max_calling_times(self.config.actor_rollout_ref.rollout.max_calling_times)

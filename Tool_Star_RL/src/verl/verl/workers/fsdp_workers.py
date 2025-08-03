@@ -429,7 +429,7 @@ class ActorRolloutRefWorker(Worker):
 
         log_gpu_memory_usage('Before update policy', logger=logger)
         #THREEGOLDCHANGE: 3 refers to the actor update
-        if "3" in os.environ.get('RAY_DEBUG_MODE', '0'):
+        if "3" in os.environ.get('RAY_DEBUG_MODE', '0') and self.rank == 0:
             breakpoint()
         #THREEGOLDCHANGE
         with self.ulysses_sharding_manager:
@@ -482,7 +482,7 @@ class ActorRolloutRefWorker(Worker):
         }
         prompts.meta_info.update(meta_info)
         with self.rollout_sharding_manager:
-            if '2' in os.environ.get('RAY_DEBUG_MODE', '0'):
+            if '2' in os.environ.get('RAY_DEBUG_MODE', '0') and self.rank == 0:
                 breakpoint()
             log_gpu_memory_usage('After entering rollout sharding manager', logger=logger)
 

@@ -42,14 +42,31 @@ def run_ppo(config, compute_score=None):
     #     num_cpus=10,
     #     _temp_dir=temp_dir  # 指定临时目录
     # )
-    info=ray.init(
-        address="local",
-        runtime_env={'env_vars': 
-            {'TOKENIZERS_PARALLELISM': 'true', 
-             'NCCL_DEBUG': 'WARN',
-             'RAY_DEBUG_POST_MORTEM': '1',
-             "RAY_DEBUG":"1"}}
-        )
+    if "0" in os.environ.get("RAY_DEBUG_MODE","0"):
+        info=ray.init(
+            address="local",
+            logging_level="debug",
+            runtime_env={'env_vars': 
+                {'TOKENIZERS_PARALLELISM': 'true', 
+                'NCCL_DEBUG': 'WARN',
+                # 'RAY_DEBUG_POST_MORTEM': '1',
+                # "RAY_DEBUG":"1"
+                }
+                }
+            )
+        print("no debug mode")
+    else:
+        info=ray.init(
+            address="local",
+            logging_level="debug",
+            runtime_env={'env_vars': 
+                {'TOKENIZERS_PARALLELISM': 'true', 
+                'NCCL_DEBUG': 'WARN',
+                'RAY_DEBUG_POST_MORTEM': '1',
+                "RAY_DEBUG":"1"
+                }
+                }
+            )
     print(info)
 
     ray.get(main_task.remote(config, compute_score))
