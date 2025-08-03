@@ -16,3 +16,6 @@ case.json
 **/retriever_launch_hit.sh
 **/trace.txt
 **/debug.sh
+**/eval.sh
+**/*csv
+**/*.json
