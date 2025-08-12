@@ -372,9 +372,10 @@ def oct_budget_penalty(data,oct_smooth):
     python_times = data.batch.get("is_python",None)
     search_cost = data.batch.get("search_cost",None)
     python_cost = data.batch.get("python_cost",None)
-    
+    max_calling_times = 0
     for i in range(len(data)):
         tool_calling_costs.append(search_cost[i]*search_times[i]+python_cost[i]*python_times[i])
+        max_calling_times = max(max_calling_times,search_times[i]+python_times[i])
 
     # 2.group_by_index
     index = data.non_tensor_batch['uid']
@@ -418,7 +419,7 @@ def oct_budget_penalty(data,oct_smooth):
                 oct_scores[i] = torch.cos(calling_cost*torch.pi/(2*calling_cost+oct_smooth_budget))
             else:
                 oct_scores[i] = torch.sin(map_costs*torch.pi/(2*optim_cost))
-    return oct_scores, calling_costs_sum/bsz
+    return oct_scores, calling_costs_sum/bsz,max_calling_times
 
 
 
