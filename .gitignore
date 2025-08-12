@@ -24,6 +24,3 @@ case.json
 **/*.png
 **/analyse/**
 **/test.py
-**/eval.sh
-**/*csv
-**/*.json
