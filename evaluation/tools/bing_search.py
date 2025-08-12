@@ -375,7 +375,7 @@ def extract_relevant_info(search_results):
                 'title': result.get('name', ''),
                 'url': result.get('url', ''),
                 'site_name': result.get('siteName', ''),
-                'date': result.get('datePublished', '').split('T')[0],
+                'date': "" if result.get('datePublished', '')==None else result.get('datePublished', '').split('T')[0],
                 'snippet': result.get('snippet', ''),  # Remove HTML tags
                 # Add context content to the information
                 'context': ''  # Reserved field to be filled later

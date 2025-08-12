@@ -78,6 +78,7 @@ for rollout_file in os.listdir(data_dir):
     with jsonlines.open(os.path.join(data_dir, rollout_file)) as reader:
         
         
+        
         for line in reader:
             count += 1
             score_sum += line["score"]

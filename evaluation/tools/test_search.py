@@ -6,8 +6,6 @@ import re
 from argparse import Namespace
 import os
 import json
-from web_search.bing_search import bing_web_search
-from web_search.bing_search import extract_relevant_info
 
 BING_API_KEY = os.environ.get("BING_API_KEY", "")
 BING_ENDPOINT = os.environ.get("BING_ENDPOINT", "")
@@ -64,19 +62,20 @@ def deep_search_snippet(search_query, top_k=10, use_jina=False, jina_api_key="em
     except Exception as e:
         print(f"Error during search query '{question}': {e}")
         results = {}
+    print(results)
     # 提取相关信息并限制结果数量
-    relevant_info = extract_relevant_info(results["data"])
-    print(relevant_info)
-    print("--------------------------------Search Bing Result--------------------------------")
+    # relevant_info = extract_relevant_info(results["data"])
+    # print(relevant_info)
+    # print("--------------------------------Search Bing Result--------------------------------")
 
-    result = ""
-    for info in relevant_info:
-        # info['snippet'] = formatted_documents
-        snippet = info['snippet']
-        clean_snippet = re.sub('<[^<]+?>', '', snippet)  # Removes HTML tags
-        result+=clean_snippet
+    # result = ""
+    # for info in relevant_info:
+    #     # info['snippet'] = formatted_documents
+    #     snippet = info['snippet']
+    #     clean_snippet = re.sub('<[^<]+?>', '', snippet)  # Removes HTML tags
+    #     result+=clean_snippet
 
-    extracted_info = result
+    extracted_info = results
 
     return extracted_info
 def batch_search(query, top_n=5):
@@ -99,7 +98,7 @@ def batch_search(query, top_n=5):
     return result_list
 
 if __name__ == "__main__":
-    query = "三角形的勾股定理是什么?"
+    query = "2023年拳头游戏Pride Month合作音乐艺术家 全球总决赛相关游戏角色?"
     top_n = 5
     result = deep_search_snippet(query)
     print(result)

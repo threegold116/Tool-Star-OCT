@@ -145,10 +145,12 @@ async def llm_evaluate_equivalence_batch(
     Evaluate multiple answer pairs concurrently using LLM
     """
     if api_base_url is None:
-        api_base_url = "http://114514.1919810/v1"
+        api_base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     if model_name is None:
         model_name = "Qwen2.5-72B-Instruct"
-
+    api_base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model_name = "qwen2.5-72b-instruct"
+    api_key = os.environ.get("ALIYUN_API_KEY","")
     client = AsyncOpenAI(
         api_key=api_key,
         base_url=api_base_url,

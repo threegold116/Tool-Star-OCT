@@ -1,14 +1,39 @@
 import json
 import sys
-# sys.path.append("..")
+import os
+
+from zmq import Errno
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from urllib.parse import urljoin
 import time 
 from argparse import Namespace
+
+from traitlets import default
 from tools.bing_search import bing_web_search
 from tools.bing_search import extract_relevant_info
+from tools.lang_search import langsearch
 import re
-
-def deep_search(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key="xxxxx", bing_endpoint="xxxxx/search"):
+#THREEGOLDCHANGE:添加读取cache操作
+default_cache_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),"cache", "search_cache.json")
+search_cache_file = os.environ.get("SEARCH_CACHE_FILE", default_cache_file)
+search_cache = {}
+if os.path.exists(search_cache_file):
+    try:
+        print(f"load search cache from {search_cache_file}")
+        with open(search_cache_file, "r", encoding='utf-8') as f:
+            search_cache = json.load(f)
+    except Exception as e:
+        cache_timestamp_files = os.listdir(os.path.join(os.path.dirname(os.path.abspath(__file__)),"cache"))
+        cache_timestamp_files.remove("search_cache.json")
+        cache_timestamp_files.sort(key=lambda x: int(x.split(".")[0].split("_")[-1]))
+        latest_search_cache_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),"cache",cache_timestamp_files[-1])
+        print(f"load latest search cache from {latest_search_cache_file}")
+        with open(latest_search_cache_file, "r", encoding='utf-8') as f:
+            search_cache = json.load(f)
+else:
+    os.makedirs(os.path.dirname(search_cache_file), exist_ok=True)
+#THREEGOLDCHANGE:添加读取cache操作
+def deep_search(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key="xxxxx", bing_endpoint="xxxxx/search",search_engine="langsearch"):
     args = Namespace(
         dataset_name='qa',
         split='test',
@@ -31,20 +56,36 @@ def deep_search(search_query, top_k=10, use_jina=False, jina_api_key="empty", bi
         model_name='search-agent',
         concurrent_limit=200
     )
-    
-    search_cache = {}
+    global search_cache
 
     question = search_query
-
-    try:
-        results = bing_web_search(question, args.bing_subscription_key, args.bing_endpoint) 
-        search_cache[question] = results
-    except Exception as e:
-        print(f"Error during search query '{question}': {e}")
-        results = {}
+    #THREEGOLDCHANGE:
+    if question in search_cache:
+        results = search_cache[question]
+        print(f"load search cache from {search_cache_file} for question {question}")
+    #THREEGOLDCHANGE:
+    else:
+        try:
+            if search_engine == "bing": #TODO:其他search engines通过环境变量获取endpoint和key
+                results = bing_web_search(question, args.bing_subscription_key, args.bing_endpoint) 
+            elif search_engine == "langsearch": 
+                results = langsearch(question,top_n=args.top_k)
+            elif search_engine == "google":
+                raise NotImplementedError("Google search is not implemented yet")
+            else:
+                raise NotImplementedError(f"Search engine {search_engine} is not implemented yet")
+            if len(results.keys())>0:
+                search_cache[question] = results
+        except Exception as e:
+            print(f"Error during search query '{question}': {e}")
+            results = {}
     
- 
-    relevant_info = extract_relevant_info(results)[:args.top_k]
+    if search_engine == "bing":
+        relevant_info = extract_relevant_info(results)[:args.top_k]
+    elif search_engine == "langsearch":
+        relevant_info = extract_relevant_info(results)
+    else:
+        raise NotImplementedError(f"Search engine {search_engine} is not implemented yet")
     print("--------------------------------get bing search result--------------------------------")
 
     result = ""
@@ -67,6 +108,7 @@ if __name__ == "__main__":
 
     result = deep_search(
         question
+        ,top_k=2
     )
     print('-------------------------------------')
     print(result)

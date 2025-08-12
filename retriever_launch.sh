@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo "Launching retriever"
 source ~/.bashrc
 source ~/miniconda3/bin/activate
 conda activate retriever

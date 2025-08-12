@@ -1,3 +1,4 @@
+import os
 from urllib.parse import urljoin
 import requests
 import time 
@@ -7,11 +8,12 @@ from openai import OpenAI
 from transformers import AutoTokenizer
 
 def refine(prompt, response):
-
-    API_BASE_URL = "your_api_base_url"
-    MODEL_NAME = "Qwen2.5-7B-Instruct"
+    if api_key == "your_api_key":
+        api_key = os.environ.get("ALIYUN_API_KEY")
+    API_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    MODEL_NAME = "qwen2.5-3b-instruct"
     client = OpenAI(
-        api_key="empty",
+        api_key=api_key,
         base_url=API_BASE_URL,
     )
 
