@@ -38,6 +38,7 @@ actor_rollout_ref:
     use_kl_loss: False # True for GRPO
     kl_loss_coef: 0.001 # for grpo
     kl_loss_type: low_var_kl # for grpo
+    loss_agg_mode: token-mean
     #THREEGOLDCHANGE
     use_oct_cofficient: False # True for OCT
     oct_coef: 1 # for OCT(alpha)
