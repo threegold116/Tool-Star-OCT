@@ -252,6 +252,7 @@ class DataParallelPPOActor(BasePPOActor):
 
                 clip_ratio = self.config.clip_ratio
                 entropy_coeff = self.config.entropy_coeff
+                loss_agg_mode = self.config.loss_agg_mode
                 clip_ratio_low = (
                         self.config.clip_ratio_low if self.config.clip_ratio_low is not None else clip_ratio
                     )
@@ -269,7 +270,8 @@ class DataParallelPPOActor(BasePPOActor):
                                                                               cliprange=clip_ratio,
                                                                               cliprange_low=clip_ratio_low,
                                                                               cliprange_high=clip_ratio_high,
-                                                                              radio_clip=radio_clip)
+                                                                              radio_clip=radio_clip,
+                                                                              loss_agg_mode=loss_agg_mode)
                 # THREEGOLDCHANGE
                 metrics['actor/mask_sum'] = torch.sum(response_mask).detach().item()
                 metrics['actor/mask_nan'] = torch.sum(torch.isnan(response_mask)).detach().item()

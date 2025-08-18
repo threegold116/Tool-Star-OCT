@@ -24,3 +24,4 @@ case.json
 **/*.png
 **/analyse/**
 **/test.py
+**/__pycache__/**

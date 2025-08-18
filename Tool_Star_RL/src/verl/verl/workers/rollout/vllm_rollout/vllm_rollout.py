@@ -267,7 +267,7 @@ class vLLMRolloutWithSearch(vLLMRollout):
         if len(query) == 0:
             return 'invalid query'
 
-        url = f'http://0.0.0.0:8000/batch_search' #your local search path
+        url = f'http://0.0.0.0:8008/batch_search' #your local search path
         if isinstance(query, str):
             query = [query]
         data = {'query': query, 'top_n': top_n}
