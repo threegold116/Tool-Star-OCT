@@ -403,7 +403,8 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
 
 
 
-def oct_budget_penalty(data,oct_smooth):
+
+def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True):
     # 1.get_strings
     tool_calling_costs = []
     search_times = data.batch.get("is_search",None)
@@ -411,8 +412,10 @@ def oct_budget_penalty(data,oct_smooth):
     search_cost = data.batch.get("search_cost",None)
     python_cost = data.batch.get("python_cost",None)
     max_calling_times = 0
+    max_calling_times = 0
     for i in range(len(data)):
         tool_calling_costs.append(search_cost[i]*search_times[i]+python_cost[i]*python_times[i])
+        max_calling_times = max(max_calling_times,search_times[i]+python_times[i])
         max_calling_times = max(max_calling_times,search_times[i]+python_times[i])
 
     # 2.group_by_index
@@ -445,7 +448,10 @@ def oct_budget_penalty(data,oct_smooth):
             else:
                 return 2*optim_cost*calling_cost/(optim_cost+calling_cost)
         for i in range(bsz): # 4. compute oct_scores
-            if torch.sum(token_level_scores[i])<=0:
+            if len(id2calling_costs[index[i]])==0:#说明当前组没有最优路径
+                oct_scores[i] = torch.tensor(1.0)
+                continue
+            if torch.sum(token_level_scores[i])<=0 and no_positive_penalty:#如果不对负值增加惩罚
                 oct_scores[i] = torch.tensor(1.0)
                 continue
             optim_cost = id2min_calling_costs[index[i]] #n
@@ -466,20 +472,29 @@ def oct_budget_penalty(data,oct_smooth):
                 oct_scores[i] = torch.cos(calling_cost*torch.pi/(2*calling_cost+oct_smooth_budget))
             else:
                 oct_scores[i] = torch.sin(map_costs*torch.pi/(2*optim_cost))
+            #TODO:如果用加减法实现惩罚，会导致其他index的token_level_scores也发生变化 #WARNING
+            # if not no_positive_penalty: #如果对负值增加惩罚
+            #     if torch.sum(token_level_scores[i])>0: # torch.sum(token_level_scores[i])=1 oct_scores[i]=0.9,after oct torch.sum(token_level_scores[i])=0.9
+            #         #通过减法实现大于0的轨迹乘惩罚因子的形式
+            #         oct_scores[i] = torch.sum(token_level_scores[i]) - oct_scores[i] * torch.sum(token_level_scores[i])      
+            #     if torch.sum(token_level_scores[i])<=0: 
+            #         #通过减法实现小于0的轨迹加惩罚因子的形式
+            #         oct_scores[i] = 1 - oct_scores[i]
     return oct_scores, calling_costs_sum/bsz,max_calling_times
-
-
 
 def oct_times_penalty(data,oct_smooth):
     # 1.get_strings
     calling_times = []
+    max_calling_times = 0
     valid_actions = data.batch.get("valid_action",None)
     for i in range(len(data)):
         calling_times.append(valid_actions[i])
+        max_calling_times = max(max_calling_times,valid_actions[i])
 
     # 2.group_by_index
     index = data.non_tensor_batch['uid']
     id2calling_times = defaultdict(list)
+    token_level_scores = data.batch['token_level_scores']
     id2min_calling_times = {}
     oct_scores = torch.zeros((data.batch.batch_size[0]), dtype=torch.float32)
     calling_times_sum = 0
@@ -487,7 +502,9 @@ def oct_times_penalty(data,oct_smooth):
         bsz = data.batch.batch_size[0]
         for i in range(bsz):
             calling_times_sum += calling_times[i]
-            id2calling_times[index[i]].append(calling_times[i])
+            #只取score>0的calling times
+            if torch.sum(token_level_scores[i])>0:
+                id2calling_times[index[i]].append(calling_times[i])
         for idx in id2calling_times:
             if len(id2calling_times[idx]) == 1:
                 id2min_calling_times[idx] = id2calling_times[idx][0]
@@ -503,6 +520,9 @@ def oct_times_penalty(data,oct_smooth):
             else:
                 return 2*optim_time*calling_time/(optim_time+calling_time)
         for i in range(bsz): # 4. compute oct_scores
+            if torch.sum(token_level_scores[i])<=0:
+                oct_scores[i] = torch.tensor(1.0)
+                continue
             optim_time = id2min_calling_times[index[i]] #n
             calling_time = calling_times[i] #m
             map_times = map_to_2n(calling_time=calling_time,optim_time=optim_time)
@@ -512,4 +532,4 @@ def oct_times_penalty(data,oct_smooth):
                 oct_scores[i] = torch.cos(torch.tensor(calling_time*torch.pi/(2*calling_time+oct_smooth)))
             else:
                 oct_scores[i] = torch.sin(torch.tensor(map_times*torch.pi/(2*optim_time)))
-    return oct_scores, calling_times_sum/bsz
+        return oct_scores, calling_times_sum/bsz, max_calling_times

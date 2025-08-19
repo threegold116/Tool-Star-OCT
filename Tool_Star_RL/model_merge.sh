@@ -1,6 +1,6 @@
 #!/bin/bash
 source ~/.bashrc
-source ~/miniconda3/bin/activate
+source ~/anaconda3/bin/activate
 conda activate toolstar
 export LD_LIBRARY_PATH=$HOME/miniconda3/envs/toolstar/lib/python3.10/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
 cd /share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL
