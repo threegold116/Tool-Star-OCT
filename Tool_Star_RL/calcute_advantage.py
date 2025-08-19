@@ -11,7 +11,6 @@ def get_group_advantage(rewards):
 
 
 
-
 def get_oct_penalty(budgets,rewards,oct_smooth=3*2):
     acc_budgets = []
     for i,reward in enumerate(rewards):

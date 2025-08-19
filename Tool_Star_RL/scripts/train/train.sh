@@ -7,6 +7,7 @@ TRAIN_BATCH_SIZE=128
 PPO_MINI_BATCH_SIZE=128
 MAX_PROMPT_LENGTH=1536
 MAX_RESPONSE_LENGTH=4096
+OCT_PENALTY=budget
 APPLY_CHAT=True
 PROMPT_TEMPLATE_NAME=re_search_template_sys
 ACTOR_MODEL_PATH=/your/model/path
@@ -70,6 +71,7 @@ while [[ $# -gt 0 ]]; do
         --use_oct_cofficient) USE_OCT_COEFFICIENT="$2"; shift 2;;
         --kl_loss_coef) KL_LOSS_COEF="$2"; shift 2;;
         --loss_agg_mode) LOSS_AGG_MODE="$2"; shift 2;;
+        --oct_penalty) OCT_PENALTY="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -96,7 +98,7 @@ echo $PYTHONPATH
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
     algorithm.kl_ctrl.kl_coef=0.0 \
-    algorithm.oct_penalty=budget \
+    algorithm.oct_penalty=${OCT_PENALTY} \
     data.train_files="$TRAIN_FILES" \
     data.val_files="$TEST_FILES" \
     data.prompt_key=${PROMPT_KEY} \
