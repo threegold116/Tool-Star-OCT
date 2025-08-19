@@ -14,6 +14,7 @@ REWARD_MANAGER=re_search
 MAX_CALLING_TIMES=1
 ROLLOUT_N=8
 TOP_N=3
+OCT_PENALTY=budget
 SEARCH_URL=http://183.174.229.164:1242 # local wiki search url
 PROJECT_NAME=research_batch_repro
 EXPERIMENT_NAME={your_experiment_name}
@@ -66,6 +67,7 @@ while [[ $# -gt 0 ]]; do
         --lr_warmup_steps_ratio) LR_WARMUP_STEPS_RATIO="$2"; shift 2;;
         --clip_ratio_high) CLIP_RATIO_HIGH="$2"; shift 2;;
         --use_oct_cofficient) USE_OCT_COEFFICIENT="$2"; shift 2;;
+        --oct_penalty) OCT_PENALTY="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -92,7 +94,7 @@ echo $PYTHONPATH
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
     algorithm.kl_ctrl.kl_coef=0.0 \
-    algorithm.oct_penalty=budget \
+    algorithm.oct_penalty=${OCT_PENALTY} \
     data.train_files="$TRAIN_FILES" \
     data.val_files="$TEST_FILES" \
     data.prompt_key=${PROMPT_KEY} \
