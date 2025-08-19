@@ -471,9 +471,6 @@ def oct_budget_penalty(data,oct_smooth):
                 oct_scores[i] = torch.sin(map_costs*torch.pi/(2*optim_cost))
     return oct_scores, calling_costs_sum/bsz,max_calling_times
 
-
-    return oct_scores, calling_costs_sum/bsz,max_calling_times
-
 def oct_times_penalty(data,oct_smooth):
     # 1.get_strings
     calling_times = []
