@@ -115,7 +115,7 @@ def apply_kl_penalty(data: DataProto, kl_ctrl: core_algos.AdaptiveKLController, 
 
     return data, metrics
 #THREEGOLDCHANGE:计算oct奖励
-def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct'):
+def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct',no_positive_penalty=True):
     token_level_scores = data.batch['token_level_scores']
     # compute the oct reward cofficent
     if oct_penalty == 'times':
@@ -126,7 +126,13 @@ def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_p
     elif oct_penalty == 'budget':
         old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth)  # (batch_size, response_length)
         print(f"old: {old}")
-        oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+        if no_positive_penalty:
+            oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+        else:#TODO:oct_ctrl.coffoicient如果不为1，对结果的影响
+            for idx, old in enumerate(old):
+                if torch.sum(token_level_scores)> 0:
+                    oct_token_level_scores = token_level_scores + old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+                
         metrics = {'rollout/avg_call_costs': avg_call_costs,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
     else:
         raise NotImplementedError
