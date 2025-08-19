@@ -178,7 +178,7 @@ conda activate toolstar
 
 # install torch & flash-atten
 pip3 install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124
-pip3 install flash-attn --no-build-isolation
+pip3 install flash-attn==flash-attn-2.7.4.post1 --no-build-isolation
 
 # install RL basic env
 cd Tool_Star_RL

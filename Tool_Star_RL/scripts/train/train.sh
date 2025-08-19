@@ -14,19 +14,22 @@ REWARD_MANAGER=re_search
 MAX_CALLING_TIMES=1
 ROLLOUT_N=8
 TOP_N=3
+OCT_PENALTY=budget
 SEARCH_URL=http://183.174.229.164:1242 # local wiki search url
 PROJECT_NAME=research_batch_repro
 EXPERIMENT_NAME={your_experiment_name}
 NNODES=1
-N_GPUS_PER_NODE=4
+N_GPUS_PER_NODE=1
 PROGRESSIVE_CALLING_TIMES_STAGES=0
 USE_OCT_COEFFICIENT=False
 SAVE_FREQ=10
 MIX_RULES=False
 QA_RULE=f1_score
 TEST_FREQ=5
+LOSS_AGG_MODE=token-mean
 SEARCH_MODE=wikipedia
 TOTAL_EPOCHS=2
+KL_LOSS_COEF=0.0
 IS_MULTI_TOOL=False
 RADIO_CLIP=False
 LR_WARMUP_STEPS_RATIO=0.285
@@ -66,6 +69,9 @@ while [[ $# -gt 0 ]]; do
         --lr_warmup_steps_ratio) LR_WARMUP_STEPS_RATIO="$2"; shift 2;;
         --clip_ratio_high) CLIP_RATIO_HIGH="$2"; shift 2;;
         --use_oct_cofficient) USE_OCT_COEFFICIENT="$2"; shift 2;;
+        --kl_loss_coef) KL_LOSS_COEF="$2"; shift 2;;
+        --loss_agg_mode) LOSS_AGG_MODE="$2"; shift 2;;
+        --oct_penalty) OCT_PENALTY="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -92,7 +98,7 @@ echo $PYTHONPATH
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
     algorithm.kl_ctrl.kl_coef=0.0 \
-    algorithm.oct_penalty=budget \
+    algorithm.oct_penalty=${OCT_PENALTY} \
     data.train_files="$TRAIN_FILES" \
     data.val_files="$TEST_FILES" \
     data.prompt_key=${PROMPT_KEY} \
@@ -110,7 +116,8 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.use_dynamic_bsz=True \
     actor_rollout_ref.actor.ppo_max_token_len_per_gpu=$((2*(MAX_PROMPT_LENGTH+MAX_RESPONSE_LENGTH))) \
     actor_rollout_ref.actor.use_kl_loss=True \
-    actor_rollout_ref.actor.kl_loss_coef=0.0 \
+    actor_rollout_ref.actor.loss_agg_mode=${LOSS_AGG_MODE} \
+    actor_rollout_ref.actor.kl_loss_coef=${KL_LOSS_COEF} \
     actor_rollout_ref.actor.kl_loss_type=low_var_kl \
     actor_rollout_ref.actor.radio_clip=${RADIO_CLIP} \
     actor_rollout_ref.actor.clip_ratio_high=${CLIP_RATIO_HIGH} \
