@@ -2,14 +2,14 @@ import jsonlines
 import os
 import json
 import re
-from analyse_research import get_search_questions
+# from analyse_research import get_search_questions
 import sys
 if len(sys.argv) > 1:
     expertment_name = sys.argv[1]
 else:
-    expertment_name="Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.28_grad_clip_epoch2_warm_up_new"
-data_dir = f"/share/home/jfliang/Project/sxjiang/Tool-Star-OCT/Tool_Star_RL/verl_checkpoints/{expertment_name}/rollout"
-specific_rollout_iter_num = 1
+    expertment_name="Qwen2.5-3B-Instruct-origin_epoch_1_new_no_warmup-grpo_debug-bz_128-clip_ratio_0.28_one_epoch_tool_star_new_no_warm_up"
+data_dir = f"/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/verl_checkpoints/{expertment_name}/rollout"
+specific_rollout_iter_num = -1
 
 def get_question(sentence):
     sentence = sentence.split("<|im_end|>\n<|im_start|>assistant\n")[0]
@@ -19,22 +19,26 @@ def find_wrong(reson_str,sequences_str):
     
     if "bad format" not in reson_str:
         return False
-    # if "<think> </think> not paired" in reson_str:
-    #     return False
-    if sequences_str.count("</answer>")>3 or sequences_str.count("<answer>")>3:
-        return True
+    # # if "<think> </think> not paired" in reson_str:
+    # #     return False
+    # if sequences_str.count("</answer>")>3 or sequences_str.count("<answer>")>3:
+    #     return True
     if "<<" in sequences_str:
         return True
-    
-    if sequences_str.count("</answer>")==2:
-        return False
-    if sequences_str.count("</answer>")==2 and sequences_str.count("<|im_end|>")==3:
-        return False
-    if sequences_str.count("</answer>")!=sequences_str.count("<|im_end|>"):
+    if "< <" in sequences_str:
         return True
-    
-    
-    return True
+    # if sequences_str.count("</answer>")==2:
+    #     return False
+    # if sequences_str.count("</answer>")==2 and sequences_str.count("<|im_end|>")==3:
+    #     return False
+    # if sequences_str.count("</answer>")!=sequences_str.count("<|im_end|>"):
+    #     return True
+    # if not sequences_str.strip().endswith("<|im_end|>") and not sequences_str.strip().endswith("</python>") and not sequences_str.strip().endswith("</search>"):
+    #     print(sequences_str[-10:])
+    #     return True
+    # if sequences_str.strip().endswith("</python><|im_end|>") or sequences_str.strip().endswith("</search><|im_end|>"):
+    #     return True
+    return False
 def draw_with_max(x,y,result_dir,name):
     plt.figure(figsize=(12, 5))  # 宽度=12，高度=5，单位是英寸
     plt.plot(x, y, marker='o', label='Line')  # 画折线图并加点
@@ -72,6 +76,7 @@ for rollout_file in os.listdir(data_dir):
     if str(specific_rollout_iter_num) not in rollout_file and specific_rollout_iter_num != -1:
         continue
     with jsonlines.open(os.path.join(data_dir, rollout_file)) as reader:
+        
         
         
         for line in reader:

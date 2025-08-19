@@ -157,7 +157,7 @@ def correctness_format_calling_score(tokenizer, response, gt, is_search, is_pyth
         return equiv_score, f'correct answer, get equiv_score: {equiv_score}'
     else:
         print(f"--------------------------------wrong answer--------------------------------")
-        return 0, f'format good but wrong answer:{answer}'
+        return 0, f'equiv_score, format good but wrong answer:{answer}'
 # THREEGOLDCHANGE:和re_search保持一致
 
 def correctness_score_v2(response, gt):

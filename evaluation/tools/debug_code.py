@@ -2,18 +2,21 @@ from urllib.parse import urljoin
 import requests
 import time 
 from argparse import Namespace
-
+import os
 import asyncio
 from openai import OpenAI
 
 
 
 def debug_code_function(code, error, api_key="your_api_key"):
-
-    API_BASE_URL = api_key
-    MODEL_NAME = "Qwen2.5-72B-Instruct"
+    
+    if api_key == "your_api_key":
+        api_key = os.environ.get("ALIYUN_API_KEY")
+    
+    API_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    MODEL_NAME = "qwen2.5-3b-instruct"
     client = OpenAI(
-        api_key="empty",
+        api_key=api_key,
         base_url=API_BASE_URL,
     )
 
@@ -48,7 +51,7 @@ def debug_code_function(code, error, api_key="your_api_key"):
         extracted_code = response_text[code_start:code_end].strip()
     else:
         extracted_code = response_text.strip()
-    print("提取的代码:", extracted_code)
+    print("提取的代码:\n", extracted_code)
     return extracted_code
 
 

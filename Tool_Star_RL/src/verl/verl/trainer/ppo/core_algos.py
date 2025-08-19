@@ -240,9 +240,45 @@ def compute_rewards(token_level_scores, old_log_prob, ref_log_prob, kl_ratio):
     kl = old_log_prob - ref_log_prob
     return token_level_scores - kl * kl_ratio
 
+
+def agg_loss(loss_mat: torch.Tensor, loss_mask: torch.Tensor, loss_agg_mode: str):
+    """
+    Aggregate the loss matrix into a scalar.
+
+    Args:
+        loss_mat: `(torch.Tensor)`:
+            shape: (bs, response_length)
+        loss_mask: `(torch.Tensor)`:
+            shape: (bs, response_length)
+        loss_agg_mode: (str) choices:
+            method to aggregate the loss matrix into a scalar.
+    Returns:
+        loss: `a scalar torch.Tensor`
+            aggregated loss
+    """
+    if loss_agg_mode == "token-mean":
+        loss = verl_F.masked_mean(loss_mat, loss_mask)
+    elif loss_agg_mode == "seq-mean-token-sum":
+        seq_losses = torch.sum(loss_mat * loss_mask, dim=-1)  # token-sum
+        loss = torch.mean(seq_losses)  # seq-mean
+    elif loss_agg_mode == "seq-mean-token-mean":
+        seq_losses = torch.sum(loss_mat * loss_mask, dim=-1) / torch.sum(loss_mask, dim=-1)  # token-mean
+        loss = torch.mean(seq_losses)  # seq-mean
+    elif loss_agg_mode == "seq-mean-token-sum-norm":
+        seq_losses = torch.sum(loss_mat * loss_mask, dim=-1)
+        loss = torch.sum(seq_losses) / loss_mask.shape[-1]  # The divisor
+        # (loss_mask.shape[-1]) should ideally be constant
+        # throughout training to well-replicate the DrGRPO paper.
+        # TODO: Perhaps add user-defined normalizer argument to
+        # agg_loss to ensure divisor stays constant throughout.
+    else:
+        raise ValueError(f"Invalid loss_agg_mode: {loss_agg_mode}")
+
+    return loss
+
 # THREEGOLDCHANGE: add clip higher
 def compute_policy_loss(old_log_prob, log_prob, advantages, eos_mask, cliprange,cliprange_low=None,
-    cliprange_high=None,radio_clip=False):
+    cliprange_high=None,radio_clip=False, loss_agg_mode='token-mean'):
     """Adapted from https://github.com/huggingface/trl/blob/main/trl/trainer/ppo_trainer.py#L1122
 
     Args:
@@ -278,8 +314,10 @@ def compute_policy_loss(old_log_prob, log_prob, advantages, eos_mask, cliprange,
 
     pg_losses = -advantages * ratio
     pg_losses2 = -advantages * torch.clamp(ratio, 1.0 - cliprange_low, 1.0 + cliprange_high)
-
-    pg_loss = verl_F.masked_mean(torch.max(pg_losses, pg_losses2), eos_mask)
+    # THREEGOLDCHANGE: follow the implementation of GRPO in token-loss-agg-mode
+    # pg_loss = verl_F.masked_mean(torch.max(pg_losses, pg_losses2), eos_mask)
+    pg_loss = agg_loss(torch.max(pg_losses, pg_losses2), eos_mask, loss_agg_mode=loss_agg_mode)
+    # THREEGOLDCHANGE
     pg_clipfrac = verl_F.masked_mean(torch.gt(pg_losses2, pg_losses).float(), eos_mask)
     return pg_loss, pg_clipfrac, ppo_kl
 
@@ -374,12 +412,15 @@ def oct_budget_penalty(data,oct_smooth):
     search_cost = data.batch.get("search_cost",None)
     python_cost = data.batch.get("python_cost",None)
     max_calling_times = 0
+    max_calling_times = 0
     for i in range(len(data)):
         tool_calling_costs.append(search_cost[i]*search_times[i]+python_cost[i]*python_times[i])
+        max_calling_times = max(max_calling_times,search_times[i]+python_times[i])
         max_calling_times = max(max_calling_times,search_times[i]+python_times[i])
 
     # 2.group_by_index
     index = data.non_tensor_batch['uid']
+    ability = data.non_tensor_batch.get("ability",None)
     id2calling_costs = defaultdict(list)
     token_level_scores = data.batch['token_level_scores']
     id2min_calling_costs = {}
@@ -412,7 +453,15 @@ def oct_budget_penalty(data,oct_smooth):
                 continue
             optim_cost = id2min_calling_costs[index[i]] #n
             calling_cost = tool_calling_costs[i] #m
-            oct_smooth_budget = oct_smooth*max(python_cost[i],search_cost[i]) 
+            if ability is None:
+                oct_smooth_budget = oct_smooth*max(python_cost[i],search_cost[i]) 
+            else:
+                if ability[i]=="qa":
+                    oct_smooth_budget = oct_smooth*search_cost[i]
+                elif ability[i]=="math":
+                    oct_smooth_budget = oct_smooth*python_cost[i]
+                else:
+                    raise f"the ability is not illeagl"
             map_costs = map_to_2n(calling_cost=calling_cost,optim_cost=optim_cost)
             if map_costs==0 and optim_cost==0:
                 oct_scores[i] = torch.tensor(1.0)
@@ -420,6 +469,9 @@ def oct_budget_penalty(data,oct_smooth):
                 oct_scores[i] = torch.cos(calling_cost*torch.pi/(2*calling_cost+oct_smooth_budget))
             else:
                 oct_scores[i] = torch.sin(map_costs*torch.pi/(2*optim_cost))
+    return oct_scores, calling_costs_sum/bsz,max_calling_times
+
+
     return oct_scores, calling_costs_sum/bsz,max_calling_times
 
 def oct_times_penalty(data,oct_smooth):

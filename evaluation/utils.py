@@ -8,8 +8,8 @@ def search(query: str):
     if query == '':
         return 'invalid query'
 
-    url = f'your_search_api_url'
-    data = {'query': query, 'top_n': 5}
+    url = f'http://0.0.0.0:8000/batch_search'
+    data = {'query': query, 'top_n': 3}
     response = requests.post(url, json=data)
     retrieval_text = ''
     for line in response.json():
@@ -17,11 +17,11 @@ def search(query: str):
     retrieval_text = retrieval_text.strip()
     return retrieval_text
 
-def batch_search(query: Union[str, List[str]], top_n=5) -> List[str]:
+def batch_search(query: Union[str, List[str]], top_n=10) -> List[str]:
     if len(query) == 0:
         return 'invalid query'
 
-    url = f'your_search_api_url'
+    url = f'http://0.0.0.0:8000/batch_search'
     if isinstance(query, str):
         query = [query]
     data = {'query': query, 'top_n': top_n}

@@ -10,11 +10,12 @@ from .webpage_utils import extract_text_from_urls, extract_snippet_with_context,
 import re
 import asyncio
 from openai import OpenAI
+import os
 # from deep_search_dgt import deep_search_dgt
 from transformers import AutoTokenizer
 
-BING_API_KEY = "E16JgNwG9667ymey3HQIK8x9exvf56wVT9I2W5N3"
-BING_ENDPOINT = "https://api.myhispreadnlp.com/v7.0/search"
+BING_API_KEY = os.environ.get("BING_API_KEY", "")
+BING_ENDPOINT = os.environ.get("BING_ENDPOINT", "")
 
 def deep_search_snippet(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key=BING_API_KEY, bing_endpoint=BING_ENDPOINT):
     # 根据函数参数构建 args
@@ -93,7 +94,7 @@ def deep_search_browser(search_query, top_k=10, use_jina=False, jina_api_key="em
         concurrent_limit=200
     )
     # print(args)
-    
+    print(bing_subscription_key, bing_endpoint)
     search_cache = {}
     url_cache = {}
 
