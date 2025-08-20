@@ -15,7 +15,6 @@ REWARD_MANAGER=re_search
 MAX_CALLING_TIMES=1
 ROLLOUT_N=8
 TOP_N=3
-OCT_PENALTY=budget
 SEARCH_URL=http://183.174.229.164:1242 # local wiki search url
 PROJECT_NAME=research_batch_repro
 EXPERIMENT_NAME={your_experiment_name}
