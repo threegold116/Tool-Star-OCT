@@ -529,7 +529,7 @@ def oct_times_penalty(data,oct_smooth):
             if map_times==0 and optim_time==0:
                 oct_scores[i] = torch.tensor(1.0)
             elif optim_time==0:
-                oct_scores[i] = torch.cos(torch.tensor(calling_time*torch.pi/(2*calling_time+oct_smooth)))
+                oct_scores[i] = torch.cos(calling_time*torch.pi/(2*calling_time+oct_smooth))
             else:
-                oct_scores[i] = torch.sin(torch.tensor(map_times*torch.pi/(2*optim_time)))
+                oct_scores[i] = torch.sin(map_times*torch.pi/(2*optim_time))
         return oct_scores, calling_times_sum/bsz, max_calling_times

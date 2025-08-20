@@ -101,10 +101,11 @@ actor_rollout_ref:
     # number of responses (i.e. num sample times)
     n: 1 # > 1 for grpo
     search_url: null
+    #THREEGOLDCHANGE
     search_mode: "wikipedia"
     top_n: 3
     max_calling_times: 3
-
+    #THREEGOLDCHANGE
 
 
 critic:
@@ -199,4 +200,6 @@ trainer:
   default_local_dir: checkpoints/${trainer.project_name}/${trainer.experiment_name}
   val_before_train: True
   rollout_save_path: null
+  #THREEGOLDCHANGE
   progressive_calling_times_stages: 3
+  #THREEGOLDCHANGE

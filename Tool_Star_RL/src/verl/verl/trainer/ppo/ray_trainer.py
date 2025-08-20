@@ -24,7 +24,7 @@ from enum import Enum
 from pprint import pprint
 from typing import Type, Dict
 from copy import deepcopy
-
+from tqdm import tqdm
 import numpy as np
 from codetiming import Timer
 from omegaconf import OmegaConf, open_dict
@@ -898,6 +898,8 @@ class RayPPOTrainer(object):
                     print(f"--------------------------------oct smooth add from {self.oct_ctrl.smooth-progressive_update_times} to {self.oct_ctrl.smooth}--------------------------------")           
                 self.phase_start = 1 + progressive_update_times*progressive_calling_steps
             print(f"-------phase_start: {self.phase_start}-------")
+        # add tqdm
+        progress_bar = tqdm(total=self.total_training_steps, initial=self.global_steps, desc="Training Progress")
         #THREEGOLDCHANGE
         for epoch in range(self.config.trainer.total_epochs):
             for batch_dict in self.train_dataloader:
@@ -1041,8 +1043,9 @@ class RayPPOTrainer(object):
                 for key,value in timing_raw.items():
                     print(f'{key}: {value}')
 
+                progress_bar.update(1)
                 if self.global_steps >= self.total_training_steps:
-
+                    self.global_steps += 1
                     # perform validation after training
                     if self.val_reward_fn is not None:
                         val_metrics = self._validate()
