@@ -35,6 +35,7 @@ IS_MULTI_TOOL=False
 RADIO_CLIP=False
 LR_WARMUP_STEPS_RATIO=0.285
 CLIP_RATIO_HIGH=0.28
+NO_POSITIVE_PENALTY=True
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --prompt_key) PROMPT_KEY="$2"; shift 2;;
@@ -73,6 +74,7 @@ while [[ $# -gt 0 ]]; do
         --kl_loss_coef) KL_LOSS_COEF="$2"; shift 2;;
         --loss_agg_mode) LOSS_AGG_MODE="$2"; shift 2;;
         --oct_penalty) OCT_PENALTY="$2"; shift 2;;
+        --no_positive_penalty) NO_POSITIVE_PENALTY="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -123,6 +125,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.radio_clip=${RADIO_CLIP} \
     actor_rollout_ref.actor.clip_ratio_high=${CLIP_RATIO_HIGH} \
     actor_rollout_ref.actor.use_oct_cofficient=${USE_OCT_COEFFICIENT} \
+    actor_rollout_ref.actor.no_positive_penalty=${NO_POSITIVE_PENALTY} \
     actor_rollout_ref.actor.fsdp_config.param_offload=False \
     actor_rollout_ref.actor.fsdp_config.grad_offload=False \
     actor_rollout_ref.actor.fsdp_config.optimizer_offload=False \

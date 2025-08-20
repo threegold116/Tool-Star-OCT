@@ -301,14 +301,17 @@ draw_with_max(x,y,result_dir,"max_length")
 y = [rollout_step2metrics[i]["max_calling_times"] for i in x]
 draw_with_max(x,y,result_dir,"max_calling_times")
 
+y = [rollout_step2metrics[i]["max_calling_times_num"] for i in x]
+draw_with_max(x,y,result_dir,"max_calling_times_num")
+
 y = [rollout_step2metrics[i]["all_calling_times"] for i in x]
 draw_with_max(x,y,result_dir,"all_calling_times")
 
 y = [rollout_step2metrics[i]["all_observation_length"] for i in x]
 draw_with_max(x,y,result_dir,"all_observation_length")
 
-y = [rollout_step2metrics[i]["multi_tool_calling_num"] for i in x]
-draw_with_max(x,y,result_dir,"multi_tool_calling_num")
+y = [rollout_step2metrics[i]["group_multi_tool_calling_num"] for i in x]
+draw_with_max(x,y,result_dir,"group_multi_tool_calling_num")
 
 y = [rollout_step2metrics[i]["group_zero_calling_num_positive"] for i in x]
 draw_with_max(x,y,result_dir,"group_zero_calling_num_positive")

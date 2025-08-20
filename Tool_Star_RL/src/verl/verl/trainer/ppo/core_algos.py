@@ -31,10 +31,11 @@ class OctController:
     https://arxiv.org/pdf/2504.14870
     """
 
-    def __init__(self, init_cofficient, init_smooth,tokenizer):
+    def __init__(self, init_cofficient, init_smooth,tokenizer,no_positive_penalty=True):
         self.cofficient = init_cofficient
         self.smooth = init_smooth
         self.tokenizer = tokenizer
+        self.no_positive_penalty = no_positive_penalty
 
     # def update(self, current_cot, n_steps):
     #     target = self.target

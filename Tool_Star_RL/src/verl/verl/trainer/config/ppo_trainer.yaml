@@ -43,6 +43,7 @@ actor_rollout_ref:
     use_oct_cofficient: False # True for OCT
     oct_coef: 1 # for OCT(alpha)
     oct_smooth: ${actor_rollout_ref.rollout.max_calling_times} # same with max_calling_times
+    no_positive_penalty: True # True for OCT
     #THREEGOLDCHANGE
     ppo_epochs: 1
     shuffle: False

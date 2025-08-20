@@ -226,6 +226,11 @@ optim_cost = 4
 smooth = 2
 draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
 
+costs = np.arange(32)
+optim_cost = 0
+smooth = 2
+draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
+
 
 costs = np.arange(32)
 optim_cost = 2

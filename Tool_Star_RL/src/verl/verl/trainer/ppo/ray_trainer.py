@@ -115,8 +115,9 @@ def apply_kl_penalty(data: DataProto, kl_ctrl: core_algos.AdaptiveKLController, 
 
     return data, metrics
 #THREEGOLDCHANGE:计算oct奖励
-def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct',no_positive_penalty=True):
+def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct'):
     token_level_scores = data.batch['token_level_scores']
+    no_positive_penalty = oct_ctrl.no_positive_penalty
     # compute the oct reward cofficent
     if oct_penalty == 'times':
         old,avg_call_times,max_calling_times = core_algos.oct_times_penalty(data,oct_smooth=oct_ctrl.smooth)  # (batch_size, response_length)
@@ -124,15 +125,25 @@ def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_p
         oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
         metrics = {'rollout/avg_call_times': avg_call_times,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
     elif oct_penalty == 'budget':
-        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth)  # (batch_size, response_length)
+        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty)  # (batch_size, response_length)
         print(f"old: {old}")
         if no_positive_penalty:
             oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
         else:#TODO:oct_ctrl.coffoicient如果不为1，对结果的影响
-            for idx, old in enumerate(old):
-                if torch.sum(token_level_scores)> 0:
-                    oct_token_level_scores = token_level_scores + old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
-                
+            oct_token_level_scores = token_level_scores.clone()
+            for idx, old_value in enumerate(old):
+                #THREEGOLDCHANGE:copy from advantage calcute 
+                prompt_ids = data[idx].batch['prompts']
+                prompt_length = prompt_ids.shape[-1]
+                valid_response_length = data[idx].batch['attention_mask'][prompt_length:].sum()
+                score = oct_token_level_scores[idx][valid_response_length - 1]
+                if torch.sum(token_level_scores[idx])> 0:
+                    oct_token_level_scores[idx][valid_response_length - 1] = score * old_value *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+                elif torch.sum(token_level_scores[idx])==0:
+                    oct_token_level_scores[idx][valid_response_length - 1] = old_value *oct_ctrl.cofficient - 1 #(bz,response_length)*(bz,1) for last-token score
+                else:
+                    pass
+                    #no penalty for format error
         metrics = {'rollout/avg_call_costs': avg_call_costs,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
     else:
         raise NotImplementedError
@@ -405,6 +416,7 @@ class RayPPOTrainer(object):
         if self.config.actor_rollout_ref.actor.use_oct_cofficient:
             self.oct_ctrl = core_algos.OctController(init_cofficient=config.actor_rollout_ref.actor.oct_coef,
                                                     init_smooth=config.actor_rollout_ref.actor.oct_smooth,
+                                                    no_positive_penalty=config.actor_rollout_ref.actor.no_positive_penalty,
                                                     tokenizer=self.tokenizer)
         #THREEGOLDCHANGE:this is oct init
         self._validate_config()
@@ -981,7 +993,8 @@ class RayPPOTrainer(object):
                         if self.config.actor_rollout_ref.actor.use_oct_cofficient:
                             batch, oct_metrics = apply_oct_penalty(batch,
                                                                  oct_ctrl=self.oct_ctrl,
-                                                                 oct_penalty=self.config.algorithm.oct_penalty)
+                                                                 oct_penalty=self.config.algorithm.oct_penalty,
+                                                                 )
                             metrics.update(oct_metrics) #TODO: 增加对calling_times的logging
                         else:
                             batch.batch['token_level_scores'] = batch.batch['token_level_scores']
