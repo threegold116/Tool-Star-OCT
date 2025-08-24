@@ -31,11 +31,12 @@ class OctController:
     https://arxiv.org/pdf/2504.14870
     """
 
-    def __init__(self, init_cofficient, init_smooth,tokenizer,no_positive_penalty=True):
+    def __init__(self, init_cofficient, init_smooth,tokenizer,no_positive_penalty=True,apply_mode="multiply"):
         self.cofficient = init_cofficient
         self.smooth = init_smooth
         self.tokenizer = tokenizer
         self.no_positive_penalty = no_positive_penalty
+        self.apply_mode = apply_mode
 
     # def update(self, current_cot, n_steps):
     #     target = self.target
@@ -466,6 +467,8 @@ def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True):
                     oct_smooth_budget = oct_smooth*python_cost[i]
                 else:
                     raise f"the ability is not illeagl"
+            if max(id2calling_costs[index[i]])>0:
+                oct_smooth_budget = min(max(id2calling_costs[index[i]]),oct_smooth_budget)
             map_costs = map_to_2n(calling_cost=calling_cost,optim_cost=optim_cost)
             if map_costs==0 and optim_cost==0:
                 oct_scores[i] = torch.tensor(1.0)

@@ -33,6 +33,7 @@ bash scripts/train/train.sh \
     --mix_rules True \
     --qa_rule em_score \
     --is_multi_tool False \
+    --apply_mode "add"\
     --progressive_calling_times_stages 3 \
     # --wandb_api_key {your_wandb_api_key} \
     

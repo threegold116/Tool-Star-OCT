@@ -212,55 +212,86 @@ def sim_oct(cost,optim_cost,smooth):
     else:
         oct_penalty = np.sin(np.pi*map_costs/(2*optim_budget))
     return oct_penalty
-result_dir="/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/analyse/sim_oct"
+result_dir="/share/home/gtang/sxjiang-gt/Tool-Star-OCT/Tool_Star_RL/analyse/sim_oct"
 os.makedirs(result_dir,exist_ok=True)
 
-costs = np.arange(32)
-optim_cost = 1
-smooth = 2
-draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
+# costs = np.arange(32)
+# optim_cost = 1
+# smooth = 2
+# draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
 
 
-costs = np.arange(32)
-optim_cost = 4
-smooth = 2
-draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
+# costs = np.arange(32)
+# optim_cost = 4
+# smooth = 2
+# draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
 
-costs = np.arange(32)
-optim_cost = 0
-smooth = 2
-draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
-
-
-costs = np.arange(32)
-optim_cost = 2
-smooth = 2
-y = [sim_oct(cost,optim_cost,smooth) for cost in costs]
-smooth = 3
-y1 = [sim_oct(cost,optim_cost,smooth) for cost in costs]
-smooth = 4
-y2 = [sim_oct(cost,optim_cost,smooth) for cost in costs]
-draw_multi_lines(costs,[y,y1,y2],["smooth_2","smooth_3","smooth_4"],result_dir,f"sim_oct_optim_{optim_cost}_smooth_multi")
+# costs = np.arange(32)
+# optim_cost = 0
+# smooth = 2
+# draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
 
 
-costs = np.arange(32)
-optim_cost = 2
-smooth = 2
-draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
+# costs = np.arange(32)
+# optim_cost = 2
+# smooth = 2
+# y = [sim_oct(cost,optim_cost,smooth) for cost in costs]
+# smooth = 3
+# y1 = [sim_oct(cost,optim_cost,smooth) for cost in costs]
+# smooth = 4
+# y2 = [sim_oct(cost,optim_cost,smooth) for cost in costs]
+# draw_multi_lines(costs,[y,y1,y2],["smooth_2","smooth_3","smooth_4"],result_dir,f"sim_oct_optim_{optim_cost}_smooth_multi")
 
 
-costs = np.arange(32)
-optim_cost = 2
-smooth = 2
-y = [sim_oct(cost,optim_cost,smooth) for cost in costs]
-y1 = [map_to_2n(cost,optim_cost) for cost in costs]
-draw_multi_lines(costs,[y,y1],["oct_score","map2n"],result_dir,f"sim_oct_map2n_optim_{optim_cost}_smooth_multi")
+# costs = np.arange(32)
+# optim_cost = 2
+# smooth = 2
+# draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
 
-costs = np.arange(32)
-optim_cost = 2
-smooth = 2
-y = [np.sin(cost*np.pi/(cost+optim_cost)) for cost in costs]
-y1 = [np.sin(cost) for cost in costs]
-y2 = [cost*np.pi/(cost+optim_cost) for cost in costs]
-draw_with_max(costs,y,result_dir,f"sin_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
-draw_multi_lines(costs,[y,y1,y2],["sin_map","sin","map2n"],result_dir,f"sin_oct_map2n_optim_{optim_cost}_smooth_multi")
+
+# costs = np.arange(32)
+# optim_cost = 2
+# smooth = 2
+# y = [sim_oct(cost,optim_cost,smooth) for cost in costs]
+# y1 = [map_to_2n(cost,optim_cost) for cost in costs]
+# draw_multi_lines(costs,[y,y1],["oct_score","map2n"],result_dir,f"sim_oct_map2n_optim_{optim_cost}_smooth_multi")
+
+# costs = np.arange(32)
+# optim_cost = 2
+# smooth = 2
+# y = [np.sin(cost*np.pi/(cost+optim_cost)) for cost in costs]
+# y1 = [np.sin(cost) for cost in costs]
+# y2 = [cost*np.pi/(cost+optim_cost) for cost in costs]
+# draw_with_max(costs,y,result_dir,f"sin_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
+# draw_multi_lines(costs,[y,y1,y2],["sin_map","sin","map2n"],result_dir,f"sin_oct_map2n_optim_{optim_cost}_smooth_multi")
+
+
+rewards = [0,0,-1,-1,1,1,1,1]
+print(np.mean(rewards),np.std(rewards))
+print(get_group_advantage(rewards))
+# rewards = [0,-0.5,-1,-1,1,1,1,1]
+# print(get_group_advantage(rewards))
+# rewards = [0,-0.5,-1,-1,2,2,2,2]
+# print(get_group_advantage(rewards))
+rewards = [0,0,-1,-1,2,2,2,2]
+print(np.mean(rewards),np.std(rewards))
+print(get_group_advantage(rewards))
+rewards = [0,0,-1,-1,2,2,2,2]
+print(get_group_advantage(rewards))
+# rewards = [0,0,-1,-1,1.2,1,1,1]
+# print(get_group_advantage(rewards))
+rewards = [1,0,-1,-1,2,2,2,2]
+print(get_group_advantage(rewards))
+
+
+rewards = [2,0,-1,-1,1.8,1.8,2,2]
+print(get_group_advantage(rewards))
+rewards = [1,0,-1,-1,0.8,0.8,1,1]
+print(get_group_advantage(rewards))
+max_rewards = np.arange(32)
+
+y = []
+for i in range(len(max_rewards)):
+    rewards = [0,0,-1,-1,max_rewards[i],max_rewards[i],max_rewards[i],max_rewards[i]]
+    y.append(get_group_advantage(rewards)[-1])
+draw_with_max(max_rewards,y,result_dir,f"sim_oct_max_rewards_adavantages",max_rewards,y)
