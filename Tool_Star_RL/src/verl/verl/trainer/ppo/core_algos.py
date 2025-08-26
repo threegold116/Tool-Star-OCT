@@ -31,12 +31,13 @@ class OctController:
     https://arxiv.org/pdf/2504.14870
     """
 
-    def __init__(self, init_cofficient, init_smooth,tokenizer,no_positive_penalty=True,apply_mode="multiply"):
+    def __init__(self, init_cofficient, init_smooth,tokenizer,no_positive_penalty=True,apply_mode="multiply",group_smooth=False):
         self.cofficient = init_cofficient
         self.smooth = init_smooth
         self.tokenizer = tokenizer
         self.no_positive_penalty = no_positive_penalty
         self.apply_mode = apply_mode
+        self.group_smooth = group_smooth
 
     # def update(self, current_cot, n_steps):
     #     target = self.target
@@ -406,7 +407,7 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
 
 
 
-def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True):
+def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=False):
     # 1.get_strings
     tool_calling_costs = []
     search_times = data.batch.get("is_search",None)
@@ -467,7 +468,7 @@ def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True):
                     oct_smooth_budget = oct_smooth*python_cost[i]
                 else:
                     raise f"the ability is not illeagl"
-            if max(id2calling_costs[index[i]])>0:
+            if max(id2calling_costs[index[i]])>0 and group_smooth:
                 oct_smooth_budget = min(max(id2calling_costs[index[i]]),oct_smooth_budget)
             map_costs = map_to_2n(calling_cost=calling_cost,optim_cost=optim_cost)
             if map_costs==0 and optim_cost==0:

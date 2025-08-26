@@ -126,7 +126,7 @@ def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_p
         oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
         metrics = {'rollout/avg_call_times': avg_call_times,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
     elif oct_penalty == 'budget':
-        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty)  # (batch_size, response_length)
+        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty,group_smooth=oct_ctrl.group_smooth)  # (batch_size, response_length)
         print(f"old: {old}")
         if apply_mode=="add":
             oct_token_level_scores = token_level_scores.clone()
