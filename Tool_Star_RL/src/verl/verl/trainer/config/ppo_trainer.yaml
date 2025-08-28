@@ -38,10 +38,14 @@ actor_rollout_ref:
     use_kl_loss: False # True for GRPO
     kl_loss_coef: 0.001 # for grpo
     kl_loss_type: low_var_kl # for grpo
+    loss_agg_mode: token-mean
     #THREEGOLDCHANGE
     use_oct_cofficient: False # True for OCT
     oct_coef: 1 # for OCT(alpha)
     oct_smooth: ${actor_rollout_ref.rollout.max_calling_times} # same with max_calling_times
+    no_positive_penalty: True # True for OCT
+    apply_mode: multiply
+    group_smooth: False
     #THREEGOLDCHANGE
     ppo_epochs: 1
     shuffle: False
@@ -100,10 +104,11 @@ actor_rollout_ref:
     # number of responses (i.e. num sample times)
     n: 1 # > 1 for grpo
     search_url: null
+    #THREEGOLDCHANGE
     search_mode: "wikipedia"
     top_n: 3
     max_calling_times: 3
-
+    #THREEGOLDCHANGE
 
 
 critic:
@@ -198,4 +203,6 @@ trainer:
   default_local_dir: checkpoints/${trainer.project_name}/${trainer.experiment_name}
   val_before_train: True
   rollout_save_path: null
+  #THREEGOLDCHANGE
   progressive_calling_times_stages: 3
+  #THREEGOLDCHANGE

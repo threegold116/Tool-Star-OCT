@@ -54,6 +54,26 @@ def validate_format(text: str) -> tuple[bool, str]:
             return False, "python/result tags are nested in the wrong order"
             
         current_pos = result_end_pos
+    #check the order of think/search
+    think_end = 0
+    while True:
+        think_end = text.find('</think>', think_end)
+        if think_end == -1:
+            break
+        
+        # 从 </think> 之后开始，跳过空白字符
+        next_pos = think_end + len('</think>')
+        while next_pos < len(text) and text[next_pos].isspace():
+            next_pos += 1
+        
+        # 检查后续标签是否合法
+        if not (text.startswith('<python>', next_pos) or 
+                text.startswith('<search>', next_pos) or 
+                text.startswith('<answer>', next_pos)):
+            return False, "Invalid tag after </think>; must be <python>, <search>, or <answer>"
+        
+        think_end = next_pos
+    
     
     # check if \boxed{} is in the answer
     answer_start = text.find('<answer>')

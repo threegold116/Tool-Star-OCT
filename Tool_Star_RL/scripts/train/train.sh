@@ -7,30 +7,36 @@ TRAIN_BATCH_SIZE=128
 PPO_MINI_BATCH_SIZE=128
 MAX_PROMPT_LENGTH=1536
 MAX_RESPONSE_LENGTH=4096
+OCT_PENALTY=budget
 APPLY_CHAT=True
 PROMPT_TEMPLATE_NAME=re_search_template_sys
 ACTOR_MODEL_PATH=/your/model/path
 REWARD_MANAGER=re_search
 MAX_CALLING_TIMES=1
 ROLLOUT_N=8
+APPLY_MODE=multiply
 TOP_N=3
 SEARCH_URL=http://183.174.229.164:1242 # local wiki search url
 PROJECT_NAME=research_batch_repro
 EXPERIMENT_NAME={your_experiment_name}
 NNODES=1
-N_GPUS_PER_NODE=4
+N_GPUS_PER_NODE=1
 PROGRESSIVE_CALLING_TIMES_STAGES=0
 USE_OCT_COEFFICIENT=False
 SAVE_FREQ=10
 MIX_RULES=False
 QA_RULE=f1_score
 TEST_FREQ=5
+LOSS_AGG_MODE=token-mean
 SEARCH_MODE=wikipedia
 TOTAL_EPOCHS=2
+KL_LOSS_COEF=0.0
 IS_MULTI_TOOL=False
 RADIO_CLIP=False
 LR_WARMUP_STEPS_RATIO=0.285
 CLIP_RATIO_HIGH=0.28
+NO_POSITIVE_PENALTY=True
+GROUP_SMOOTH=False
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --prompt_key) PROMPT_KEY="$2"; shift 2;;
@@ -66,6 +72,12 @@ while [[ $# -gt 0 ]]; do
         --lr_warmup_steps_ratio) LR_WARMUP_STEPS_RATIO="$2"; shift 2;;
         --clip_ratio_high) CLIP_RATIO_HIGH="$2"; shift 2;;
         --use_oct_cofficient) USE_OCT_COEFFICIENT="$2"; shift 2;;
+        --kl_loss_coef) KL_LOSS_COEF="$2"; shift 2;;
+        --loss_agg_mode) LOSS_AGG_MODE="$2"; shift 2;;
+        --oct_penalty) OCT_PENALTY="$2"; shift 2;;
+        --no_positive_penalty) NO_POSITIVE_PENALTY="$2"; shift 2;;
+        --apply_mode) APPLY_MODE="$2"; shift 2;;
+        --group_smooth) GROUP_SMOOTH="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -92,7 +104,7 @@ echo $PYTHONPATH
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
     algorithm.kl_ctrl.kl_coef=0.0 \
-    algorithm.oct_penalty=budget \
+    algorithm.oct_penalty=${OCT_PENALTY} \
     data.train_files="$TRAIN_FILES" \
     data.val_files="$TEST_FILES" \
     data.prompt_key=${PROMPT_KEY} \
@@ -110,18 +122,22 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.use_dynamic_bsz=True \
     actor_rollout_ref.actor.ppo_max_token_len_per_gpu=$((2*(MAX_PROMPT_LENGTH+MAX_RESPONSE_LENGTH))) \
     actor_rollout_ref.actor.use_kl_loss=True \
-    actor_rollout_ref.actor.kl_loss_coef=0.0 \
+    actor_rollout_ref.actor.loss_agg_mode=${LOSS_AGG_MODE} \
+    actor_rollout_ref.actor.kl_loss_coef=${KL_LOSS_COEF} \
     actor_rollout_ref.actor.kl_loss_type=low_var_kl \
     actor_rollout_ref.actor.radio_clip=${RADIO_CLIP} \
     actor_rollout_ref.actor.clip_ratio_high=${CLIP_RATIO_HIGH} \
     actor_rollout_ref.actor.use_oct_cofficient=${USE_OCT_COEFFICIENT} \
+    actor_rollout_ref.actor.apply_mode=${APPLY_MODE} \
+    actor_rollout_ref.actor.no_positive_penalty=${NO_POSITIVE_PENALTY} \
+    actor_rollout_ref.actor.group_smooth=${GROUP_SMOOTH} \
     actor_rollout_ref.actor.fsdp_config.param_offload=False \
     actor_rollout_ref.actor.fsdp_config.grad_offload=False \
     actor_rollout_ref.actor.fsdp_config.optimizer_offload=False \
     actor_rollout_ref.rollout.log_prob_max_token_len_per_gpu=$((4*(MAX_PROMPT_LENGTH+MAX_RESPONSE_LENGTH))) \
     actor_rollout_ref.rollout.tensor_model_parallel_size=1 \
     actor_rollout_ref.rollout.name=vllm_with_search \
-    actor_rollout_ref.rollout.gpu_memory_utilization=0.8 \
+    actor_rollout_ref.rollout.gpu_memory_utilization=0.85 \
     actor_rollout_ref.rollout.search_mode=${SEARCH_MODE} \
     actor_rollout_ref.rollout.top_n=${TOP_N} \
     actor_rollout_ref.rollout.n=${ROLLOUT_N} \

@@ -26,7 +26,7 @@ install_requires = [
   'tensordict<0.6',
   'torchdata',
   'transformers',
-  'vllm==0.6.3',
+  # 'vllm==0.6.3',
   'wandb',
 
   # flashrag
@@ -62,7 +62,7 @@ setup(
     name='re-search',
     version=__version__,
     package_dir={'': 'src'},
-    packages=find_packages(where='src'),
+    packages=find_packages(where='src', exclude=['vllm']),
     url='https://github.com/Agent-RL/ReSearch',
     license='MIT License',
     author='Baichuan Inc.',
