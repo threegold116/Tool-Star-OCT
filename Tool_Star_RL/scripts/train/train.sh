@@ -37,6 +37,8 @@ LR_WARMUP_STEPS_RATIO=0.285
 CLIP_RATIO_HIGH=0.28
 NO_POSITIVE_PENALTY=True
 GROUP_SMOOTH=False
+GUP_MEMORY_UTILIZATION=0.85
+BINARY_F1_THRESHOLD=0.5
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --prompt_key) PROMPT_KEY="$2"; shift 2;;
@@ -78,6 +80,8 @@ while [[ $# -gt 0 ]]; do
         --no_positive_penalty) NO_POSITIVE_PENALTY="$2"; shift 2;;
         --apply_mode) APPLY_MODE="$2"; shift 2;;
         --group_smooth) GROUP_SMOOTH="$2"; shift 2;;
+        --gup_memory_utilization) GUP_MEMORY_UTILIZATION="$2"; shift 2;;
+        --binary_f1_threshold) BINARY_F1_THRESHOLD="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -137,7 +141,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.log_prob_max_token_len_per_gpu=$((4*(MAX_PROMPT_LENGTH+MAX_RESPONSE_LENGTH))) \
     actor_rollout_ref.rollout.tensor_model_parallel_size=1 \
     actor_rollout_ref.rollout.name=vllm_with_search \
-    actor_rollout_ref.rollout.gpu_memory_utilization=0.85 \
+    actor_rollout_ref.rollout.gpu_memory_utilization=${GUP_MEMORY_UTILIZATION} \
     actor_rollout_ref.rollout.search_mode=${SEARCH_MODE} \
     actor_rollout_ref.rollout.top_n=${TOP_N} \
     actor_rollout_ref.rollout.n=${ROLLOUT_N} \
@@ -149,6 +153,7 @@ python3 -m verl.trainer.main_ppo \
     reward_model.mix_rules=${MIX_RULES} \
     reward_model.qa_rule=${QA_RULE} \
     reward_model.is_multi_tool=${IS_MULTI_TOOL} \
+    reward_model.binary_f1_threshold=${BINARY_F1_THRESHOLD} \
     trainer.critic_warmup=0 \
     trainer.logger="[console, wandb]" \
     trainer.project_name=${PROJECT_NAME} \

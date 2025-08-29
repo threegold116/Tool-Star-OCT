@@ -8,9 +8,9 @@ conda install pytorch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 pytorch-cuda=
 pip install transformers datasets pyserini
 
 ## install the gpu version faiss to guarantee efficient RL rollout
-conda install -c pytorch -c nvidia faiss-gpu=1.8.0
+conda install -c pytorch -c nvidia faiss-gpu=1.8.0 -y
 
 ## API function
 pip install uvicorn fastapi
 
-pip install langid
+pip install langid 

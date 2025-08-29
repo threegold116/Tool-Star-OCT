@@ -21,7 +21,7 @@ class ReSearchRewardManagerWithSave():
     """The reward manager.
     """
 
-    def __init__(self, tokenizer, num_examine, compute_score=None, save_path=None,mix_rules=False,qa_rule="f1_score",is_multi_tool=False) -> None:
+    def __init__(self, tokenizer, num_examine, compute_score=None, save_path=None,mix_rules=False,qa_rule="f1_score",is_multi_tool=False,binary_f1_threshold=0.5) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.compute_score = compute_score or _default_compute_score
@@ -30,6 +30,7 @@ class ReSearchRewardManagerWithSave():
         self.mix_rules = mix_rules
         self.qa_rule = qa_rule
         self.is_multi_tool = is_multi_tool
+        self.binary_f1_threshold = binary_f1_threshold
     def __call__(self, data: DataProto, curr_save_path=None):
         """We will expand this function gradually based on the available datasets"""
 
@@ -87,7 +88,8 @@ class ReSearchRewardManagerWithSave():
                 abality=abality,
                 mix_rules=self.mix_rules,
                 qa_rule=self.qa_rule,
-                is_multi_tool=self.is_multi_tool
+                is_multi_tool=self.is_multi_tool,
+                binary_f1_threshold=self.binary_f1_threshold
             )
             if isinstance(score, tuple):
                 score, reason = score
