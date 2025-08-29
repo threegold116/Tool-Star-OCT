@@ -173,7 +173,7 @@ In this step, we will load the cold-start data for GRPO training. We reference t
 
 ```bash
 #create env
-conda create -n toolstar python==3.10
+conda create -n toolstar python==3.10 -y
 conda activate toolstar
 
 # install torch & flash-atten
