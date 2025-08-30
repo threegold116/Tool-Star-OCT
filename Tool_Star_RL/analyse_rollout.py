@@ -33,16 +33,14 @@ def get_question(sentence):
     return sentence
 def find_wrong(reson_str,sequences_str):
     
-    if "bad format" not in reson_str:
-        return False
     # # if "<think> </think> not paired" in reson_str:
     # #     return False
     # if sequences_str.count("</answer>")>3 or sequences_str.count("<answer>")>3:
     #     return True
-    if "<<" in sequences_str:
+    if "</think><result>" in sequences_str.replace(" ",""):
         return True
-    if "< <" in sequences_str:
-        return True
+    # if "< <" in sequences_str:
+    #     return True
     # if sequences_str.count("</answer>")==2:
     #     return False
     # if sequences_str.count("</answer>")==2 and sequences_str.count("<|im_end|>")==3:
@@ -104,6 +102,7 @@ for rollout_file in os.listdir(data_dir): #TODO:增加对smooth的统计
     questions = []
     wrong_rollout_num=0
     wrong_rollout_sequences=[]
+    format_error_num=0
     duplicate_rollout_num=0
     multi_tool_calling_num=0
     # print(rollout_file)
@@ -139,6 +138,8 @@ for rollout_file in os.listdir(data_dir): #TODO:增加对smooth的统计
             elif "bad format" not in line["reason"]:
                 problem2groups[get_question(line["sequences_str"])]["type"]="math"
             count += 1
+            if line["score"] == -1:
+                format_error_num += 1
             problem2groups[get_question(line["sequences_str"])]["score"].append(line["score"])
             problem2groups[get_question(line["sequences_str"])]["calling_times"].append(line["is_python"]+line["is_search"])
             problem2groups[get_question(line["sequences_str"])]["sequences"].append(line["sequences_str"])
@@ -200,7 +201,7 @@ for rollout_file in os.listdir(data_dir): #TODO:增加对smooth的统计
         for idx,score in enumerate(score_list):
             if score-mean_score==0:
                 advantage_zero_num+=1
-            if score>0:
+            if score>0.5:
                 oct_change_calling_list.append(calling_times_list[idx])
                 group_no_positive = False
             else:
@@ -266,6 +267,7 @@ for rollout_file in os.listdir(data_dir): #TODO:增加对smooth的统计
         "all_observation_length": all_observation_length,
         # "question": questions,
         "wrong_rollout_num": wrong_rollout_num,
+        "format_error_num": format_error_num,
         "wrong_rollout_sequences": wrong_rollout_sequences,
         "multi_tool_calling_num": multi_tool_calling_num,
         "group_score_no_positive_num": group_score_no_positive_num,
@@ -291,6 +293,10 @@ result_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),"analyse",e
 os.makedirs(result_dir, exist_ok=True)
 x = [int(i) for i in rollout_step2metrics.keys()]
 x = sorted(x)
+
+y = [rollout_step2metrics[i]["format_error_num"] for i in x]
+draw_with_max(x,y,result_dir,"format_error_num")
+
 
 y = [rollout_step2metrics[i]["wrong_rollout_num"] for i in x]
 draw_with_max(x,y,result_dir,"wrong_rollout_num")

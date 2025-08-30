@@ -1058,7 +1058,7 @@ class RayPPOTrainer(object):
 
                 progress_bar.update(1)
                 if self.global_steps >= self.total_training_steps:
-                    self.global_steps += 1
+                    # self.global_steps += 1
                     # perform validation after training
                     if self.val_reward_fn is not None:
                         val_metrics = self._validate()
