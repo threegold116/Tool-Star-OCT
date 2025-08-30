@@ -54,6 +54,26 @@ def validate_format(text: str) -> tuple[bool, str]:
             return False, "python/result tags are nested in the wrong order"
             
         current_pos = result_end_pos
+    #check the order of think/search
+    think_end = 0
+    while True:
+        think_end = text.find('</think>', think_end)
+        if think_end == -1:
+            break
+        
+        # 从 </think> 之后开始，跳过空白字符
+        next_pos = think_end + len('</think>')
+        while next_pos < len(text) and text[next_pos].isspace():
+            next_pos += 1
+        
+        # 检查后续标签是否合法
+        if not (text.startswith('<python>', next_pos) or 
+                text.startswith('<search>', next_pos) or 
+                text.startswith('<answer>', next_pos)):
+            return False, "Invalid tag after </think>; must be <python>, <search>, or <answer>"
+        
+        think_end = next_pos
+    
     
     # check if \boxed{} is in the answer
     answer_start = text.find('<answer>')
@@ -240,7 +260,7 @@ def em_check(prediction, golden_answers):
             break
     return score
 # THREEGOLDCHANGE
-def compute_score(tokenizer, solution_str, ground_truth, is_search=0, is_python=0,qa_rule="f1_score",is_multi_tool=False) -> float:
+def compute_score(tokenizer, solution_str, ground_truth, is_search=0, is_python=0,qa_rule="f1_score",is_multi_tool=False,binary_f1_threshold=0.5) -> float:
     # handling both the base model and the instruction-tuned model
     if "<|im_start|>assistant\n" in solution_str:
         solution_str_split = solution_str.split("<|im_start|>assistant\n")
@@ -277,6 +297,13 @@ def compute_score(tokenizer, solution_str, ground_truth, is_search=0, is_python=
     elif qa_rule=="em_score":
         em_score = em_check(answer, ground_truth)
         acc_score = em_score
+    elif qa_rule=="binary_f1":
+        f1_score = get_f1_score(answer, ground_truth)
+        em_score = em_check(answer, ground_truth)
+        if f1_score >= binary_f1_threshold or em_score == 1:
+            acc_score = 1
+        else:
+            acc_score = 0
     else:
         raise ValueError(f"Invalid qa rule mode: {qa_rule}")
     

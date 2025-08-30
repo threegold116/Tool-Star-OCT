@@ -44,6 +44,8 @@ actor_rollout_ref:
     oct_coef: 1 # for OCT(alpha)
     oct_smooth: ${actor_rollout_ref.rollout.max_calling_times} # same with max_calling_times
     no_positive_penalty: True # True for OCT
+    apply_mode: multiply
+    group_smooth: False
     #THREEGOLDCHANGE
     ppo_epochs: 1
     shuffle: False
@@ -165,9 +167,12 @@ reward_model:
   use_dynamic_bsz: ${critic.use_dynamic_bsz}
   forward_max_token_len_per_gpu: ${critic.forward_max_token_len_per_gpu}
   reward_manager: naive
+  #THREEGOLDCHANGE
   mix_rules: False
   qa_rule: f1_score
   is_multi_tool: False
+  binary_f1_threshold: 0.5
+  #THREEGOLDCHANGE
 algorithm:
   gamma: 1.0
   lam: 1.0
