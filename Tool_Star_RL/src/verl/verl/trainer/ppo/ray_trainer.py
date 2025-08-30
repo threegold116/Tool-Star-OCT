@@ -913,7 +913,7 @@ class RayPPOTrainer(object):
         # we start from step 1
         self.global_steps += 1
         #THREEGOLDCHANGE: progressive calling times TODO:Check oct_ctrl和progressive_calling_steps的更新
-        if self.config.actor_rollout_ref.rollout.max_calling_times>3:
+        if self.config.actor_rollout_ref.rollout.max_calling_times>4:
             down_progressive=True
         else:
             down_progressive=False
