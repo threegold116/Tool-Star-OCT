@@ -435,6 +435,7 @@ class RayPPOTrainer(object):
                                                     no_positive_penalty=config.actor_rollout_ref.actor.no_positive_penalty,
                                                     apply_mode=config.actor_rollout_ref.actor.apply_mode,
                                                     tokenizer=self.tokenizer)
+            print(f"Using OCT with cofficient {self.oct_ctrl.cofficient}, smooth {self.oct_ctrl.smooth}, no_positive_penalty {self.oct_ctrl.no_positive_penalty}, apply_mode {self.oct_ctrl.apply_mode}")
         #THREEGOLDCHANGE:this is oct init
         self._validate_config()
         self._create_dataloader()
