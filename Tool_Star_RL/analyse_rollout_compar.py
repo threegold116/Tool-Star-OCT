@@ -52,7 +52,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([128-rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_oct_no_zero_num")
 
@@ -65,10 +65,9 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([128-rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_advantage_no_zero_num")
-
 
 comparison_key = "all_calling_times"
 y_list = []
@@ -79,9 +78,22 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"all_calling_times")
+
+comparison_key = "group_multi_tool_calling_num"
+y_list = []
+labels = []
+for experiment_name,rollout_step2metrics in experiment2results.items():
+    if isinstance(rollout_step2metrics,list):
+        pass
+    x = [int(i) for i in rollout_step2metrics.keys()]
+    x = sorted(x)
+    y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
+os.makedirs(result_dir,exist_ok=True)
+draw_multi_lines(x,y_list,labels,result_dir,"group_multi_tool_calling_num")
 
 comparison_key = "all_calling_times"
 y_list = []
@@ -92,7 +104,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key]/1024 for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"avg_all_calling_times")
 
@@ -105,7 +117,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"max_calling_times")
 
@@ -118,10 +130,35 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"max_calling_times_num")
 
+comparison_key = "format_error_num"
+y_list = []
+labels = []
+for experiment_name,rollout_step2metrics in experiment2results.items():
+    if isinstance(rollout_step2metrics,list):
+        pass
+    x = [int(i) for i in rollout_step2metrics.keys()]
+    x = sorted(x)
+    y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
+os.makedirs(result_dir,exist_ok=True)
+draw_multi_lines(x,y_list,labels,result_dir,"format_error_num")
+
+comparison_key = "wrong_rollout_num"
+y_list = []
+labels = []
+for experiment_name,rollout_step2metrics in experiment2results.items():
+    if isinstance(rollout_step2metrics,list):
+        pass
+    x = [int(i) for i in rollout_step2metrics.keys()]
+    x = sorted(x)
+    y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
+os.makedirs(result_dir,exist_ok=True)
+draw_multi_lines(x,y_list,labels,result_dir,"wrong_rollout_num")
 
 comparison_key = "group_score_no_positive_num"
 y_list = []
@@ -132,7 +169,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_score_no_positive_num")
 
@@ -145,7 +182,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_advantage_zero_num_all_one")
 
@@ -159,7 +196,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([128 - rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_oct_num")
 
@@ -172,7 +209,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_zero_calling_num_positive")
 
@@ -185,7 +222,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_oct_smooth_num")
 comparison_key = "group_oct_smooth_num"
@@ -197,7 +234,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key]/(128-rollout_step2metrics[str(i)]["group_oct_zero_num"]) for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_oct_smooth_num_radio")
 
@@ -210,7 +247,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_zero_calling_num_positive")
 
@@ -225,7 +262,7 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_zero_calling_num_positive")
 
@@ -239,6 +276,6 @@ for experiment_name,rollout_step2metrics in experiment2results.items():
     x = [int(i) for i in rollout_step2metrics.keys()]
     x = sorted(x)
     y_list.append([rollout_step2metrics[str(i)][comparison_key] for i in x])
-    labels.append(experiment_name.split("one_epoch_tool_star_")[-1])
+    labels.append(experiment_name.split("Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128")[-1])
 os.makedirs(result_dir,exist_ok=True)
 draw_multi_lines(x,y_list,labels,result_dir,"group_multi_tool_calling_num")

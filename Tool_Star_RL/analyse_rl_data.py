@@ -15,7 +15,8 @@ def is_date(s):
     except (ValueError, OverflowError):
         return False
 parquet_files = [
-    "/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/mix_grpo/grpo_mix_train_shuffle.parquet"
+    # "/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/mix_grpo/grpo_mix_train_shuffle.parquet"
+    "/share/home/sxjiang/dataset/ARPO-RL-Reasoning-10K/train_10k.parquet"
 ]
 dataframes = []
 for parquet_file in parquet_files:
@@ -29,7 +30,7 @@ for idx in range(len(rl_data)):
     data_item = rl_data.iloc[idx].to_dict()
     # print(data_item.keys())
     answer = data_item["reward_model"]["ground_truth"]
-    question = data_item["question"]
+    # question = data_item["question"]
     # if len(answer)==1:
     #     print(answer)
     # if data_item["ability"]=="math":
@@ -39,12 +40,10 @@ for idx in range(len(rl_data)):
         else:
             math_item+=1
             if data_item["ability"]!="math":
-                print(answer)
                 pass
     else:
         qa_item+=1
         if data_item["ability"]!="qa":
-            print(answer)
             pass
     # if data_item["ability"]=="qa":
         # qa_item+=1
