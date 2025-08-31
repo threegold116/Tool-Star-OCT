@@ -39,6 +39,7 @@ NO_POSITIVE_PENALTY=True
 GROUP_SMOOTH=False
 GUP_MEMORY_UTILIZATION=0.85
 BINARY_F1_THRESHOLD=0.5
+MATH_RULE=em_score
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --prompt_key) PROMPT_KEY="$2"; shift 2;;
@@ -82,6 +83,7 @@ while [[ $# -gt 0 ]]; do
         --group_smooth) GROUP_SMOOTH="$2"; shift 2;;
         --gup_memory_utilization) GUP_MEMORY_UTILIZATION="$2"; shift 2;;
         --binary_f1_threshold) BINARY_F1_THRESHOLD="$2"; shift 2;;
+        --math_rule) MATH_RULE="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -151,6 +153,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
     reward_model.reward_manager=${REWARD_MANAGER} \
     reward_model.mix_rules=${MIX_RULES} \
+    reward_model.math_rule=${MATH_RULE} \
     reward_model.qa_rule=${QA_RULE} \
     reward_model.is_multi_tool=${IS_MULTI_TOOL} \
     reward_model.binary_f1_threshold=${BINARY_F1_THRESHOLD} \

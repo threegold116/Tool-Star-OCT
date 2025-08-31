@@ -120,7 +120,7 @@ def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_p
     no_positive_penalty = oct_ctrl.no_positive_penalty
     apply_mode = getattr(oct_ctrl,"apply_mode","multiply")
     # compute the oct reward cofficent
-    if oct_penalty == 'times':
+    if oct_penalty == 'times':#TODO:times现在只实现了multiply
         old,avg_call_times,max_calling_times = core_algos.oct_times_penalty(data,oct_smooth=oct_ctrl.smooth)  # (batch_size, response_length)
         print(f"old: {old}")
         oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score

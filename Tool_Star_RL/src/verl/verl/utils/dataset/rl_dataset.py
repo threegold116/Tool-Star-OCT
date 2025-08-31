@@ -153,7 +153,7 @@ class RLHFDataset(Dataset):
         Note that we also return the raw_input_ids so that it can be combined with other chat template
         """
         row_dict = self.dataframe.iloc[item].to_dict()
-
+        cost_dict = None
         chat = row_dict.pop(self.prompt_key)
         #THREEGOLDCHANGE:增加随机Budget
         if self.prompt_template_name == 're_search_template_with_budget_sys':
@@ -162,6 +162,7 @@ class RLHFDataset(Dataset):
             prompt_template = self.prompt_template.replace('[python_cost]', str(python_cost)).replace('[search_cost]', str(search_cost))
             row_dict['python_cost'] = torch.tensor(python_cost)
             row_dict['search_cost'] = torch.tensor(search_cost)
+            cost_dict = {'python_cost': python_cost, 'search_cost': search_cost}
         else:
             prompt_template = self.prompt_template
         #THREEGOLDCHANGE:增加随机Budget
