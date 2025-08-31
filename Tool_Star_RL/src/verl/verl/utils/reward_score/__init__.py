@@ -14,7 +14,7 @@
 # from . import gsm8k, math, prime_math, prime_code
 
 
-def _default_compute_score(data_source, tokenizer,solution_str, ground_truth, is_search, is_python, abality,mix_rules=False,qa_rule="f1_score",is_multi_tool=False,binary_f1_threshold=0.5):
+def _default_compute_score(data_source, tokenizer,solution_str, ground_truth, is_search, is_python, abality,mix_rules=False,qa_rule="f1_score",math_rule="em_score",is_multi_tool=False,binary_f1_threshold=0.5):
     print(f"--------------------------------compute_score开始--------------------------------")
     # import pdb
     # pdb.set_trace()
@@ -51,7 +51,7 @@ def _default_compute_score(data_source, tokenizer,solution_str, ground_truth, is
             from . import re_search_math
             old_res = res
             res = re_search_math.compute_score(tokenizer, solution_str, ground_truth, reward_type='format_calling',is_search=is_search,is_python=is_python,is_multi_tool=is_multi_tool)
-            if qa_rule == "binary_f1":
+            if qa_rule == "binary_f1" and math_rule == "binary_f1":
                 if old_res[0]==1.0:#如果是binary_f1，且binary_f1为1，则返回1，否则返回math结果
                     res = (1, res[1]+" but acc in binary_f1")
                 else:

@@ -156,16 +156,17 @@ def main_task(config, compute_score=None):
     # THREEGOLDCHANGE:增加mix rules和qa_mode，只考虑re_search reward manager的情况
     mix_rules = config.reward_model.get('mix_rules', False)
     qa_rule = config.reward_model.get('qa_rule', "f1_score")
+    math_rule = config.reward_model.get('math_rule', "em_score")
     is_multi_tool = config.reward_model.get('is_multi_tool', False)
     binary_f1_threshold = config.reward_model.get('binary_f1_threshold', 0.5)
     # THREEGOLDCHANGE
     if save_path is not None:
         open(save_path, 'w').close()
-        reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=0, compute_score=compute_score, save_path=save_path, mix_rules=mix_rules,qa_rule=qa_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold)
-        val_reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=1, compute_score=compute_score, save_path=save_path, mix_rules=mix_rules,qa_rule=qa_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold)
+        reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=0, compute_score=compute_score, save_path=save_path, mix_rules=mix_rules,qa_rule=qa_rule,math_rule=math_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold)
+        val_reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=1, compute_score=compute_score, save_path=save_path, mix_rules=mix_rules,qa_rule=qa_rule,math_rule=math_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold)
     else:
-        reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=0, compute_score=compute_score, mix_rules=mix_rules,qa_rule=qa_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold)
-        val_reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=1, compute_score=compute_score, mix_rules=mix_rules,qa_rule=qa_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold)
+        reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=0, compute_score=compute_score, mix_rules=mix_rules,qa_rule=qa_rule,math_rule=math_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold)
+        val_reward_fn = reward_manager_cls(tokenizer=tokenizer, num_examine=1, compute_score=compute_score, mix_rules=mix_rules,qa_rule=qa_rule,math_rule=math_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold)
 
     resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
 
