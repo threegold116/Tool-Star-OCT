@@ -120,13 +120,13 @@ def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_p
     no_positive_penalty = oct_ctrl.no_positive_penalty
     apply_mode = getattr(oct_ctrl,"apply_mode","multiply")
     # compute the oct reward cofficent
-    if oct_penalty == 'times':
+    if oct_penalty == 'times':#TODO:times现在只实现了multiply
         old,avg_call_times,max_calling_times = core_algos.oct_times_penalty(data,oct_smooth=oct_ctrl.smooth)  # (batch_size, response_length)
         print(f"old: {old}")
         oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
         metrics = {'rollout/avg_call_times': avg_call_times,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
     elif oct_penalty == 'budget':
-        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty)  # (batch_size, response_length)
+        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty,group_smooth=oct_ctrl.group_smooth)  # (batch_size, response_length)
         print(f"old: {old}")
         if apply_mode=="add":
             oct_token_level_scores = token_level_scores.clone()
@@ -435,6 +435,7 @@ class RayPPOTrainer(object):
                                                     no_positive_penalty=config.actor_rollout_ref.actor.no_positive_penalty,
                                                     apply_mode=config.actor_rollout_ref.actor.apply_mode,
                                                     tokenizer=self.tokenizer)
+            print(f"Using OCT with cofficient {self.oct_ctrl.cofficient}, smooth {self.oct_ctrl.smooth}, no_positive_penalty {self.oct_ctrl.no_positive_penalty}, apply_mode {self.oct_ctrl.apply_mode}")
         #THREEGOLDCHANGE:this is oct init
         self._validate_config()
         self._create_dataloader()
@@ -912,7 +913,7 @@ class RayPPOTrainer(object):
         # we start from step 1
         self.global_steps += 1
         #THREEGOLDCHANGE: progressive calling times TODO:Check oct_ctrl和progressive_calling_steps的更新
-        if self.config.actor_rollout_ref.rollout.max_calling_times==5:
+        if self.config.actor_rollout_ref.rollout.max_calling_times>4:
             down_progressive=True
         else:
             down_progressive=False

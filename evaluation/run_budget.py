@@ -309,6 +309,7 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                 stop_reasons = [output.outputs[0].stop_reason for output in initial_outputs2]
                 python_indices = []
                 search_indices = []
+                achieve_max_budget_indices = []
                 other_indices = []
                 text_generating_indices = [] #在超过最大调用次数之后继续输出一次
                 
