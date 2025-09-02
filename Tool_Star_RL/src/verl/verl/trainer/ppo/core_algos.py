@@ -467,8 +467,8 @@ def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True):
                     oct_smooth_budget = oct_smooth*python_cost[i]
                 else:
                     raise f"the ability is not illeagl"
-            if max(id2calling_costs[index[i]])>0:
-                oct_smooth_budget = min(max(id2calling_costs[index[i]]),oct_smooth_budget)
+            # if max(id2calling_costs[index[i]])>0:#group_smooth_budget
+            #     oct_smooth_budget = min(max(id2calling_costs[index[i]]),oct_smooth_budget)
             map_costs = map_to_2n(calling_cost=calling_cost,optim_cost=optim_cost)
             if map_costs==0 and optim_cost==0:
                 oct_scores[i] = torch.tensor(1.0)
