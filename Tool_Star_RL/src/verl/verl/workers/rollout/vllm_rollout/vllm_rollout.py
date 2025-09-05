@@ -601,6 +601,8 @@ class vLLMRolloutWithSearch(vLLMRollout):
                         # output is too long
                         curr_inputs[idx] += output_ids
                         result_mask_list[idx] += [1] * len(output_ids)
+                        if len(curr_inputs[idx]) - len(init_inputs[idx]) < self.config.response_length:
+                            new_active_indices.append(idx) #Follow ARPO setting
 
                 # batch process the search requests
                 if search_queries:
