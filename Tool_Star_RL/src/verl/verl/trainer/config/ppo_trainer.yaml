@@ -181,6 +181,7 @@ algorithm:
   kl_penalty: kl  # how to estimate kl divergence
   #THREEGOLDCHANGE
   oct_penalty: times  # how to estimate oct divergence
+  optim_cost_estimate: True # True for OCT
   #THREEGOLDCHANGE
   kl_ctrl:
     type: fixed
