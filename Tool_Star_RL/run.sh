@@ -1,15 +1,8 @@
 #!/bin/bash
 source ~/.bashrc
 source ~/miniconda3/bin/activate
-for j in {1..12000}
-do
-echo $j
-sleep 1
-echo "sleep for next run"
 
-done
-
-for i in {1..6}  
+for i in {1..10}  
 do
 cd ~
 python kill.py

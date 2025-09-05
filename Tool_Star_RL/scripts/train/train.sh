@@ -40,6 +40,7 @@ GROUP_SMOOTH=False
 GUP_MEMORY_UTILIZATION=0.85
 BINARY_F1_THRESHOLD=0.5
 MATH_RULE=em_score
+OPTIM_COST_ESTIMATE=True
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --prompt_key) PROMPT_KEY="$2"; shift 2;;
@@ -84,6 +85,7 @@ while [[ $# -gt 0 ]]; do
         --gup_memory_utilization) GUP_MEMORY_UTILIZATION="$2"; shift 2;;
         --binary_f1_threshold) BINARY_F1_THRESHOLD="$2"; shift 2;;
         --math_rule) MATH_RULE="$2"; shift 2;;
+        --optim_cost_estimate) OPTIM_COST_ESTIMATE="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -111,6 +113,7 @@ python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
     algorithm.kl_ctrl.kl_coef=0.0 \
     algorithm.oct_penalty=${OCT_PENALTY} \
+    algorithm.optim_cost_estimate=${OPTIM_COST_ESTIMATE} \
     data.train_files="$TRAIN_FILES" \
     data.val_files="$TEST_FILES" \
     data.prompt_key=${PROMPT_KEY} \
