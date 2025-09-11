@@ -39,6 +39,9 @@ def find_wrong(reson_str,sequences_str):
     #     return True
     if "</think><result>" in sequences_str.replace(" ",""):
         return True
+    if not sequences_str.strip().endswith("<|im_end|>"):
+        print(sequences_str[-10:])
+        return True
     # if "< <" in sequences_str:
     #     return True
     # if sequences_str.count("</answer>")==2:
