@@ -145,11 +145,11 @@ async def llm_evaluate_equivalence_batch(
     Evaluate multiple answer pairs concurrently using LLM
     """
     if api_base_url is None:
-        api_base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        api_base_url = "http://0.0.0.0:7888"
     if model_name is None:
-        model_name = "Qwen2.5-72B-Instruct"
-    api_base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    model_name = "qwen2.5-72b-instruct"
+        model_name = "Qwen2.5-7B-Instruct"
+    api_base_url = os.environ.get("ALIYUN_API_BASE_URL","http://localhost:8888/v1")
+    model_name = os.environ.get("ALIYUN_MODEL_NAME","Qwen2.5-72B-Instruct-GPTQ-Int4")
     api_key = os.environ.get("ALIYUN_API_KEY","")
     client = AsyncOpenAI(
         api_key=api_key,
@@ -298,7 +298,7 @@ def evaluate_predictions(output, labeled_answer, mode='math', use_llm=False, que
             sequence = sequence[:last_answer_end_pos + len("\\boxed")]
         except:
             pass
-
+    
     if '<python>' in sequence:
         code_counts = count_tag_pairs(sequence, '<python>', '</python>')
         tool_counts += code_counts
@@ -342,7 +342,8 @@ def run_evaluation(filtered_data, input_list, output_list, task_type, output_dir
         'math_equal': [],
         'llm_equal': [],
         'pass@1': [],
-        'tool_call': []
+        'tool_call': [],
+        'tool_budget': []
     })
 
     def get_domain(item):
@@ -352,9 +353,9 @@ def run_evaluation(filtered_data, input_list, output_list, task_type, output_dir
         return 'Unknown'
 
     # Evaluation for math/qa tasks
-    avg_em, avg_acc, avg_f1, avg_math, avg_llm, avg_tool, avg_tool_used = [], [], [], [], [], [], []
+    avg_em, avg_acc, avg_f1, avg_math, avg_llm, avg_tool, avg_tool_used, avg_budget = [], [], [], [], [], [], [], []
     num_valid_answer = 0
-    
+    num_multi_tool = 0
     # Lists to store data for batch LLM evaluation
     questions_for_llm = []
     labeled_answers_for_llm = []
@@ -373,14 +374,21 @@ def run_evaluation(filtered_data, input_list, output_list, task_type, output_dir
             extract_answer=extract_answer,
             item=item
         )
-        
-        
+        #THREEGOLDCHANGE:利用rollout计算tool_count
+        if "python_rounds" in item:
+            metric["tool_counts"] = item["python_rounds"]+item["search_rounds"]
+            metric["tool_budget"] = item["calling_budegets"]
+            metric["tool_use"] = 1 if metric["tool_counts"] > 0 else 0
+            metric["is_multi_tool"] = 1 if item["python_rounds"] and item["search_rounds"] else 0
+            num_multi_tool += metric["is_multi_tool"]
         item['Pred_Answer'] = pred_answer
         item['Metrics'] = metric
         item['Question'] = input_prompt
 
         # Store data for batch LLM evaluation
         if use_llm:
+            if item["Metrics"].get("llm_response","Error").lower() in ["correct","incorrect","wrong","not correct","incorrect"]:
+                continue
             questions_for_llm.append(input_prompt)
             labeled_answers_for_llm.append(labeled_answer)
             pred_answers_for_llm.append(pred_answer)
@@ -394,6 +402,7 @@ def run_evaluation(filtered_data, input_list, output_list, task_type, output_dir
         avg_f1.append(metric['f1'])
         avg_math.append(metric['math_equal'])
         avg_tool.append(metric['tool_counts'])
+        avg_budget.append(metric['tool_budget'])
         if metric['tool_use'] >= 1:
             avg_tool_used.append(1)
         else:
@@ -432,8 +441,10 @@ def run_evaluation(filtered_data, input_list, output_list, task_type, output_dir
         'math_equal': np.mean(avg_math) if len(avg_math) > 0 else 0.0,
         'num_valid_answer': f'{num_valid_answer} of {len(input_list)}',
         'tool_call': np.mean(avg_tool) if len(avg_tool) > 0 else 0.0,
+        'tool_budget': np.mean(avg_budget) if len(avg_budget) > 0 else 0.0,
         'tool_productivity': final_tool_productivity,
         'average_datas_used_tool_number': np.mean(avg_tool_used) if len(avg_tool_used) > 0 else 0.0,
+        "num_multi_tool": num_multi_tool 
     }
     
     # Add LLM evaluation metric if available
@@ -501,7 +512,6 @@ if __name__ == "__main__":
     output_path = args.output_path
     output_metrics_path = output_path.replace('.json', '.metrics.json')
     output_metrics_overall_path = output_path.replace('.json', '.metrics.overall.json')
-
     # Load main output data
     with open(output_path, mode='r', encoding='utf-8') as file:
         data = json.load(file)
@@ -559,6 +569,6 @@ if __name__ == "__main__":
         domain_fields=DOMAIN_FIELDS,  # Pass the domain fields to run_evaluation
         dataset_name=args.dataset_name
     )
-
+    #TODO: resume evaluate，如果有metrics就不evaluate
     print(f"Evaluation completed. Metrics saved to {output_metrics_path}")
     print('------------------------------------------')
