@@ -73,7 +73,30 @@ def validate_format(text: str) -> tuple[bool, str]:
             return False, "Invalid tag after </think>; must be <python>, <search>, or <answer>"
         
         think_end = next_pos
+    #THREEGOLDCHANGE:检查是否存在其他xml token
     
+    no_result_match=[]
+    
+    think_pattern = re.compile(r"<think>(.+?)</think>", re.S)
+    think_match = think_pattern.findall(text)
+    no_result_match.extend(think_match)
+    search_pattern = re.compile(r"<search>(.+?)</search>", re.S)
+    search_match = search_pattern.findall(text)
+    no_result_match.extend(search_match)
+    answer_pattern = re.compile(r"<answer>(.+?)</answer>", re.S)
+    answer_match = answer_pattern.findall(text)
+    no_result_match.extend(answer_match)
+    python_pattern = re.compile(r"<python>(.+?)</python>", re.S)
+    python_match = python_pattern.findall(text)
+    no_result_match.extend(python_match)
+    
+    for match_str in no_result_match:
+        pattern = re.compile(r"(<[\w]+?>)", re.S)
+        matches = pattern.findall(match_str)
+        matches = set(matches)
+        matches = matches - {"<think>","</think>","<result>","</result>","<python>","</python>","<search>","</search>","<answer>","</answer>"}
+        if len(matches) > 0:
+            return False, f"other xml token {matches} found in action response"
     
     # check if \boxed{} is in the answer
     answer_start = text.find('<answer>')
