@@ -159,6 +159,14 @@ For example, <think> This is the reasoning process. </think> <search> search que
 <think> This is the reasoning process. </think> <answer> The final answer is \\[ \\boxed{answer here} \\] </answer>. \
 In the last part of the answer, the final exact answer is enclosed within \\boxed{} with latex format.
 """
+        elif self.prompt_type == 'torl':
+            self.prompt_template = """
+Please integrate natural language reasoning with programs to solve the problem above, and put your final answer within \\boxed{}.
+"""
+        elif self.prompt_type == 'CIR':
+            self.prompt_template = """
+Please provide a solution to the following problem by integrating natural language reasoning with Python codes. Begin by explaining your thought process step by step, and then implement the solution in Python. Ensure the code is clear, well-documented, and follows best practices. Finally, present the final answer enclosed within \\boxed{} for clarity.
+"""
         elif self.prompt_type == 'math':
             self.prompt_template = """
 You are a helpful assistant that can solve the given question step by step with the help of the python interpreter tool. \
@@ -272,12 +280,8 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                     self.tokenizer.apply_chat_template(
                         [
                             {
-                                "role": "system",
-                                "content": self.prompt_template
-                            },
-                            {
                                 "role": "user",
-                                "content": item
+                                "content": self.prompt_template + item
                             }
                         ], tokenize=False, add_generation_prompt=True, add_model_prefix=True
                     )
@@ -308,7 +312,7 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
             while generating:
                 input_prompts = [concat_prompts_outputs[i] for i in generating]
                 active_max_tokens = [curr_max_tokens[i] for i in generating]
-                self.params_config.stop = ['</python>', '</search>', '</answer>', '</code>']
+                self.params_config.stop = ['</python>', '</search>', '</answer>', '</code>', '```output']
                 self.params_config.detokenize = True
                 self.params_config.max_tokens = max(active_max_tokens)
                 #THREEGOLDCHANGE:from detokenizer to post_process_tokens
@@ -443,6 +447,31 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                             else:
                                 finished_reason[generating[i]] = "abnormal_finish_with_unknown"
                             print(f"batch {batch_idx} data {i} finished reason: {finished_reason[generating[i]]}")
+                    elif self.prompt_type == 'torl' or self.prompt_type == 'CIR':
+                        if outputs[i].strip().endswith('```output'):
+                            if calling_rounds[generating[i]] >= self.max_calling_times:
+                                text_generating_indices.append((generating[i], outputs[i]))
+                                other_indices.append((generating[i], outputs[i]))
+                                finished_reason[generating[i]] = "achieve_max_calling_times"
+                                print(f"batch {batch_idx} data {i} finished reason: {finished_reason[generating[i]]}")
+                            elif self.python_budget+calling_budegets[generating[i]] > self.max_tool_budget: #THREEGOLDCHANGE
+                                text_generating_indices.append((generating[i], outputs[i]))
+                                other_indices.append((generating[i], outputs[i]))
+                                finished_reason[generating[i]] = "achieve_max_tool_budget"
+                                print(f"batch {batch_idx} data {i} finished reason: {finished_reason[generating[i]]}")
+                            elif python_rounds[generating[i]] >= self.max_python_times:
+                                text_generating_indices.append((generating[i], outputs[i]))
+                                finished_reason[generating[i]] = "achieve_max_python_times"
+                                other_indices.append((generating[i], outputs[i]))
+                            else:
+                                python_indices.append((generating[i], outputs[i]))
+                                python_rounds[generating[i]] += 1
+                                calling_rounds[generating[i]] += 1
+                                calling_budegets[generating[i]] += 1*self.python_budget
+                        else:
+                            other_indices.append((generating[i], outputs[i]))
+                            finished_reason[generating[i]] = "normal_finish"
+                            print(f"batch {batch_idx} data {i} finished reason: {finished_reason[generating[i]]}")                            
                     elif self.prompt_type == 'search': #TODO:针对其他prompt的修改
                         if outputs[i].strip().endswith('</search>'):
                             if search_rounds[generating[i]] >= self.max_search_times:
@@ -490,7 +519,7 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                             result_ids = result_ids[:self.max_obs_length]
                         result = self.tokenizer.decode(result_ids)
                         if report == "Done":
-                            concat_prompts_outputs[idx] += f'<result>\n{result}\n</result>'
+                            concat_prompts_outputs[idx] += f'\n{result}\n```'
                         else:
                             python_error_times[idx] += 1
                             if not self.use_debug:

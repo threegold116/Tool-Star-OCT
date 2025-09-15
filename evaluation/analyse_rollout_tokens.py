@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 
 dataset_names=["musique", "bamboogle", "hotpotqa", "2wiki", "nq", "SimpleQA", "amc23", "aime24", "aime25", "math", "math500", "gsm8k", "OlymBench-math"]
 mode_name="budget_no_limit_run"
-model_names=["ARPO_7b", "ARPO_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_em_score_seq_mean_smooth_origin_global_step_78"]
+model_names=["tool_star_qwen_7b_origin", "tool_star_qwen_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_new_global_step_78"]
 data_dir = f"/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/result/"
 specific_rollout_iter_num = -1
+
 def draw_column(labels,values,result_dir,name):
     print(labels)
     print(values)
@@ -54,8 +55,8 @@ def get_question(sentence):
     sentence = sentence.split("<|im_end|>\n<|im_start|>assistant\n")[0]
     sentence = sentence.split("<|im_start|>user\n")[1]
     return sentence
+
 def find_wrong(reson_str,sequences_str):
-    
     if "bad format" not in reson_str:
         return False
     if sequences_str.count("</answer>")>3:
@@ -72,6 +73,192 @@ def find_wrong(reson_str,sequences_str):
         return True
     
     return False
+
+def clean_model_name(model_name):
+    """清理模型名称，保留主要部分"""
+    # 针对tool_star系列
+    if model_name.startswith('tool_star_qwen_3b_origin'):
+        return 'tool_star_qwen_3b_origin'
+    elif model_name.startswith('tool_star_qwen_3b_oct'):
+        return 'tool_star_qwen_3b_oct'
+    elif model_name.startswith('tool_star_qwen_7b_origin'):
+        return 'tool_star_qwen_7b_origin'
+    elif model_name.startswith('tool_star_qwen_7b_oct'):
+        return 'tool_star_qwen_7b_oct'
+    # 针对ARPO系列
+    elif model_name.startswith('ARPO_3b_oct'):
+        return 'ARPO_3b_oct'
+    elif model_name.startswith('ARPO_3b'):
+        return 'ARPO_3b'
+    elif model_name.startswith('ARPO_7b_oct'):
+        return 'ARPO_7b_oct'
+    elif model_name.startswith('ARPO_7b'):
+        return 'ARPO_7b'
+    else:
+        # 其他情况，移除常见的后缀
+        cleaned = model_name
+        suffixes_to_remove = [
+            '_global_step_110', '_global_step_78', '_gpu18',
+            '_clip_radio_gradclip_02_two_epoch_down_progressive_seq_mean_new_add'
+        ]
+        for suffix in suffixes_to_remove:
+            if suffix in cleaned:
+                cleaned = cleaned.replace(suffix, '')
+        return cleaned
+
+def save_detailed_results(modelname2dict):
+    """保存详细的JSON结果文件，类似於analyse_rollout_Toolacc.py的功能"""
+    
+    # 创建基础输出目录
+    base_output_dir = "/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/img/token_analysis"
+    os.makedirs(base_output_dir, exist_ok=True)
+    
+    # 如果有多个模型，为每个模型创建单独的结果文件
+    for model_name, model_data in modelname2dict.items():
+        cleaned_model_name = clean_model_name(model_name)
+        
+        # 为单个模型创建目录
+        model_output_dir = os.path.join(base_output_dir, cleaned_model_name)
+        os.makedirs(model_output_dir, exist_ok=True)
+        
+        # 计算该模型的总体统计信息
+        all_metrics = [
+            "avg_of_total_reason_token",
+            "avg_of_total_search_token", 
+            "avg_of_total_python_token",
+            "avg_of_mean_sequence_reason_token",
+            "avg_of_mean_sequence_search_token",
+            "avg_of_mean_sequence_python_token",
+            "avg_of_reason_token_per_call",
+            "avg_of_search_token_per_call",
+            "avg_of_python_token_per_call"
+        ]
+        
+        overall_metrics = {}
+        for metric in all_metrics:
+            values = []
+            for dataset_name, dataset_data in model_data.items():
+                if metric in dataset_data:
+                    values.append(dataset_data[metric])
+            
+            if values:
+                overall_metrics[f"{metric}_mean"] = sum(values) / len(values)
+                overall_metrics[f"{metric}_max"] = max(values)
+                overall_metrics[f"{metric}_min"] = min(values)
+                overall_metrics[f"{metric}_std"] = (sum((x - overall_metrics[f"{metric}_mean"])**2 for x in values) / len(values))**0.5
+            else:
+                overall_metrics[f"{metric}_mean"] = 0
+                overall_metrics[f"{metric}_max"] = 0
+                overall_metrics[f"{metric}_min"] = 0
+                overall_metrics[f"{metric}_std"] = 0
+        
+        # 构建完整的结果字典
+        result_data = {
+            "model_info": {
+                "original_model_name": model_name,
+                "cleaned_model_name": cleaned_model_name,
+                "analysis_mode": mode_name,
+                "total_datasets": len(model_data)
+            },
+            "overall_metrics": overall_metrics,
+            "per_dataset_results": []
+        }
+        
+        # 添加每个数据集的详细结果
+        for dataset_name, dataset_data in model_data.items():
+            dataset_result = {
+                "dataset_name": dataset_name,
+                "metrics": dataset_data
+            }
+            result_data["per_dataset_results"].append(dataset_result)
+        
+        # 保存单个模型的详细结果
+        output_path = os.path.join(model_output_dir, "detailed_token_analysis.json")
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(result_data, f, indent=4, ensure_ascii=False)
+        
+        print(f"\n模型 {cleaned_model_name} 的详细结果已保存到: {output_path}")
+        
+        # 打印该模型的总体统计摘要
+        print(f"\n=== {cleaned_model_name} 总体统计摘要 ===")
+        print(f"分析的数据集数量: {len(model_data)}")
+        
+        key_metrics = [
+            "avg_of_total_reason_token_mean",
+            "avg_of_total_search_token_mean", 
+            "avg_of_total_python_token_mean"
+        ]
+        
+        for metric in key_metrics:
+            if metric in overall_metrics:
+                metric_display_name = metric.replace("avg_of_total_", "").replace("_token_mean", "").upper()
+                print(f"{metric_display_name} 平均Token数: {overall_metrics[metric]:.2f}")
+    
+    # 如果有多个模型，创建模型对比的汇总文件
+    if len(modelname2dict) > 1:
+        comparison_data = {
+            "analysis_info": {
+                "mode": mode_name,
+                "datasets_analyzed": dataset_names,
+                "total_models": len(modelname2dict)
+            },
+            "model_comparison": {}
+        }
+        
+        for model_name, model_data in modelname2dict.items():
+            cleaned_name = clean_model_name(model_name)
+            
+            # 计算每个模型的关键指标平均值
+            key_metrics_summary = {}
+            for metric in all_metrics:
+                values = []
+                for dataset_data in model_data.values():
+                    if metric in dataset_data:
+                        values.append(dataset_data[metric])
+                
+                if values:
+                    key_metrics_summary[metric] = {
+                        "mean": sum(values) / len(values),
+                        "datasets_count": len(values)
+                    }
+                else:
+                    key_metrics_summary[metric] = {
+                        "mean": 0,
+                        "datasets_count": 0
+                    }
+            
+            comparison_data["model_comparison"][cleaned_name] = {
+                "original_name": model_name,
+                "metrics_summary": key_metrics_summary,
+                "datasets_analyzed": list(model_data.keys())
+            }
+        
+        # 保存模型对比文件
+        comparison_output_path = os.path.join(base_output_dir, "models_comparison.json")
+        with open(comparison_output_path, 'w', encoding='utf-8') as f:
+            json.dump(comparison_data, f, indent=4, ensure_ascii=False)
+        
+        print(f"\n模型对比结果已保存到: {comparison_output_path}")
+        
+        # 打印模型对比摘要
+        print(f"\n=== 模型对比摘要 ===")
+        for model_name in comparison_data["model_comparison"]:
+            model_info = comparison_data["model_comparison"][model_name]
+            print(f"\n{model_name}:")
+            
+            # 显示关键指标
+            key_display_metrics = [
+                "avg_of_total_reason_token",
+                "avg_of_total_search_token",
+                "avg_of_total_python_token"
+            ]
+            
+            for metric in key_display_metrics:
+                if metric in model_info["metrics_summary"]:
+                    mean_val = model_info["metrics_summary"][metric]["mean"]
+                    count = model_info["metrics_summary"][metric]["datasets_count"]
+                    metric_display = metric.replace("avg_of_total_", "").replace("_token", "").upper()
+                    print(f"  {metric_display}: {mean_val:.2f} (基于{count}个数据集)")
 
 rollout_model2metrics={}
 wrong_rollout_idx = []
@@ -115,9 +302,14 @@ for root,dirs,files in os.walk(data_dir):
         
         total_search_token_len = [] # 计算所有<search>的总token长度
         total_python_token_len = [] # 计算所有<python>的总token长度
-        
         total_reason_token_len = [] # 计算所有<think>的总token长度
+        
+        per_python_token_len = []  # 计算每段<python>的平均token长度
+        per_search_token_len = []  # 计算每段<search>的平均token长度
         per_reason_token_len = []   # 计算每段<think>的平均token长度
+        
+        per_call_python_token_len = []  # 计算每次调用的<python>的平均token长度， 如果调用为0，和call_times=1一样
+        per_call_search_token_len = []  # 计算每次调用的<search>的平均token长度， 如果调用为0，和call_times=1一样
         per_call_reason_token_len = []  # 计算每次调用的<think>的平均token长度， 如果调用为0，和call_times=1一样
 
 
@@ -161,18 +353,44 @@ for root,dirs,files in os.walk(data_dir):
                         avg_of_think_sequence_len = total_think_sequence_len / len(think_tokens_sequence) if think_tokens_sequence else 0
                         per_reason_token_len.append(avg_of_think_sequence_len)
                         
+                        # 计算每段<search>的平均token长度
+                        avg_of_search_sequence_len = total_search_sequence_len / len(search_tokens_sequence) if search_tokens_sequence else 0
+                        per_search_token_len.append(avg_of_search_sequence_len)
+                        
+                        # 计算每段<python>的平均token长度
+                        avg_of_python_sequence_len = total_python_sequence_len / len(python_tokens_sequence) if python_tokens_sequence else 0
+                        per_python_token_len.append(avg_of_python_sequence_len)
+                        
                         # 计算每次调用的<think>的平均token长度， 如果调用为0，和call_times=1一样
                         if call_times > 0:
                             per_call_reason_token_len.append(total_think_sequence_len / call_times)
                         elif call_times == 0:
                             per_call_reason_token_len.append(total_think_sequence_len)
+                            
+                        # 计算每次调用的<search>的平均token长度， 如果调用为0，和call_times=1一样
+                        if call_times > 0:
+                            per_call_search_token_len.append(total_search_sequence_len / call_times)
+                        elif call_times == 0:
+                            per_call_search_token_len.append(total_search_sequence_len)
+                            
+                        # 计算每次调用的<python>的平均token长度， 如果调用为0，和call_times=1一样
+                        if call_times > 0:
+                            per_call_python_token_len.append(total_python_sequence_len / call_times)
+                        elif call_times == 0:
+                            per_call_python_token_len.append(total_python_sequence_len)
+                            
 
                 avg_of_total_reason_token = sum(total_reason_token_len) / len(total_reason_token_len) if total_reason_token_len else 0
                 avg_of_total_search_token = sum(total_search_token_len) / len(total_search_token_len) if total_search_token_len else 0
                 avg_of_total_python_token = sum(total_python_token_len) / len(total_python_token_len) if total_python_token_len else 0
 
                 avg_of_mean_sequence_reason_token = sum(per_reason_token_len) / len(per_reason_token_len) if per_reason_token_len else 0
+                avg_of_mean_sequence_search_token = sum(per_search_token_len) / len(per_search_token_len) if per_search_token_len else 0
+                avg_of_mean_sequence_python_token = sum(per_python_token_len) / len(per_python_token_len) if per_python_token_len else 0
+                
                 avg_of_reason_token_per_call = sum(per_call_reason_token_len) / len(per_call_reason_token_len) if per_call_reason_token_len else 0
+                avg_of_search_token_per_call = sum(per_call_search_token_len) / len(per_call_search_token_len) if per_call_search_token_len else 0
+                avg_of_python_token_per_call = sum(per_call_python_token_len) / len(per_call_python_token_len) if per_call_python_token_len else 0
 
             # 实际这里不是真正的avg_token， 这里的token是按照空格划分的
             # 计算以下指标：
@@ -183,11 +401,19 @@ for root,dirs,files in os.walk(data_dir):
             # 4. avg_of_total_search_token, 每段search的token之和
             # 5. avg_of_total_python_token, 每段python的token之和
             modelname2dict[path_model_name][path_dataset_name]["avg_of_total_reason_token"] = avg_of_total_reason_token
-            modelname2dict[path_model_name][path_dataset_name]["avg_of_mean_sequence_reason_token"] = avg_of_mean_sequence_reason_token
-            modelname2dict[path_model_name][path_dataset_name]["avg_of_reason_token_per_call"] = avg_of_reason_token_per_call
             modelname2dict[path_model_name][path_dataset_name]["avg_of_total_search_token"] = avg_of_total_search_token
             modelname2dict[path_model_name][path_dataset_name]["avg_of_total_python_token"] = avg_of_total_python_token
+            
+            modelname2dict[path_model_name][path_dataset_name]["avg_of_mean_sequence_reason_token"] = avg_of_mean_sequence_reason_token
+            modelname2dict[path_model_name][path_dataset_name]["avg_of_mean_sequence_search_token"] = avg_of_mean_sequence_search_token
+            modelname2dict[path_model_name][path_dataset_name]["avg_of_mean_sequence_python_token"] = avg_of_mean_sequence_python_token
+            
+            modelname2dict[path_model_name][path_dataset_name]["avg_of_reason_token_per_call"] = avg_of_reason_token_per_call
+            modelname2dict[path_model_name][path_dataset_name]["avg_of_search_token_per_call"] = avg_of_search_token_per_call
+            modelname2dict[path_model_name][path_dataset_name]["avg_of_python_token_per_call"] = avg_of_python_token_per_call
 
+# 在原有的绘图代码之前，先保存JSON结果
+save_detailed_results(modelname2dict)
 
 # 统计每个模型在各个测试集下的avg_of_reason_token并绘图
 # for path_model_name in modelname2dict:
@@ -367,53 +593,28 @@ if len(modelname2dict) >= 2:
     # 定义所有需要对比的指标
     metrics = [
         "avg_of_total_reason_token",
-        "avg_of_mean_sequence_reason_token", 
-        "avg_of_reason_token_per_call",
         "avg_of_total_search_token",
-        "avg_of_total_python_token"
+        "avg_of_total_python_token",
+        "avg_of_mean_sequence_reason_token",
+        "avg_of_mean_sequence_search_token", 
+        "avg_of_mean_sequence_python_token",
+        "avg_of_reason_token_per_call",
+        "avg_of_search_token_per_call",
+        "avg_of_python_token_per_call"
     ]
     
     # 指标的中文名称映射
     metric_titles = {
         "avg_of_total_reason_token": "Average Total Reasoning Token Length",
-        "avg_of_mean_sequence_reason_token": "Average Mean Sequence Reasoning Token Length",
-        "avg_of_reason_token_per_call": "Average Reasoning Token Per Call",
         "avg_of_total_search_token": "Average Total Search Token Length",
-        "avg_of_total_python_token": "Average Total Python Token Length"
+        "avg_of_total_python_token": "Average Total Python Token Length",
+        "avg_of_mean_sequence_reason_token": "Average Mean Sequence Reasoning Token Length",
+        "avg_of_mean_sequence_search_token": "Average Mean Sequence Search Token Length",
+        "avg_of_mean_sequence_python_token": "Average Mean Sequence Python Token Length",
+        "avg_of_reason_token_per_call": "Average Reasoning Token Per Call",
+        "avg_of_search_token_per_call": "Average Search Token Per Call",
+        "avg_of_python_token_per_call": "Average Python Token Per Call"
     }
-    
-    # 定义模型名称处理函数
-    def clean_model_name(model_name):
-        """清理模型名称，保留主要部分"""
-        # 针对tool_star系列
-        if model_name.startswith('tool_star_qwen_3b_origin'):
-            return 'tool_star_qwen_3b_origin'
-        elif model_name.startswith('tool_star_qwen_3b_oct'):
-            return 'tool_star_qwen_3b_oct'
-        elif model_name.startswith('tool_star_qwen_7b_origin'):
-            return 'tool_star_qwen_7b_origin'
-        elif model_name.startswith('tool_star_qwen_7b_oct'):
-            return 'tool_star_qwen_7b_oct'
-        # 针对ARPO系列
-        elif model_name.startswith('ARPO_3b_oct'):
-            return 'ARPO_3b_oct'
-        elif model_name.startswith('ARPO_3b'):
-            return 'ARPO_3b'
-        elif model_name.startswith('ARPO_7b_oct'):
-            return 'ARPO_7b_oct'
-        elif model_name.startswith('ARPO_7b'):
-            return 'ARPO_7b'
-        else:
-            # 其他情况，移除常见的后缀
-            cleaned = model_name
-            suffixes_to_remove = [
-                '_global_step_110', '_global_step_78', '_gpu18',
-                '_clip_radio_gradclip_02_two_epoch_down_progressive_seq_mean_new_add'
-            ]
-            for suffix in suffixes_to_remove:
-                if suffix in cleaned:
-                    cleaned = cleaned.replace(suffix, '')
-            return cleaned
     
     for path_model_name in modelname2dict:
         model_data[path_model_name] = {}

@@ -1936,8 +1936,282 @@ run_dataset(){
     
 # done
 
+# MODE=budget_no_limit_run
+# MODEL=ToRL-1.5B
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# ####################################################################################################################
+# 2025-09-11
+
+# MODEL="ARPO_3b_oct_clip_radio_gradclip_02_two_epoch_down_progressive_seq_mean_smooth_global_step_156"
+# MODE="budget_limit_run_5"
+# TASK="math"
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# TASK="qa"
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODEL="ARPO_3b"
+# MODE="budget_limit_run_5"
+# TASK="math"
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# TASK="qa"
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODEL="ARPO_7b"
+# MODE="budget_limit_run_5"
+# TASK="math"
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# TASK="qa"
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_7b_clip_radio_gradclip_02_one_epoch_down_progressive_2_seq_mean_global_step_78
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODEL="ARPO_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_em_score_seq_mean_smooth_origin_global_step_78"
+# MODE="budget_limit_run_5"
+# TASK="math"
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# TASK="qa"
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# ####################################################################################################################
+# 2025-09-14
+
+# MODE=no-tool-inference_origin_prompt
+# MODEL=qwen2p5_instruct_3b_seed1234
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA logiqa)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+
+# MODE=no-tool-inference_origin_prompt
+# MODEL=qwen2p5_instruct_7b_seed1234
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA logiqa)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_7b_sft
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_7b_oct_clip_radio_gradclip_02_two_epoch_down_progressive_em_score_seq_mean_smooth_global_step_156
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_sft
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_7b_sft
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_3b_sft
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODE=budget_no_limit_run
+# MODEL=Search-R1_3b_origin_prompt
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODE=budget_no_limit_run
+# MODEL=ReSearch-7b
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# ####################################################################################################################
+# 2025-09-15
+
 MODE=budget_no_limit_run
-MODEL=ToRL-1.5B
+MODEL=CIR-7B-origin_prompt
 
 DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
 TASK=qa
@@ -1952,3 +2226,21 @@ for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
     
 done
+
+
+# MODE=budget_no_limit_run
+# MODEL=ToRL-7B-origin_prompt
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done

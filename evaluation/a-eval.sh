@@ -1007,14 +1007,116 @@ BUDGET=10
 # TASK=math
 # run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
 
+# MODE=budget_no_limit_run
+# MODEL=ToRL-7B
+# MODEL_PATH=/home/sxjiang/model/ToRL-7B
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_7b_clip_radio_gradclip_02_one_epoch_down_progressive_2_seq_mean_global_step_78
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_2_seq_mean-global_step_78
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# ####################################################################################################################
+# 2025-09-13
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_sft
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_7b_sft
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-final_sft_edition10-52
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_3b_sft
+# MODEL_PATH=/home/sxjiang/myproject/agent/ARPO-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-arpo_final_sft_edition10-52
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+
+# MODE=budget_no_limit_run
+# MODEL=ReSearch-7b
+# MODEL_PATH=/home/sxjiang/model/ReSearch-Qwen-7B-Instruct
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+
+# ####################################################################################################################
+# 2025-09-15
+
+# MODE=budget_no_limit_run
+# MODEL=CIR-7B-origin_prompt
+# MODEL_PATH=/home/sxjiang/model/Qwen-Math-7B-CIR
+
+# TASK=math
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_g16W_global_step_78
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_g16W-global_step_78
+
+# TASK=math
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+
 MODE=budget_no_limit_run
-MODEL=ToRL-7B
-MODEL_PATH=/home/sxjiang/model/ToRL-7B
+MODEL=tool_star_qwen_3b_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_g16W_global_step_78
+MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_g16W-global_step_78
 
-DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+DATASET_NAMEs=(nq SimpleQA)
 TASK=qa
-run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
-
-DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
-TASK=math
 run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"

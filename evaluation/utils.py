@@ -119,6 +119,14 @@ def extract_python_content(text: str) -> str:
             start_tag = '<code>'
             end_tag = '</code>'
         else:
+            # 新增对```python代码块的支持
+            import re
+            # 匹配 ```python ... ``` 格式的代码块
+            pattern = r'```python\n(.*?)\n```'
+            match = re.search(pattern, text, re.DOTALL)
+            if match:
+                return match.group(1).strip()
+
             return ""
         
         end_pos = text.rindex(end_tag)
