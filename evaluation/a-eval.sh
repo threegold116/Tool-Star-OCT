@@ -1113,10 +1113,38 @@ BUDGET=10
 # run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
 
 
-MODE=budget_no_limit_run
-MODEL=tool_star_qwen_3b_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_g16W_global_step_78
-MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_g16W-global_step_78
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_g16W_global_step_78
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_g16W-global_step_78
 
-DATASET_NAMEs=(nq SimpleQA)
+# DATASET_NAMEs=(nq SimpleQA)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_3b_two_epoch_add_test
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_two_epoch_no_warm_up_down_progressive_seq_mean_smooth_add-global_step_110
+
+# TASK=math
+# DATASET_NAMEs=(gsm8k)
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(bamboogle 2wiki)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+
+
+MODE=budget_no_limit_run
+MODEL=tool_star_3b_origin_test
+MODEL_PATH=/home/sxjiang/model/Tool-Star-Qwen-3B
+
+TASK=math
+DATASET_NAMEs=(gsm8k math500)
+run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+DATASET_NAMEs=(2wiki)
 TASK=qa
 run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+

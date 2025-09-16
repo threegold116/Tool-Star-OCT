@@ -7,7 +7,8 @@ import re
 import textwrap
 import matplotlib.pyplot as plt
 
-dataset_names=["musique", "bamboogle", "hotpotqa", "2wiki", "nq", "SimpleQA", "amc23", "aime24", "aime25", "math", "math500", "gsm8k", "OlymBench-math"]
+# dataset_names=["musique", "bamboogle", "hotpotqa", "2wiki", "nq", "SimpleQA", "amc23", "aime24", "aime25", "math", "math500", "gsm8k", "OlymBench-math"]
+dataset_names=["musique", "2wiki", "math", "gsm8k"]
 
 mode_name="budget_no_limit_run"
 model_names=["tool_star_qwen_7b_origin", "tool_star_qwen_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_new_global_step_78"]
@@ -545,7 +546,7 @@ save_detailed_results(modelname2dict)
 #         plt.close()
         
 #         # 绘制对比折线图
-#         plt.figure(figsize=(16, 10))
+#         plt.figure(figsize=(15, 8))
 #         plt.plot(range(len(common_datasets)), avg_reason_tokens_list, marker='o', linewidth=2, markersize=8, color='red')
         
 #         # 在点上显示数值
@@ -586,147 +587,310 @@ save_detailed_results(modelname2dict)
 
 
 # 绘制所有指标的模型对比图
-if len(modelname2dict) >= 2:
-    # 获取所有模型的数据
-    model_data = {}
-    all_datasets = set()
+# if len(modelname2dict) >= 2:
+#     # 获取所有模型的数据
+#     model_data = {}
+#     all_datasets = set()
     
-    # 定义所有需要对比的指标
-    metrics = [
-        "avg_of_total_reason_token",
-        "avg_of_total_search_token",
-        "avg_of_total_python_token",
-        "avg_of_mean_sequence_reason_token",
-        "avg_of_mean_sequence_search_token", 
-        "avg_of_mean_sequence_python_token",
+#     # 定义所有需要对比的指标
+#     metrics = [
+#         "avg_of_total_reason_token",
+#         "avg_of_total_search_token",
+#         "avg_of_total_python_token",
+#         "avg_of_mean_sequence_reason_token",
+#         "avg_of_mean_sequence_search_token", 
+#         "avg_of_mean_sequence_python_token",
+#         "avg_of_reason_token_per_call",
+#         "avg_of_search_token_per_call",
+#         "avg_of_python_token_per_call"
+#     ]
+    
+#     # 指标的中文名称映射
+#     metric_titles = {
+#         "avg_of_total_reason_token": "Average Total Reasoning Token Length",
+#         "avg_of_total_search_token": "Average Total Search Token Length",
+#         "avg_of_total_python_token": "Average Total Python Token Length",
+#         "avg_of_mean_sequence_reason_token": "Average Mean Sequence Reasoning Token Length",
+#         "avg_of_mean_sequence_search_token": "Average Mean Sequence Search Token Length",
+#         "avg_of_mean_sequence_python_token": "Average Mean Sequence Python Token Length",
+#         "avg_of_reason_token_per_call": "Average Reasoning Token Per Call",
+#         "avg_of_search_token_per_call": "Average Search Token Per Call",
+#         "avg_of_python_token_per_call": "Average Python Token Per Call"
+#     }
+    
+#     for path_model_name in modelname2dict:
+#         model_data[path_model_name] = {}
+#         for path_dataset_name in modelname2dict[path_model_name]:
+#             for metric in metrics:
+#                 if metric in modelname2dict[path_model_name][path_dataset_name]:
+#                     if metric not in model_data[path_model_name]:
+#                         model_data[path_model_name][metric] = {}
+#                     model_data[path_model_name][metric][path_dataset_name] = modelname2dict[path_model_name][path_dataset_name][metric]
+#                     all_datasets.add(path_dataset_name)
+    
+#     # 找到两个模型都有数据的数据集
+#     common_datasets = []
+#     for dataset in sorted(all_datasets):
+#         has_all_models = True
+#         for model in model_data:
+#             # 检查该模型是否在所有指标上都有这个数据集的数据
+#             for metric in metrics:
+#                 if metric not in model_data[model] or dataset not in model_data[model][metric]:
+#                     has_all_models = False
+#                     break
+#             if not has_all_models:
+#                 break
+#         if has_all_models:
+#             common_datasets.append(dataset)
+    
+#     if common_datasets and len(model_data) >= 2:
+#         models = list(model_data.keys())
+        
+#         # 创建路径结构 - 使用清理后的模型名称
+#         cleaned_model_names = [clean_model_name(model) for model in models]
+#         model_names_str = "_vs_".join(cleaned_model_names)
+#         base_result_path = "/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/img/img_tokens"
+#         model_comparison_path = os.path.join(base_result_path, model_names_str)
+        
+#         # 为每个指标绘制对比图
+#         for metric in metrics:
+#             # 创建指标路径
+#             metric_path = os.path.join(model_comparison_path, metric)
+#             os.makedirs(metric_path, exist_ok=True)
+            
+#             # 绘制对比柱状图
+#             plt.figure(figsize=(16, 10))
+            
+#             x = range(len(common_datasets))
+#             width = 0.35
+#             colors = ['skyblue', 'lightcoral', 'lightgreen', 'wheat', 'plum']  # 支持最多5个模型
+            
+#             for i, model in enumerate(models[:5]):  # 最多显示5个模型
+#                 values = [model_data[model][metric][dataset] for dataset in common_datasets]
+#                 offset = (i - len(models)/2 + 0.5) * width
+#                 bars = plt.bar([pos + offset for pos in x], values, width, 
+#                               label=clean_model_name(model), 
+#                               color=colors[i], alpha=0.8)
+                
+#                 # 在柱子上显示数值
+#                 for bar, value in zip(bars, values):
+#                     plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(values)*0.01, 
+#                             f'{value:.1f}', ha='center', va='bottom', fontsize=8)
+            
+#             wrapped_labels = ['\n'.join(textwrap.wrap(name, 8)) for name in common_datasets]
+#             plt.xlabel('Dataset', fontsize=12)
+#             plt.ylabel('Token Length', fontsize=12)
+#             plt.title(f'Model Comparison: {metric_titles[metric]} by Dataset', fontsize=14, pad=20)
+#             plt.xticks(x, wrapped_labels, rotation=45, ha='right')
+#             plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+#             plt.grid(axis='y', alpha=0.3)
+#             plt.tight_layout()
+            
+#             # 保存对比柱状图
+#             plt.savefig(os.path.join(metric_path, f"{metric}_comparison_bar.png"), dpi=300, bbox_inches='tight')
+#             plt.close()
+            
+#             # 绘制对比折线图
+#             plt.figure(figsize=(16, 10))
+            
+#             markers = ['o', 's', '^', 'D', 'v']  # 不同的标记样式
+#             line_styles = ['-', '--', '-.', ':', '-']  # 不同的线型
+            
+#             for i, model in enumerate(models[:5]):
+#                 values = [model_data[model][metric][dataset] for dataset in common_datasets]
+#                 label = clean_model_name(model)
+#                 plt.plot(x, values, marker=markers[i], linewidth=2, markersize=8, 
+#                         label=label, linestyle=line_styles[i], color=colors[i])
+                
+#                 # 在数据点上显示数值
+#                 for j, value in enumerate(values):
+#                     plt.text(j, value + max(values)*0.02, f'{value:.1f}', 
+#                             ha='center', va='bottom', fontsize=8)
+            
+#             plt.xlabel('Dataset', fontsize=12)
+#             plt.ylabel('Token Length', fontsize=12)
+#             plt.title(f'Model Comparison: {metric_titles[metric]} Trend by Dataset', fontsize=14, pad=20)
+#             plt.xticks(x, wrapped_labels, rotation=45, ha='right')
+#             plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+#             plt.grid(True, alpha=0.3)
+#             plt.tight_layout()
+            
+#             # 保存对比折线图
+#             plt.savefig(os.path.join(metric_path, f"{metric}_comparison_line.png"), dpi=300, bbox_inches='tight')
+#             plt.close()
+            
+#             # 打印该指标的对比统计信息
+#             print(f"\n=== {metric_titles[metric]} ===")
+#             print(f"Common datasets: {len(common_datasets)}")
+#             print(f"Datasets: {', '.join(common_datasets)}")
+            
+#             for model in models:
+#                 values = [model_data[model][metric][dataset] for dataset in common_datasets]
+#                 print(f"\n{clean_model_name(model)}:")
+#                 print(f"  Average: {sum(values)/len(values):.2f}")
+#                 print(f"  Max: {max(values):.2f}")
+#                 print(f"  Min: {min(values):.2f}")
+
+# 绘制三个per_call指标在同一张图上的对比 - 修改为三个子图
+if len(modelname2dict) >= 2:
+    # 定义要对比的三个指标
+    per_call_metrics = [
         "avg_of_reason_token_per_call",
-        "avg_of_search_token_per_call",
+        "avg_of_search_token_per_call", 
         "avg_of_python_token_per_call"
     ]
     
-    # 指标的中文名称映射
-    metric_titles = {
-        "avg_of_total_reason_token": "Average Total Reasoning Token Length",
-        "avg_of_total_search_token": "Average Total Search Token Length",
-        "avg_of_total_python_token": "Average Total Python Token Length",
-        "avg_of_mean_sequence_reason_token": "Average Mean Sequence Reasoning Token Length",
-        "avg_of_mean_sequence_search_token": "Average Mean Sequence Search Token Length",
-        "avg_of_mean_sequence_python_token": "Average Mean Sequence Python Token Length",
-        "avg_of_reason_token_per_call": "Average Reasoning Token Per Call",
-        "avg_of_search_token_per_call": "Average Search Token Per Call",
-        "avg_of_python_token_per_call": "Average Python Token Per Call"
+    # 指标的显示名称
+    metric_display_names = {
+        "avg_of_reason_token_per_call": "Reasoning Token Per Call",
+        "avg_of_search_token_per_call": "Search Token Per Call",
+        "avg_of_python_token_per_call": "Python Token Per Call"
     }
     
-    for path_model_name in modelname2dict:
-        model_data[path_model_name] = {}
-        for path_dataset_name in modelname2dict[path_model_name]:
-            for metric in metrics:
-                if metric in modelname2dict[path_model_name][path_dataset_name]:
-                    if metric not in model_data[path_model_name]:
-                        model_data[path_model_name][metric] = {}
-                    model_data[path_model_name][metric][path_dataset_name] = modelname2dict[path_model_name][path_dataset_name][metric]
-                    all_datasets.add(path_dataset_name)
+    # 收集数据
+    oct_model_name = None
+    origin_model_name = None
     
-    # 找到两个模型都有数据的数据集
-    common_datasets = []
-    for dataset in sorted(all_datasets):
-        has_all_models = True
-        for model in model_data:
-            # 检查该模型是否在所有指标上都有这个数据集的数据
-            for metric in metrics:
-                if metric not in model_data[model] or dataset not in model_data[model][metric]:
-                    has_all_models = False
-                    break
-            if not has_all_models:
-                break
-        if has_all_models:
-            common_datasets.append(dataset)
+    # 找到OCT和Origin模型
+    for model_name in modelname2dict.keys():
+        if 'oct' in model_name.lower():
+            oct_model_name = model_name
+        elif 'origin' in model_name.lower():
+            origin_model_name = model_name
+        elif 'oct' not in model_name.lower():
+            origin_model_name = model_name  
     
-    if common_datasets and len(model_data) >= 2:
-        models = list(model_data.keys())
+    if oct_model_name and origin_model_name:
+        # 找到两个模型都有数据的数据集
+        common_datasets = []
+        for dataset in dataset_names:
+            if (dataset in modelname2dict.get(oct_model_name, {}) and 
+                dataset in modelname2dict.get(origin_model_name, {})):
+                # 检查两个模型在该数据集上是否都有三个指标的数据
+                oct_has_all = all(metric in modelname2dict[oct_model_name][dataset] 
+                                for metric in per_call_metrics)
+                origin_has_all = all(metric in modelname2dict[origin_model_name][dataset] 
+                                   for metric in per_call_metrics)
+                if oct_has_all and origin_has_all:
+                    common_datasets.append(dataset)
         
-        # 创建路径结构 - 使用清理后的模型名称
-        cleaned_model_names = [clean_model_name(model) for model in models]
-        model_names_str = "_vs_".join(cleaned_model_names)
-        base_result_path = "/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/img"
-        model_comparison_path = os.path.join(base_result_path, model_names_str)
-        
-        # 为每个指标绘制对比图
-        for metric in metrics:
-            # 创建指标路径
-            metric_path = os.path.join(model_comparison_path, metric)
-            os.makedirs(metric_path, exist_ok=True)
+        if common_datasets:
+            # 创建包含三个子图的图形
+            fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+            fig.suptitle('Token Efficiency Comparison per Call', 
+                        fontsize=20, y=1.02)
             
-            # 绘制对比柱状图
-            plt.figure(figsize=(16, 10))
+            # 颜色设置 
+            colors = {
+                'oct': '#78e2db',      
+                'origin': '#4285f4'    
+            }
             
-            x = range(len(common_datasets))
-            width = 0.35
-            colors = ['skyblue', 'lightcoral', 'lightgreen', 'wheat', 'plum']  # 支持最多5个模型
+            # 每个数据集的位置
+            n_datasets = len(common_datasets)
+            dataset_positions = range(n_datasets)
+            bar_width = 0.35
             
-            for i, model in enumerate(models[:5]):  # 最多显示5个模型
-                values = [model_data[model][metric][dataset] for dataset in common_datasets]
-                offset = (i - len(models)/2 + 0.5) * width
-                bars = plt.bar([pos + offset for pos in x], values, width, 
-                              label=clean_model_name(model), 
-                              color=colors[i], alpha=0.8)
+            # 为每个指标绘制子图
+            for i, metric in enumerate(per_call_metrics):
+                ax = axes[i]
+                
+                # OCT模型的数据
+                oct_values = [modelname2dict[oct_model_name][dataset][metric] 
+                             for dataset in common_datasets]
+                # Origin模型的数据
+                origin_values = [modelname2dict[origin_model_name][dataset][metric] 
+                               for dataset in common_datasets]
+                
+                # OCT模型的柱子位置
+                oct_positions = [pos - bar_width/2 for pos in dataset_positions]
+                # Origin模型的柱子位置  
+                origin_positions = [pos + bar_width/2 for pos in dataset_positions]
+                
+                # 绘制柱状图
+                oct_bars = ax.bar(oct_positions, oct_values, bar_width, 
+                                 label='ARPO(ours)', color=colors['oct'], alpha=0.8)
+                
+                origin_bars = ax.bar(origin_positions, origin_values, bar_width,
+                                   label='ARPO', color=colors['origin'], alpha=0.8)
                 
                 # 在柱子上显示数值
-                for bar, value in zip(bars, values):
-                    plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(values)*0.01, 
-                            f'{value:.1f}', ha='center', va='bottom', fontsize=8)
-            
-            wrapped_labels = ['\n'.join(textwrap.wrap(name, 8)) for name in common_datasets]
-            plt.xlabel('Dataset', fontsize=12)
-            plt.ylabel('Token Length', fontsize=12)
-            plt.title(f'Model Comparison: {metric_titles[metric]} by Dataset', fontsize=14, pad=20)
-            plt.xticks(x, wrapped_labels, rotation=45, ha='right')
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-            plt.grid(axis='y', alpha=0.3)
-            plt.tight_layout()
-            
-            # 保存对比柱状图
-            plt.savefig(os.path.join(metric_path, f"{metric}_comparison_bar.png"), dpi=300, bbox_inches='tight')
-            plt.close()
-            
-            # 绘制对比折线图
-            plt.figure(figsize=(16, 10))
-            
-            markers = ['o', 's', '^', 'D', 'v']  # 不同的标记样式
-            line_styles = ['-', '--', '-.', ':', '-']  # 不同的线型
-            
-            for i, model in enumerate(models[:5]):
-                values = [model_data[model][metric][dataset] for dataset in common_datasets]
-                label = clean_model_name(model)
-                plt.plot(x, values, marker=markers[i], linewidth=2, markersize=8, 
-                        label=label, linestyle=line_styles[i], color=colors[i])
+                max_value = max(oct_values + origin_values)
+                # for bar, value in zip(oct_bars, oct_values):
+                #     ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max_value*0.01,
+                #            f'{value:.1f}', ha='center', va='bottom', fontsize=9, rotation=0)
                 
-                # 在数据点上显示数值
-                for j, value in enumerate(values):
-                    plt.text(j, value + max(values)*0.02, f'{value:.1f}', 
-                            ha='center', va='bottom', fontsize=8)
+                # for bar, value in zip(origin_bars, origin_values):
+                #     ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max_value*0.01,
+                #            f'{value:.1f}', ha='center', va='bottom', fontsize=9, rotation=0)
+                
+                # 设置子图属性
+                ax.set_xlabel('Dataset', fontsize=16, labelpad=15)
+                if i == 0:
+                    ax.set_ylabel('Average Token Length', fontsize=16)
+                ax.set_title(metric_display_names[metric], fontsize=18, pad=10)
+                
+                # 设置x轴标签
+                wrapped_datasets = ['\n'.join(textwrap.wrap(name, 8)) for name in common_datasets]
+                ax.set_xticks(dataset_positions)
+                ax.set_xticklabels(wrapped_datasets, rotation=0, ha='center', fontsize=16)
+                
+                # 添加网格
+                # ax.grid(axis='y', alpha=0.3, linestyle='--')
+
+                # 设置y轴刻度标签的字体大小
+                ax.tick_params(axis='y', labelsize=14)
+
+                # 添加图例
+                ax.legend(loc='best', fontsize=14)
+                
+                # 设置y轴范围，留出显示数值的空间
+                ax.set_ylim(0, max_value * 1.15)
             
-            plt.xlabel('Dataset', fontsize=12)
-            plt.ylabel('Token Length', fontsize=12)
-            plt.title(f'Model Comparison: {metric_titles[metric]} Trend by Dataset', fontsize=14, pad=20)
-            plt.xticks(x, wrapped_labels, rotation=45, ha='right')
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-            plt.grid(True, alpha=0.3)
-            plt.tight_layout()
+            # 调整子图间距
+            # plt.tight_layout()
+            plt.subplots_adjust(wspace=0.15) 
             
-            # 保存对比折线图
-            plt.savefig(os.path.join(metric_path, f"{metric}_comparison_line.png"), dpi=300, bbox_inches='tight')
+            # 保存图片
+            base_result_path = "/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/img/img_tokens"
+            os.makedirs(base_result_path, exist_ok=True)
+            
+            clean_oct_name = clean_model_name(oct_model_name)
+            clean_origin_name = clean_model_name(origin_model_name)
+            filename = f"{clean_oct_name}_vs_{clean_origin_name}_per_call_metrics_img.svg"
+            
+            plt.savefig(os.path.join(base_result_path, filename), format='svg', bbox_inches='tight') 
             plt.close()
             
-            # 打印该指标的对比统计信息
-            print(f"\n=== {metric_titles[metric]} ===")
+            # 打印统计信息
+            print(f"\n=== Per Call Metrics Comparison (Subplots) ===")
+            print(f"OCT Model: {clean_oct_name}")
+            print(f"Origin Model: {clean_origin_name}")
             print(f"Common datasets: {len(common_datasets)}")
             print(f"Datasets: {', '.join(common_datasets)}")
             
-            for model in models:
-                values = [model_data[model][metric][dataset] for dataset in common_datasets]
-                print(f"\n{clean_model_name(model)}:")
-                print(f"  Average: {sum(values)/len(values):.2f}")
-                print(f"  Max: {max(values):.2f}")
-                print(f"  Min: {min(values):.2f}")
+            for metric in per_call_metrics:
+                print(f"\n{metric_display_names[metric]}:")
+                oct_values = [modelname2dict[oct_model_name][dataset][metric] 
+                             for dataset in common_datasets]
+                origin_values = [modelname2dict[origin_model_name][dataset][metric] 
+                               for dataset in common_datasets]
+                
+                print(f"  OCT - Average: {sum(oct_values)/len(oct_values):.2f}, "
+                      f"Max: {max(oct_values):.2f}, Min: {min(oct_values):.2f}")
+                print(f"  Origin - Average: {sum(origin_values)/len(origin_values):.2f}, "
+                      f"Max: {max(origin_values):.2f}, Min: {min(origin_values):.2f}")
+                
+                # 计算改进幅度
+                avg_oct = sum(oct_values)/len(oct_values)
+                avg_origin = sum(origin_values)/len(origin_values)
+                improvement = ((avg_oct - avg_origin) / avg_origin * 100) if avg_origin != 0 else 0
+                print(f"  OCT vs Origin: {improvement:+.1f}%")
+            
+            print(f"\n子图已保存到: {os.path.join(base_result_path, filename)}")
+        
+        else:
+            print("没有找到两个模型都有完整数据的公共数据集")
+    else:
+        print(f"未能找到OCT和Origin模型。找到的模型: {list(modelname2dict.keys())}")
 

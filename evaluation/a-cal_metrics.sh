@@ -2210,22 +2210,22 @@ run_dataset(){
 # ####################################################################################################################
 # 2025-09-15
 
-MODE=budget_no_limit_run
-MODEL=CIR-7B-origin_prompt
+# MODE=budget_no_limit_run
+# MODEL=CIR-7B-origin_prompt
 
-DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
-TASK=qa
-for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
-    run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
     
-done
+# done
 
-DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
-TASK=math
-for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
-    run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
     
-done
+# done
 
 
 # MODE=budget_no_limit_run
@@ -2244,3 +2244,58 @@ done
 #     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
     
 # done
+
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_g16W_global_step_78
+
+# DATASET_NAMEs=(musique bamboogle hotpotqa 2wiki nq SimpleQA)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(amc23 aime24 aime25 math math500 gsm8k OlymBench-math)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_3b_two_epoch_add_test
+
+# DATASET_NAMEs=(bamboogle 2wiki)
+# TASK=qa
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+# DATASET_NAMEs=(gsm8k)
+# TASK=math
+# for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+#     run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+# done
+
+
+MODE=budget_no_limit_run
+MODEL=tool_star_3b_origin_test
+
+DATASET_NAMEs=(2wiki)
+TASK=qa
+for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+    run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+done
+
+DATASET_NAMEs=(gsm8k math500)
+TASK=math
+for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
+    run_dataset_model_mode $TASK $DATASET_NAME $MODEL $MODE
+    
+done
+
