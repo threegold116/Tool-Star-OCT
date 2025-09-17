@@ -6,6 +6,7 @@ import json
 import re
 import textwrap
 import matplotlib.pyplot as plt
+from transformers import AutoTokenizer
 
 dataset_names=["musique", "bamboogle", "hotpotqa", "2wiki", "nq", "SimpleQA", "amc23", "aime24", "aime25", "math", "math500", "gsm8k", "OlymBench-math"]
 
@@ -17,6 +18,26 @@ model_names=["tool_star_qwen_7b_origin", "tool_star_qwen_7b_oct_clip_radio_gradc
 
 data_dir = f"/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/result/"
 specific_rollout_iter_num = -1
+
+
+TOKENIZER_PATH = "/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_smooth_multiply-global_step_78"  
+TOKENIZER_PATH = '/home/sxjiang/model/Tool-Star-Qwen-7B'
+
+def get_tokenizer():
+    """获取tokenizer实例"""
+    if not TOKENIZER_PATH:
+        raise ValueError("请在TOKENIZER_PATH变量中设置tokenizer路径")
+    return AutoTokenizer.from_pretrained(TOKENIZER_PATH, trust_remote_code=True)
+
+def count_tokens_with_tokenizer(text, tokenizer):
+    """使用tokenizer计算token数量"""
+    try:
+        token_ids = tokenizer.encode(text, add_special_tokens=False)
+        return len(token_ids)
+    except Exception as e:
+        print(f"Error encoding text with tokenizer: {e}")
+        # 如果tokenizer出错，回退到空格分词
+        return len(text.split())
 
 def draw_column(labels,values,result_dir,name):
     print(labels)
@@ -267,6 +288,10 @@ wrong_rollout_idx = []
 wrong_rollout_num_dict={}
 print(data_dir)
 modelname2dict = {}
+
+# 初始化tokenizer
+tokenizer = get_tokenizer()
+    
 for root,dirs,files in os.walk(data_dir):
     if "one_epoch_warmup" in root:
         continue
@@ -313,7 +338,6 @@ for root,dirs,files in os.walk(data_dir):
         per_call_search_token_len = []  # 计算每次调用的<search>的平均token长度， 如果调用为0，和call_times=1一样
         per_call_reason_token_len = []  # 计算每次调用的<think>的平均token长度， 如果调用为0，和call_times=1一样
 
-
         if file=="result.metrics.json":
             file_path=os.path.join(root,file)
 
@@ -331,17 +355,18 @@ for root,dirs,files in os.walk(data_dir):
                         python_tokens_sequence = re.findall(r'<python>(.*?)</python>', item['Full_output'], re.DOTALL)
                         call_times = item['calling_rounds']
                         
+                        # 使用tokenizer计算token长度
                         for think_tokens in think_tokens_sequence:
-                            tokens = think_tokens.split()
-                            total_think_sequence_len += len(tokens)
+                            token_count = count_tokens_with_tokenizer(think_tokens, tokenizer)
+                            total_think_sequence_len += token_count
 
                         for search_tokens in search_tokens_sequence:
-                            tokens = search_tokens.split()
-                            total_search_sequence_len += len(tokens)
+                            token_count = count_tokens_with_tokenizer(search_tokens, tokenizer)
+                            total_search_sequence_len += token_count
                             
                         for python_tokens in python_tokens_sequence:
-                            tokens = python_tokens.split()
-                            total_python_sequence_len += len(tokens)
+                            token_count = count_tokens_with_tokenizer(python_tokens, tokenizer)
+                            total_python_sequence_len += token_count
 
                         # 计算所有<think>的总token长度
                         total_reason_token_len.append(total_think_sequence_len)
@@ -379,7 +404,6 @@ for root,dirs,files in os.walk(data_dir):
                             per_call_python_token_len.append(total_python_sequence_len / call_times)
                         elif call_times == 0:
                             per_call_python_token_len.append(total_python_sequence_len)
-                            
 
                 avg_of_total_reason_token = sum(total_reason_token_len) / len(total_reason_token_len) if total_reason_token_len else 0
                 avg_of_total_search_token = sum(total_search_token_len) / len(total_search_token_len) if total_search_token_len else 0
@@ -686,7 +710,7 @@ if len(modelname2dict) >= 2:
             plt.tight_layout()
             
             # 保存对比柱状图
-            plt.savefig(os.path.join(metric_path, f"{metric}_comparison_bar.png"), dpi=300, bbox_inches='tight')
+            plt.savefig(os.path.join(metric_path, f"{metric}_comparison_bar2.png"), dpi=300, bbox_inches='tight')
             plt.close()
             
             # 绘制对比折线图

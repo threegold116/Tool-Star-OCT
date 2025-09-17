@@ -6,6 +6,25 @@ import json
 import re
 import textwrap
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+from transformers import AutoTokenizer
+
+# 添加字体文件
+fm.fontManager.addfont('/home/sxjiang/myproject/analyse/radar/TIMES.TTF')
+# 字体设置 
+fontsize = 25
+
+# 设置matplotlib全局字体参数
+plt.rcParams.update({
+    "legend.fontsize": fontsize,
+    "legend.title_fontsize": fontsize,    # 如果有图例标题
+    "font.size": 15,        # 全局字体大小
+    "font.family": "Times New Roman",  # 全局字体族
+    "axes.titlesize": fontsize,   # 标题字体
+    "axes.labelsize": fontsize,   # 坐标轴标签字体
+    "xtick.labelsize": fontsize,  # X轴刻度字体
+    "ytick.labelsize": fontsize   # Y轴刻度字体
+})
 
 # dataset_names=["musique", "bamboogle", "hotpotqa", "2wiki", "nq", "SimpleQA", "amc23", "aime24", "aime25", "math", "math500", "gsm8k", "OlymBench-math"]
 dataset_names=["musique", "2wiki", "math", "gsm8k"]
@@ -19,62 +38,20 @@ model_names=["tool_star_qwen_7b_origin", "tool_star_qwen_7b_oct_clip_radio_gradc
 data_dir = f"/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/result/"
 specific_rollout_iter_num = -1
 
-def draw_column(labels,values,result_dir,name):
-    print(labels)
-    print(values)
-    # 绘制柱形图
-    plt.figure(figsize=(8, 8))
-    wrapped_labels = ['\n'.join(textwrap.wrap(l, 6)) for l in labels]
-    plt.bar(wrapped_labels, values)
-    # 用 textwrap 自动按宽度切分
-    # 添加标题和标签
-    plt.title('Colome')
-    plt.xlabel('calling_times')
-    plt.ylabel('num')
+# 添加tokenizer路径配置，用户可以自己填写
+TOKENIZER_PATH = ""  # 用户需要在这里填写tokenizer路径
 
-    # 显示图形
-    # 保存图片
-    plt.savefig(os.path.join(result_dir,f"{name}.png"))
-    plt.close()
+def get_tokenizer():
+    """获取tokenizer实例"""
+    if not TOKENIZER_PATH:
+        raise ValueError("请在TOKENIZER_PATH变量中设置tokenizer路径")
+    return AutoTokenizer.from_pretrained(TOKENIZER_PATH, trust_remote_code=True)
 
+def count_tokens_with_tokenizer(text, tokenizer):
+    """使用tokenizer计算token数量"""
+    token_ids = tokenizer.encode(text, add_special_tokens=False)
+    return len(token_ids)
 
-def draw_with_max(x,y,result_dir,name):
-    print(x,y)
-   
-    plt.figure(figsize=(16, 10))
-    plt.plot(x, y, marker='o', label='Line')
-    plt.xticks(rotation=45, ha='right')
-
-    # 标记最大值
-    max_index = y.index(max(y))
-    max_x = x[max_index]
-    max_y = y[max_index]
-    plt.axvline(x=max_x, color='red', linestyle='--', label='Max Value')
-    plt.text(max_x, max_y + 0.05, f'Max: {max_y}', ha='center', color='red', fontsize=10, rotation=90)
-    plt.legend()
-
-    # 保存图片
-    plt.savefig(os.path.join(result_dir,f"{name}.png"))
-    plt.close()
-
-
-def find_wrong(reson_str,sequences_str):
-    if "bad format" not in reson_str:
-        return False
-    if sequences_str.count("</answer>")>3:
-        return True
-    if "<<" in sequences_str:
-        return True
-    if "</answer> not found" in reson_str:
-        return False
-    if sequences_str.count("</answer>")==2:
-        return False
-    if sequences_str.count("</answer>")==2 and sequences_str.count("<|im_end|>")==3:
-        return False
-    if sequences_str.count("</answer>")!=sequences_str.count("<|im_end|>"):
-        return True
-    
-    return False
 
 def clean_model_name(model_name):
     """清理模型名称，保留主要部分"""
@@ -268,6 +245,11 @@ wrong_rollout_idx = []
 wrong_rollout_num_dict={}
 print(data_dir)
 modelname2dict = {}
+
+# 初始化tokenizer
+tokenizer = get_tokenizer()
+print(f"成功加载tokenizer: {TOKENIZER_PATH}")
+
 for root,dirs,files in os.walk(data_dir):
     if "one_epoch_warmup" in root:
         continue
@@ -332,17 +314,18 @@ for root,dirs,files in os.walk(data_dir):
                         python_tokens_sequence = re.findall(r'<python>(.*?)</python>', item['Full_output'], re.DOTALL)
                         call_times = item['calling_rounds']
                         
+                        # 使用tokenizer计算token长度
                         for think_tokens in think_tokens_sequence:
-                            tokens = think_tokens.split()
-                            total_think_sequence_len += len(tokens)
+                            token_count = count_tokens_with_tokenizer(think_tokens, tokenizer)
+                            total_think_sequence_len += token_count
 
                         for search_tokens in search_tokens_sequence:
-                            tokens = search_tokens.split()
-                            total_search_sequence_len += len(tokens)
+                            token_count = count_tokens_with_tokenizer(search_tokens, tokenizer)
+                            total_search_sequence_len += token_count
                             
                         for python_tokens in python_tokens_sequence:
-                            tokens = python_tokens.split()
-                            total_python_sequence_len += len(tokens)
+                            token_count = count_tokens_with_tokenizer(python_tokens, tokenizer)
+                            total_python_sequence_len += token_count
 
                         # 计算所有<think>的总token长度
                         total_reason_token_len.append(total_think_sequence_len)
@@ -394,14 +377,7 @@ for root,dirs,files in os.walk(data_dir):
                 avg_of_search_token_per_call = sum(per_call_search_token_len) / len(per_call_search_token_len) if per_call_search_token_len else 0
                 avg_of_python_token_per_call = sum(per_call_python_token_len) / len(per_call_python_token_len) if per_call_python_token_len else 0
 
-            # 实际这里不是真正的avg_token， 这里的token是按照空格划分的
-            # 计算以下指标：
-            # 1. avg_of_total_reason_token ，每段think的token之和
-            # 2. avg_of_mean_sequence_reason_token， 每段think的平均token数
-            # 3. avg_of_reason_token_per_call, 每段think的token之和除以tool调用次数 
-            
-            # 4. avg_of_total_search_token, 每段search的token之和
-            # 5. avg_of_total_python_token, 每段python的token之和
+            # 存储指标数据
             modelname2dict[path_model_name][path_dataset_name]["avg_of_total_reason_token"] = avg_of_total_reason_token
             modelname2dict[path_model_name][path_dataset_name]["avg_of_total_search_token"] = avg_of_total_search_token
             modelname2dict[path_model_name][path_dataset_name]["avg_of_total_python_token"] = avg_of_total_python_token
@@ -731,20 +707,18 @@ save_detailed_results(modelname2dict)
 #                 print(f"  Max: {max(values):.2f}")
 #                 print(f"  Min: {min(values):.2f}")
 
-# 绘制三个per_call指标在同一张图上的对比 - 修改为三个子图
+# 绘制两个per_call指标在同一张图上的对比 - 修改为两个子图
 if len(modelname2dict) >= 2:
-    # 定义要对比的三个指标
+    # 定义要对比的两个指标
     per_call_metrics = [
         "avg_of_reason_token_per_call",
-        "avg_of_search_token_per_call", 
-        "avg_of_python_token_per_call"
+        "avg_of_tool_token_per_call"  # 这个是合并后的指标
     ]
     
     # 指标的显示名称
     metric_display_names = {
         "avg_of_reason_token_per_call": "Reasoning Token Per Call",
-        "avg_of_search_token_per_call": "Search Token Per Call",
-        "avg_of_python_token_per_call": "Python Token Per Call"
+        "avg_of_tool_token_per_call": "Tool Token Per Call"  # search + python
     }
     
     # 收集数据
@@ -766,19 +740,29 @@ if len(modelname2dict) >= 2:
         for dataset in dataset_names:
             if (dataset in modelname2dict.get(oct_model_name, {}) and 
                 dataset in modelname2dict.get(origin_model_name, {})):
-                # 检查两个模型在该数据集上是否都有三个指标的数据
-                oct_has_all = all(metric in modelname2dict[oct_model_name][dataset] 
-                                for metric in per_call_metrics)
-                origin_has_all = all(metric in modelname2dict[origin_model_name][dataset] 
-                                   for metric in per_call_metrics)
-                if oct_has_all and origin_has_all:
+                # 检查两个模型在该数据集上是否都有search和python指标的数据
+                oct_has_base = ("avg_of_reason_token_per_call" in modelname2dict[oct_model_name][dataset] and
+                              "avg_of_search_token_per_call" in modelname2dict[oct_model_name][dataset] and
+                              "avg_of_python_token_per_call" in modelname2dict[oct_model_name][dataset])
+                origin_has_base = ("avg_of_reason_token_per_call" in modelname2dict[origin_model_name][dataset] and
+                                 "avg_of_search_token_per_call" in modelname2dict[origin_model_name][dataset] and
+                                 "avg_of_python_token_per_call" in modelname2dict[origin_model_name][dataset])
+                if oct_has_base and origin_has_base:
                     common_datasets.append(dataset)
         
         if common_datasets:
-            # 创建包含三个子图的图形
-            fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-            fig.suptitle('Token Efficiency Comparison per Call', 
-                        fontsize=20, y=1.02)
+            # 为每个模型和数据集计算合并后的tool token指标
+            for model_name in [oct_model_name, origin_model_name]:
+                for dataset in common_datasets:
+                    search_tokens = modelname2dict[model_name][dataset]["avg_of_search_token_per_call"]
+                    python_tokens = modelname2dict[model_name][dataset]["avg_of_python_token_per_call"]
+                    # 合并search和python的token数
+                    modelname2dict[model_name][dataset]["avg_of_tool_token_per_call"] = search_tokens + python_tokens
+            
+            # 创建包含两个子图的图形
+            fig, axes = plt.subplots(1, 2, figsize=(18, 6))
+            # fig.suptitle('Token Efficiency Comparison per Call', 
+            #             fontsize=20, y=1.02)
             
             # 颜色设置 
             colors = {
@@ -809,47 +793,36 @@ if len(modelname2dict) >= 2:
                 
                 # 绘制柱状图
                 oct_bars = ax.bar(oct_positions, oct_values, bar_width, 
-                                 label='ARPO(ours)', color=colors['oct'], alpha=0.8)
+                                 label='Tool-Star-7B(ours)', color=colors['oct'], alpha=0.8)
                 
                 origin_bars = ax.bar(origin_positions, origin_values, bar_width,
-                                   label='ARPO', color=colors['origin'], alpha=0.8)
+                                   label='Tool-Star-7B', color=colors['origin'], alpha=0.8)
                 
                 # 在柱子上显示数值
                 max_value = max(oct_values + origin_values)
-                # for bar, value in zip(oct_bars, oct_values):
-                #     ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max_value*0.01,
-                #            f'{value:.1f}', ha='center', va='bottom', fontsize=9, rotation=0)
-                
-                # for bar, value in zip(origin_bars, origin_values):
-                #     ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max_value*0.01,
-                #            f'{value:.1f}', ha='center', va='bottom', fontsize=9, rotation=0)
                 
                 # 设置子图属性
-                ax.set_xlabel('Dataset', fontsize=16, labelpad=15)
+                ax.set_xlabel('Dataset', fontsize=24, labelpad=15)
                 if i == 0:
-                    ax.set_ylabel('Average Token Length', fontsize=16)
-                ax.set_title(metric_display_names[metric], fontsize=18, pad=10)
-                
+                    ax.set_ylabel('Average Token Length', fontsize=24)
+                ax.set_title(metric_display_names[metric], fontsize=24, pad=15)
+
                 # 设置x轴标签
                 wrapped_datasets = ['\n'.join(textwrap.wrap(name, 8)) for name in common_datasets]
                 ax.set_xticks(dataset_positions)
-                ax.set_xticklabels(wrapped_datasets, rotation=0, ha='center', fontsize=16)
+                ax.set_xticklabels(wrapped_datasets, rotation=0, ha='center', fontsize=24)
                 
-                # 添加网格
-                # ax.grid(axis='y', alpha=0.3, linestyle='--')
-
                 # 设置y轴刻度标签的字体大小
-                ax.tick_params(axis='y', labelsize=14)
+                ax.tick_params(axis='y', labelsize=20)
 
                 # 添加图例
-                ax.legend(loc='best', fontsize=14)
+                ax.legend(loc='best', fontsize=20)
                 
                 # 设置y轴范围，留出显示数值的空间
                 ax.set_ylim(0, max_value * 1.15)
             
             # 调整子图间距
-            # plt.tight_layout()
-            plt.subplots_adjust(wspace=0.15) 
+            plt.subplots_adjust(wspace=0.15)  # 增大间距，因为只有两个子图
             
             # 保存图片
             base_result_path = "/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/img/img_tokens"
@@ -857,13 +830,13 @@ if len(modelname2dict) >= 2:
             
             clean_oct_name = clean_model_name(oct_model_name)
             clean_origin_name = clean_model_name(origin_model_name)
-            filename = f"{clean_oct_name}_vs_{clean_origin_name}_per_call_metrics_img.svg"
+            filename = f"{clean_oct_name}_vs_{clean_origin_name}_per_call_metrics_img_new.svg"
             
             plt.savefig(os.path.join(base_result_path, filename), format='svg', bbox_inches='tight') 
             plt.close()
             
             # 打印统计信息
-            print(f"\n=== Per Call Metrics Comparison (Subplots) ===")
+            print(f"\n=== Per Call Metrics Comparison (Two Subplots) ===")
             print(f"OCT Model: {clean_oct_name}")
             print(f"Origin Model: {clean_origin_name}")
             print(f"Common datasets: {len(common_datasets)}")
@@ -886,9 +859,18 @@ if len(modelname2dict) >= 2:
                 avg_origin = sum(origin_values)/len(origin_values)
                 improvement = ((avg_oct - avg_origin) / avg_origin * 100) if avg_origin != 0 else 0
                 print(f"  OCT vs Origin: {improvement:+.1f}%")
+                
+                # 如果是tool token，额外显示search和python的分解信息
+                if metric == "avg_of_tool_token_per_call":
+                    print(f"  Tool Token 分解:")
+                    for dataset in common_datasets:
+                        oct_search = modelname2dict[oct_model_name][dataset]["avg_of_search_token_per_call"]
+                        oct_python = modelname2dict[oct_model_name][dataset]["avg_of_python_token_per_call"]
+                        origin_search = modelname2dict[origin_model_name][dataset]["avg_of_search_token_per_call"]
+                        origin_python = modelname2dict[origin_model_name][dataset]["avg_of_python_token_per_call"]
+                        print(f"    {dataset}: OCT(S:{oct_search:.1f}+P:{oct_python:.1f}), Origin(S:{origin_search:.1f}+P:{origin_python:.1f})")
             
             print(f"\n子图已保存到: {os.path.join(base_result_path, filename)}")
-        
         else:
             print("没有找到两个模型都有完整数据的公共数据集")
     else:
