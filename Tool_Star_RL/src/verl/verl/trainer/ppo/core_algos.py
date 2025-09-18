@@ -407,7 +407,7 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
 
 
 
-def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=False):
+def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=False,optim_cost_estimate=True):
     # 1.get_strings
     tool_calling_costs = []
     search_times = data.batch.get("is_search",None)
@@ -457,7 +457,10 @@ def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=Fal
             if torch.sum(token_level_scores[i])<=0 and no_positive_penalty:#如果不对负值增加惩罚
                 oct_scores[i] = torch.tensor(1.0)
                 continue
-            optim_cost = id2min_calling_costs[index[i]] #n
+            if optim_cost_estimate:
+                optim_cost = id2min_calling_costs[index[i]] #n         
+            else:
+                optim_cost = 0   
             calling_cost = tool_calling_costs[i] #m
             if ability is None:
                 oct_smooth_budget = oct_smooth*max(python_cost[i],search_cost[i]) 

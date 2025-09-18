@@ -64,6 +64,9 @@ def find_wrong(reason_str,sequences_str):
         all_tags.update(matches)
         if len(matches) > 0 and "bad format" not in reason_str:
             return True
+    if not sequences_str.strip().endswith("<|im_end|>"):
+        print(sequences_str[-10:])
+        return True
     # if not sequences_str.strip().endswith("<|im_end|>"):
     #     print(sequences_str[-10:])
     #     return True
