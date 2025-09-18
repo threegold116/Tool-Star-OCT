@@ -6,16 +6,18 @@ import numpy as np
 import re
 from labellines import labelLines
 import matplotlib.pyplot as plt
+from transformers import AutoTokenizer
 # from analyse_research import get_search_questions
 import sys
+analyse_tokenizer = AutoTokenizer.from_pretrained("/share/home/sxjiang/myproject/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52")
 if len(sys.argv) > 1:
     expertment_name = sys.argv[1]
 else:
-    expertment_name="Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.28_one_epoch_tool_star_no_warm_up_new"
+    expertment_name="Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_smooth"
 data_dir = f"/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/verl_checkpoints/{expertment_name}/rollout"
 specific_rollout_iter_num = -1
 questions_worng_dict = {}
-
+all_tags = set()
 if os.path.exists("/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/llm_result_worng.json"):
     with open("/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/llm_result_worng.json","r") as f:
         questions_worng = json.load(f)
@@ -31,14 +33,44 @@ def get_question(sentence):
     sentence = sentence.split("<|im_end|>\n<|im_start|>assistant\n")[0]
     sentence = sentence.split("<|im_start|>user\n")[1]
     return sentence
-def find_wrong(reson_str,sequences_str):
+def find_wrong(reason_str,sequences_str):
     
     # # if "<think> </think> not paired" in reson_str:
     # #     return False
     # if sequences_str.count("</answer>")>3 or sequences_str.count("<answer>")>3:
     #     return True
-    if "</think><result>" in sequences_str.replace(" ",""):
-        return True
+    # if "</think><result>" in sequences_str.replace(" ",""):
+    #     return True
+    no_result_match=[]
+    
+    think_pattern = re.compile(r"<think>(.+?)</think>", re.S)
+    think_match = think_pattern.findall(sequences_str)
+    no_result_match.extend(think_match)
+    search_pattern = re.compile(r"<search>(.+?)</search>", re.S)
+    search_match = search_pattern.findall(sequences_str)
+    no_result_match.extend(search_match)
+    answer_pattern = re.compile(r"<answer>(.+?)</answer>", re.S)
+    answer_match = answer_pattern.findall(sequences_str)
+    no_result_match.extend(answer_match)
+    python_pattern = re.compile(r"<python>(.+?)</python>", re.S)
+    python_match = python_pattern.findall(sequences_str)
+    no_result_match.extend(python_match)
+    
+    for match_str in no_result_match:
+        pattern = re.compile(r"(<[\w]+?>)", re.S)
+        matches = pattern.findall(match_str)
+        matches = set(matches)
+        matches = matches - {"<think>","</think>","<result>","</result>","<python>","</python>","<search>","</search>","<answer>","</answer>"}
+        all_tags.update(matches)
+        if len(matches) > 0 and "bad format" not in reason_str:
+            return True
+    # if not sequences_str.strip().endswith("<|im_end|>"):
+    #     print(sequences_str[-10:])
+    #     return True
+    # if sequences_str.strip().endswith("</search><|im_end|>") or sequences_str.strip().endswith("</python><|im_end|>"):
+    #     print(sequences_str[-10:])
+    #     return True
+
     # if "< <" in sequences_str:
     #     return True
     # if sequences_str.count("</answer>")==2:
@@ -61,7 +93,9 @@ def draw_with_max(x,y,result_dir,name):
     print(max_x,max_y)
     # 添加一条竖线
     plt.axvline(x=max_x, color='red', linestyle='--', label='Max Value')
-
+    error_index = 85
+    # 添加一条竖线
+    plt.axvline(x=error_index, color='red', linestyle='--', label='NaN')
     # 添加文字标注
     plt.text(max_x, max_y + 1, f'Max: {max_x}', ha='center', color='red', fontsize=10)
 
@@ -86,7 +120,6 @@ def draw_multi_lines(x,y_list,labels,result_dir,name):
 
     plt.savefig(os.path.join(result_dir,f"{name}.png"))
     plt.close()
-
 rollout_step2metrics={}
 wrong_rollout_idx = []
 # print(data_dir)
@@ -120,7 +153,9 @@ for rollout_file in os.listdir(data_dir): #TODO:增加对smooth的统计
             score_sum += line["score"]
             all_calling_times += line["is_search"]+line["is_python"]
             max_calling_times = max(max_calling_times, line["is_search"]+line["is_python"])
+            # max_length = max(max_length, len(analyse_tokenizer.tokenize(line["sequences_str"])))
             max_length = max(max_length, len(line["sequences_str"]))
+            print(max_length)
             questions.append(get_question(line["sequences_str"]))
             if get_question(line["sequences_str"]) not in problem2groups:
                 problem2groups[get_question(line["sequences_str"])] = {}
@@ -143,6 +178,12 @@ for rollout_file in os.listdir(data_dir): #TODO:增加对smooth的统计
             problem2groups[get_question(line["sequences_str"])]["score"].append(line["score"])
             problem2groups[get_question(line["sequences_str"])]["calling_times"].append(line["is_python"]+line["is_search"])
             problem2groups[get_question(line["sequences_str"])]["sequences"].append(line["sequences_str"])
+            
+            pattern = re.compile(r"(<[\w]+>)")
+            matches = pattern.findall(line["sequences_str"])
+            matches = set(matches)
+            # all_tags.update(matches)
+            
             pattern = re.compile(r"<result>(.+?)</result>")
             match = pattern.findall(line["sequences_str"])
             if line["is_python"] and line["is_search"]:
@@ -394,7 +435,8 @@ with open(os.path.join(result_dir,f"llm_wrong_question_result.json"), "w") as f:
             new_questions_worng_dict[question] = {}
         new_questions_worng_dict[question]["score_sum"] = score_sum         
     json.dump(questions_worng_dict, f,indent=4)
-
+with open(os.path.join(result_dir,"all_tags.json"), "w") as f:
+    json.dump(list(all_tags), f,indent=4)
 #### 分析search
 # search_questions = get_search_questions(data_dir,result_dir)
 # print(len(search_questions))
