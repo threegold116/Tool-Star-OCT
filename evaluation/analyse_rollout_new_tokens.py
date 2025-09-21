@@ -27,7 +27,7 @@ plt.rcParams.update({
 })
 
 # dataset_names=["musique", "bamboogle", "hotpotqa", "2wiki", "nq", "SimpleQA", "amc23", "aime24", "aime25", "math", "math500", "gsm8k", "OlymBench-math"]
-dataset_names=["musique", "2wiki", "math", "gsm8k"]
+dataset_names=["musique", "2wiki", "math", "aime25"]
 
 mode_name="budget_no_limit_run"
 model_names=["tool_star_qwen_7b_origin", "tool_star_qwen_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_new_global_step_78"]
@@ -38,8 +38,8 @@ model_names=["tool_star_qwen_7b_origin", "tool_star_qwen_7b_oct_clip_radio_gradc
 data_dir = f"/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/result/"
 specific_rollout_iter_num = -1
 
-# 添加tokenizer路径配置，用户可以自己填写
-TOKENIZER_PATH = ""  # 用户需要在这里填写tokenizer路径
+# 添加tokenizer路径配置
+TOKENIZER_PATH = "/home/sxjiang/model/Tool-Star-Qwen-7B"  
 
 def get_tokenizer():
     """获取tokenizer实例"""

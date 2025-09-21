@@ -106,7 +106,7 @@ def calculate_tool_usage_accuracy(dataset_name, no_tool_model, no_limit_model):
     # 暂时不可能出现(HT + HN) == 0的情况
     if (EN + ET) == 0 or (HT + HN) == 0:
         if (EN + ET) == 0:
-            tool_usage_accuracy = 0.5 * (HT / (HT + HN))
+            tool_usage_accuracy = 1.0 * (HT / (HT + HN))
     else:
         easy_accuracy = EN / (EN + ET)
         hard_accuracy = HT / (HT + HN)

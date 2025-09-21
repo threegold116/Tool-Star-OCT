@@ -11,10 +11,10 @@ data_dir = "/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/result/"
 
 # 手动配置模型名称映射（OCT模型名 -> SFT模型名）
 model_mapping = {
-    # 示例：你需要根据实际情况填写
     "tool_star_qwen_3b_oct_clip_radio_gradclip_02_two_epoch_down_progressive_seq_mean_new_add_global_step_110": "tool_star_qwen_3b_sft",
-    # 添加更多映射...
-    # "oct_model_name": "corresponding_sft_model_name"
+    "tool_star_qwen_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_new_global_step_78": "tool_star_qwen_7b_sft",
+    "ARPO_3b_oct_clip_radio_gradclip_02_two_epoch_down_progressive_seq_mean_smooth_global_step_156": "ARPO_3b_sft",
+    "ARPO_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_em_score_seq_mean_smooth_origin_global_step_78": "ARPO_7b_sft"
 }
 
 def load_metrics_data(file_path):
@@ -106,14 +106,22 @@ def calculate_comparison_metrics(dataset_name, oct_model, sft_model):
         elif not oct_correct and sft_correct:
             LA += 1
         
-        # 统计ME和LE（需要输出相同）
-        if oct_output == sft_output:
+        # 统计ME和LE
+        # 改为同对 or 同错
+        # if oct_output == sft_output:
+        #     same_output_count += 1
+        #     if oct_tool_count < sft_tool_count:
+        #         ME += 1
+        #     elif oct_tool_count > sft_tool_count:
+        #         LE += 1
+                
+        if oct_correct == sft_correct:
             same_output_count += 1
             if oct_tool_count < sft_tool_count:
                 ME += 1
             elif oct_tool_count > sft_tool_count:
                 LE += 1
-    
+        
     # 计算比例
     me_ratio = ME / matched_questions if matched_questions > 0 else 0
     le_ratio = LE / matched_questions if matched_questions > 0 else 0
@@ -160,10 +168,10 @@ def visualize_results(results, model_pair_name):
     x = np.arange(len(datasets))
     width = 0.2
     
-    bars1 = plt.bar(x - 1.5*width, me_ratios, width, label='ME (OCT用更少工具，输出相同)', color='lightblue', alpha=0.8)
-    bars2 = plt.bar(x - 0.5*width, le_ratios, width, label='LE (OCT用更多工具，输出相同)', color='lightcoral', alpha=0.8)
-    bars3 = plt.bar(x + 0.5*width, ma_ratios, width, label='MA (OCT对，SFT错)', color='lightgreen', alpha=0.8)
-    bars4 = plt.bar(x + 1.5*width, la_ratios, width, label='LA (OCT错，SFT对)', color='orange', alpha=0.8)
+    bars1 = plt.bar(x - 1.5*width, me_ratios, width, label='ME', color='lightblue', alpha=0.8)
+    bars2 = plt.bar(x - 0.5*width, le_ratios, width, label='LE', color='lightcoral', alpha=0.8)
+    bars3 = plt.bar(x + 0.5*width, ma_ratios, width, label='MA', color='lightgreen', alpha=0.8)
+    bars4 = plt.bar(x + 1.5*width, la_ratios, width, label='LA', color='orange', alpha=0.8)
     
     # 显示数值
     for bars, values in zip([bars1, bars2, bars3, bars4], [me_ratios, le_ratios, ma_ratios, la_ratios]):
@@ -179,66 +187,66 @@ def visualize_results(results, model_pair_name):
     plt.ylim(0, max(max(me_ratios), max(le_ratios), max(ma_ratios), max(la_ratios)) * 1.2)
     plt.grid(axis='y', alpha=0.3)
     plt.tight_layout()
-    plt.savefig(os.path.join(result_dir, "comparison_metrics_ratios.png"), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(result_dir, "comparison_metrics_ratios.png"), dpi=300)
     plt.close()
     
-    # 2. ME vs LE 对比图
-    plt.figure(figsize=(16, 10))
-    x = range(len(datasets))
-    width = 0.35
+    # # 2. ME vs LE 对比图
+    # plt.figure(figsize=(16, 10))
+    # x = range(len(datasets))
+    # width = 0.35
     
-    bars1 = plt.bar([i - width/2 for i in x], me_ratios, width, 
-                   label='ME (OCT用更少工具，输出相同)', color='lightblue', alpha=0.8)
-    bars2 = plt.bar([i + width/2 for i in x], le_ratios, width,
-                   label='LE (OCT用更多工具，输出相同)', color='lightcoral', alpha=0.8)
+    # bars1 = plt.bar([i - width/2 for i in x], me_ratios, width, 
+    #                label='ME (OCT用更少工具，输出相同)', color='lightblue', alpha=0.8)
+    # bars2 = plt.bar([i + width/2 for i in x], le_ratios, width,
+    #                label='LE (OCT用更多工具，输出相同)', color='lightcoral', alpha=0.8)
     
-    # 显示数值
-    for bar, value in zip(bars1, me_ratios):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005, 
-                f'{value:.3f}', ha='center', va='bottom', fontsize=9)
-    for bar, value in zip(bars2, le_ratios):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005, 
-                f'{value:.3f}', ha='center', va='bottom', fontsize=9)
+    # # 显示数值
+    # for bar, value in zip(bars1, me_ratios):
+    #     plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005, 
+    #             f'{value:.3f}', ha='center', va='bottom', fontsize=9)
+    # for bar, value in zip(bars2, le_ratios):
+    #     plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005, 
+    #             f'{value:.3f}', ha='center', va='bottom', fontsize=9)
     
-    plt.xlabel('Dataset', fontsize=12)
-    plt.ylabel('Ratio', fontsize=12)
-    plt.title('Tool Usage Comparison: ME vs LE', fontsize=14, pad=20)
-    plt.xticks(x, wrapped_labels, rotation=45, ha='right')
-    plt.legend()
-    plt.ylim(0, max(max(me_ratios), max(le_ratios)) * 1.2)
-    plt.grid(axis='y', alpha=0.3)
-    plt.tight_layout()
-    plt.savefig(os.path.join(result_dir, "me_vs_le_comparison.png"), dpi=300, bbox_inches='tight')
-    plt.close()
+    # plt.xlabel('Dataset', fontsize=12)
+    # plt.ylabel('Ratio', fontsize=12)
+    # plt.title('Tool Usage Comparison: ME vs LE', fontsize=14, pad=20)
+    # plt.xticks(x, wrapped_labels, rotation=45, ha='right')
+    # plt.legend()
+    # plt.ylim(0, max(max(me_ratios), max(le_ratios)) * 1.2)
+    # plt.grid(axis='y', alpha=0.3)
+    # plt.tight_layout()
+    # plt.savefig(os.path.join(result_dir, "me_vs_le_comparison.png"), dpi=300, bbox_inches='tight')
+    # plt.close()
     
-    # 3. MA vs LA 对比图
-    plt.figure(figsize=(16, 10))
-    x = range(len(datasets))
-    width = 0.35
+    # # 3. MA vs LA 对比图
+    # plt.figure(figsize=(16, 10))
+    # x = range(len(datasets))
+    # width = 0.35
     
-    bars1 = plt.bar([i - width/2 for i in x], ma_ratios, width, 
-                   label='MA (OCT对，SFT错)', color='lightgreen', alpha=0.8)
-    bars2 = plt.bar([i + width/2 for i in x], la_ratios, width,
-                   label='LA (OCT错，SFT对)', color='orange', alpha=0.8)
+    # bars1 = plt.bar([i - width/2 for i in x], ma_ratios, width, 
+    #                label='MA (OCT对，SFT错)', color='lightgreen', alpha=0.8)
+    # bars2 = plt.bar([i + width/2 for i in x], la_ratios, width,
+    #                label='LA (OCT错，SFT对)', color='orange', alpha=0.8)
     
-    # 显示数值
-    for bar, value in zip(bars1, ma_ratios):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005, 
-                f'{value:.3f}', ha='center', va='bottom', fontsize=9)
-    for bar, value in zip(bars2, la_ratios):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005, 
-                f'{value:.3f}', ha='center', va='bottom', fontsize=9)
+    # # 显示数值
+    # for bar, value in zip(bars1, ma_ratios):
+    #     plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005, 
+    #             f'{value:.3f}', ha='center', va='bottom', fontsize=9)
+    # for bar, value in zip(bars2, la_ratios):
+    #     plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005, 
+    #             f'{value:.3f}', ha='center', va='bottom', fontsize=9)
     
-    plt.xlabel('Dataset', fontsize=12)
-    plt.ylabel('Ratio', fontsize=12)
-    plt.title('Accuracy Comparison: MA vs LA', fontsize=14, pad=20)
-    plt.xticks(x, wrapped_labels, rotation=45, ha='right')
-    plt.legend()
-    plt.ylim(0, max(max(ma_ratios), max(la_ratios)) * 1.2)
-    plt.grid(axis='y', alpha=0.3)
-    plt.tight_layout()
-    plt.savefig(os.path.join(result_dir, "ma_vs_la_comparison.png"), dpi=300, bbox_inches='tight')
-    plt.close()
+    # plt.xlabel('Dataset', fontsize=12)
+    # plt.ylabel('Ratio', fontsize=12)
+    # plt.title('Accuracy Comparison: MA vs LA', fontsize=14, pad=20)
+    # plt.xticks(x, wrapped_labels, rotation=45, ha='right')
+    # plt.legend()
+    # plt.ylim(0, max(max(ma_ratios), max(la_ratios)) * 1.2)
+    # plt.grid(axis='y', alpha=0.3)
+    # plt.tight_layout()
+    # plt.savefig(os.path.join(result_dir, "ma_vs_la_comparison.png"), dpi=300)
+    # plt.close()
 
 def main():
     """主函数"""
