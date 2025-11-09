@@ -169,7 +169,11 @@ def draw_with_max(x,y,result_dir,name,optim_cost,smooth):
     plt.axvline(x=max_x, color='red', linestyle='--', label='Max Value')
     # # 添加文字标注
     # plt.text(max_x, max_y + 1, f'Max: {max_x}', ha='center', color='red', fontsize=10)
+    # plt.title(f"optim_cost: {optim_cost}, smooth: {smooth}")
+    
     plt.title(f"optim_cost: {optim_cost}, smooth: {smooth}")
+
+    plt.legend()
     plt.savefig(os.path.join(result_dir,f"{name}.png"))
     plt.close()
 def draw_multi_lines(x,y_list,labels,result_dir,name):
@@ -180,7 +184,8 @@ def draw_multi_lines(x,y_list,labels,result_dir,name):
     # labelLines(plt.gca().get_lines(), zorder=2.5) 4
     plt.legend()
 
-
+    plt.xlabel("Calling Times")   # 横坐标标题
+    plt.ylabel("Efficient Coefficient")   # 纵坐标标题
     # # 添加文字标注
     # plt.text(max_x, max_y + 1, f'Max: {max_x}', ha='center', color='red', fontsize=10)
 
@@ -212,7 +217,7 @@ def sim_oct(cost,optim_cost,smooth):
     else:
         oct_penalty = np.sin(np.pi*map_costs/(2*optim_budget))
     return oct_penalty
-result_dir="/share/home/gtang/sxjiang-gt/Tool-Star-OCT/Tool_Star_RL/analyse/sim_oct"
+result_dir="/share/home/sxjiang/myproject/Tool-Star-OCT/Tool_Star_RL/analyse/sim_oct"
 os.makedirs(result_dir,exist_ok=True)
 
 # costs = np.arange(32)
@@ -226,35 +231,35 @@ os.makedirs(result_dir,exist_ok=True)
 # smooth = 2
 # draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
 
+costs = np.arange(32)
+optim_cost = 0
+smooth = 2
+draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
+
+
+costs = np.arange(32)
+optim_cost = 0
+smooth = 2
+y = [sim_oct(cost,optim_cost,smooth) for cost in costs]
+smooth = 3
+y1 = [sim_oct(cost,optim_cost,smooth) for cost in costs]
+smooth = 4
+y2 = [sim_oct(cost,optim_cost,smooth) for cost in costs]
+draw_multi_lines(costs,[y,y1,y2],["s=2","s=3","s=4"],result_dir,f"sim_oct_optim_{optim_cost}_smooth_multi")
+
+
 # costs = np.arange(32)
-# optim_cost = 0
+# optim_cost = 2
 # smooth = 2
 # draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
 
 
-# costs = np.arange(32)
-# optim_cost = 2
-# smooth = 2
-# y = [sim_oct(cost,optim_cost,smooth) for cost in costs]
-# smooth = 3
-# y1 = [sim_oct(cost,optim_cost,smooth) for cost in costs]
-# smooth = 4
-# y2 = [sim_oct(cost,optim_cost,smooth) for cost in costs]
-# draw_multi_lines(costs,[y,y1,y2],["smooth_2","smooth_3","smooth_4"],result_dir,f"sim_oct_optim_{optim_cost}_smooth_multi")
-
-
-# costs = np.arange(32)
-# optim_cost = 2
-# smooth = 2
-# draw_with_max(costs,[sim_oct(cost,optim_cost,smooth) for cost in costs],result_dir,f"sim_oct_optim_{optim_cost}_smooth_{smooth}",optim_cost,smooth)
-
-
-# costs = np.arange(32)
-# optim_cost = 2
-# smooth = 2
-# y = [sim_oct(cost,optim_cost,smooth) for cost in costs]
-# y1 = [map_to_2n(cost,optim_cost) for cost in costs]
-# draw_multi_lines(costs,[y,y1],["oct_score","map2n"],result_dir,f"sim_oct_map2n_optim_{optim_cost}_smooth_multi")
+costs = np.arange(32)
+optim_cost = 2
+smooth = 2
+y = [sim_oct(cost,optim_cost,smooth) for cost in costs]
+y1 = [map_to_2n(cost,optim_cost) for cost in costs]
+draw_multi_lines(costs,[y,y1],["oct_score","map2n"],result_dir,f"sim_oct_map2n_optim_{optim_cost}_smooth_multi")
 
 # costs = np.arange(32)
 # optim_cost = 2

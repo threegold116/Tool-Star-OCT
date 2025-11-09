@@ -115,8 +115,27 @@ def apply_kl_penalty(data: DataProto, kl_ctrl: core_algos.AdaptiveKLController, 
 
     return data, metrics
 #THREEGOLDCHANGE:计算oct奖励
-def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct',optim_cost_estimate=True):
-    token_level_scores = data.batch['token_level_scores']
+def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct',optim_cost_estimate=True,shaping_mode="reward_shaping"):
+    """在token-level的score上添加对应的oct因子
+
+    Args:
+        data (DataProto): verl的数据
+        oct_ctrl (core_algos.OctController): 定义的oct_controller
+        oct_penalty (str, optional): _description_. Defaults to 'oct'.
+        optim_cost_estimate (bool, optional): _description_. Defaults to True.
+        shaping_mode (str, optional): _description_. Defaults to "reward_shaping".
+
+    Raises:
+        NotImplementedError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    if shaping_mode=="reward_shaping":
+        token_level_scores = data.batch['token_level_scores']
+    else:
+        token_level_scores = data.batch['advantages'] #只适用于GRPO token
     no_positive_penalty = oct_ctrl.no_positive_penalty
     apply_mode = getattr(oct_ctrl,"apply_mode","multiply")
     # compute the oct reward cofficent
@@ -163,11 +182,16 @@ def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_p
         metrics = {'rollout/avg_call_costs': avg_call_costs,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
     else:
         raise NotImplementedError
-    data.batch['token_level_scores'] = oct_token_level_scores
+    
+    if shaping_mode=="reward_shaping":
+        data.batch['token_level_scores'] = oct_token_level_scores
+    else:
+        data.batch['advantages'] = oct_token_level_scores  #只适用于GRPO token
+    
     return data, metrics
 #THREEGOLDCHANGE
 
-def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_repeat=1):
+def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_repeat=1,normlization_mode="group_normlization"):
     # prepare response group
     # TODO: add other ways to estimate advantages
     if adv_estimator == 'gae':
@@ -193,7 +217,8 @@ def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_re
         response_mask = attention_mask[:, -response_length:]
         advantages, returns = core_algos.compute_grpo_outcome_advantage(token_level_rewards=token_level_rewards,
                                                                         eos_mask=response_mask,
-                                                                        index=index)
+                                                                        index=index,
+                                                                        normlization_mode=normlization_mode)
         data.batch['advantages'] = advantages
         data.batch['returns'] = returns
     elif adv_estimator == 'reinforce_plus_plus':
@@ -429,7 +454,7 @@ class RayPPOTrainer(object):
             raise NotImplementedError
         #THREEGOLDCHANGE
         #define oct control
-        if self.config.actor_rollout_ref.actor.use_oct_cofficient:
+        if self.config.actor_rollout_ref.actor.use_oct_cofficient or self.config.actor_rollout_ref.actor.get('use_oct_cofficient_advantage_shaping',False):
             self.oct_ctrl = core_algos.OctController(init_cofficient=config.actor_rollout_ref.actor.oct_coef,
                                                     init_smooth=config.actor_rollout_ref.actor.oct_smooth,
                                                     no_positive_penalty=config.actor_rollout_ref.actor.no_positive_penalty,
@@ -1047,7 +1072,16 @@ class RayPPOTrainer(object):
                                                   adv_estimator=self.config.algorithm.adv_estimator,
                                                   gamma=self.config.algorithm.gamma,
                                                   lam=self.config.algorithm.lam,
-                                                  num_repeat=self.config.actor_rollout_ref.rollout.n)
+                                                  num_repeat=self.config.actor_rollout_ref.rollout.n,
+                                                  normlization_mode=self.config.algorithm.normlization_mode,)
+                        if self.config.actor_rollout_ref.actor.use_oct_cofficient_advantage_shaping:
+                            batch, oct_metrics = apply_oct_penalty(batch,
+                                                                 oct_ctrl=self.oct_ctrl,
+                                                                 oct_penalty=self.config.algorithm.oct_penalty,
+                                                                 optim_cost_estimate=self.config.algorithm.optim_cost_estimate,
+                                                                 shaping_mode='advantage_shaping'
+                                                                 )
+                            metrics.update(oct_metrics) #TODO: 增加对calling_times的logging
 
                     # update critic
                     if self.use_critic:

@@ -26,7 +26,7 @@ bash scripts/train/train.sh \
     --test_freq 100 \
     --total_epochs 2 \
     --save_path /home/sxjiang/myproject/agent/Tool-Star-OCT/Tool_Star_RL/verl_checkpoints/$EXPERIMENT_NAME \
-    --train_files $DATA_PATH/grpo_mix_train_shuffle.parquet \
+    --train_files $DATA_PATH/rl_data_auto_verify_qwen3_32b.parquet \
     --test_files $DATA_PATH/grpo_mix_test.parquet \
     --top_n 3\
     --max_calling_times 3 \

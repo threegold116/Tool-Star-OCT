@@ -131,7 +131,8 @@ def compute_gae_advantage_return(token_level_rewards: torch.Tensor, values: torc
 def compute_grpo_outcome_advantage(token_level_rewards: torch.Tensor,
                                    eos_mask: torch.Tensor,
                                    index: torch.Tensor,
-                                   epsilon: float = 1e-6):
+                                   epsilon: float = 1e-6,
+                                   normlization_mode: str = "group_normlization"):
     """
     Compute advantage for GRPO, operating only on Outcome reward 
     (with only one scalar reward for each response).
@@ -153,7 +154,10 @@ def compute_grpo_outcome_advantage(token_level_rewards: torch.Tensor,
     id2score = defaultdict(list)
     id2mean = {}
     id2std = {}
-
+    batch2mean = torch.mean(scores)
+    batch2std = torch.std(scores)
+    # THREEGOLDCHANGE
+    
     with torch.no_grad():
         bsz = scores.shape[0]
         for i in range(bsz):
@@ -168,7 +172,18 @@ def compute_grpo_outcome_advantage(token_level_rewards: torch.Tensor,
             else:
                 raise ValueError(f"no score in prompt index: {idx}")
         for i in range(bsz):
-            scores[i] = (scores[i] - id2mean[index[i]]) / (id2std[index[i]] + epsilon)
+            if "no_std" in normlization_mode:
+                if "batch_normlization" in normlization_mode:
+                    scores[i] = (scores[i] - batch2mean) 
+                else:
+                    scores[i] = (scores[i] - id2mean[index[i]]) 
+            else:
+                if "batch_normlization" in normlization_mode:
+                    scores[i] = (scores[i] - batch2mean) / (batch2std+epsilon)
+                else:
+                    scores[i] = (scores[i] - id2mean[index[i]]) / (id2std[index[i]] + epsilon)
+                    
+                    
         scores = scores.unsqueeze(-1).tile([1, response_length]) * eos_mask
 
     return scores, scores
