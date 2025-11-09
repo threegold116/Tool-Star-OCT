@@ -41,6 +41,8 @@ GUP_MEMORY_UTILIZATION=0.85
 BINARY_F1_THRESHOLD=0.5
 MATH_RULE=em_score
 OPTIM_COST_ESTIMATE=True
+ENTROPY_COEFF=0.001
+FIX_COST=False
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --prompt_key) PROMPT_KEY="$2"; shift 2;;
@@ -86,6 +88,8 @@ while [[ $# -gt 0 ]]; do
         --binary_f1_threshold) BINARY_F1_THRESHOLD="$2"; shift 2;;
         --math_rule) MATH_RULE="$2"; shift 2;;
         --optim_cost_estimate) OPTIM_COST_ESTIMATE="$2"; shift 2;;
+        --entropy_coeff) ENTROPY_COEFF="$2"; shift 2;;
+        --fix_cost) FIX_COST="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -122,6 +126,7 @@ python3 -m verl.trainer.main_ppo \
     data.max_response_length=${MAX_RESPONSE_LENGTH} \
     data.apply_chat=${APPLY_CHAT} \
     data.prompt_template_name=${PROMPT_TEMPLATE_NAME} \
+    data.fix_cost=${FIX_COST} \
     actor_rollout_ref.model.path=${ACTOR_MODEL_PATH} \
     actor_rollout_ref.model.enable_gradient_checkpointing=True \
     actor_rollout_ref.model.use_remove_padding=True \
@@ -133,6 +138,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.use_kl_loss=True \
     actor_rollout_ref.actor.loss_agg_mode=${LOSS_AGG_MODE} \
     actor_rollout_ref.actor.kl_loss_coef=${KL_LOSS_COEF} \
+    actor_rollout_ref.actor.entropy_coeff=${ENTROPY_COEFF} \
     actor_rollout_ref.actor.kl_loss_type=low_var_kl \
     actor_rollout_ref.actor.radio_clip=${RADIO_CLIP} \
     actor_rollout_ref.actor.clip_ratio_high=${CLIP_RATIO_HIGH} \

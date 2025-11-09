@@ -13,6 +13,8 @@ data:
   apply_chat: True  # when training from base, turn False, and check whether the prompt_key is right
   prompt_template_name: null  # the template adapted to string prompt, find name in verl/utils/dataset/template.py
   shuffle: True
+  # THREEGOLDCHANGE
+  fix_cost: False
 
 actor_rollout_ref:
   hybrid_engine: True

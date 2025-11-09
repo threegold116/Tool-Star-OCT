@@ -530,6 +530,7 @@ class RayPPOTrainer(object):
                                          return_raw_chat=self.config.data.get('return_raw_chat', False),
                                          apply_chat=self.config.data.apply_chat,
                                          prompt_template_name=self.config.data.prompt_template_name,
+                                         fix_cost=self.config.data.fix_cost,
                                          truncation='error')
         # use sampler for better ckpt resume
         if self.config.data.shuffle:
