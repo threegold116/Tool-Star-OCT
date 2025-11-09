@@ -16,6 +16,7 @@ MAX_CALLING_TIMES=1
 ROLLOUT_N=8
 APPLY_MODE=multiply
 TOP_N=3
+NO_STD=False
 SEARCH_URL=http://183.174.229.164:1242 # local wiki search url
 PROJECT_NAME=research_batch_repro
 EXPERIMENT_NAME={your_experiment_name}
@@ -41,6 +42,8 @@ GUP_MEMORY_UTILIZATION=0.85
 BINARY_F1_THRESHOLD=0.5
 MATH_RULE=em_score
 OPTIM_COST_ESTIMATE=True
+NORMLIZATION_MODE="group_normlization"
+USE_OCT_COEFFICIENT_ADVANTAGE_SHAPING=False
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --prompt_key) PROMPT_KEY="$2"; shift 2;;
@@ -86,6 +89,8 @@ while [[ $# -gt 0 ]]; do
         --binary_f1_threshold) BINARY_F1_THRESHOLD="$2"; shift 2;;
         --math_rule) MATH_RULE="$2"; shift 2;;
         --optim_cost_estimate) OPTIM_COST_ESTIMATE="$2"; shift 2;;
+        --normlization_mode) NORMLIZATION_MODE="$2"; shift 2;;
+        --use_oct_cofficient_advantage_shaping) USE_OCT_COEFFICIENT_ADVANTAGE_SHAPING="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -114,6 +119,7 @@ python3 -m verl.trainer.main_ppo \
     algorithm.kl_ctrl.kl_coef=0.0 \
     algorithm.oct_penalty=${OCT_PENALTY} \
     algorithm.optim_cost_estimate=${OPTIM_COST_ESTIMATE} \
+    +algorithm.normlization_mode=${NORMLIZATION_MODE} \
     data.train_files="$TRAIN_FILES" \
     data.val_files="$TEST_FILES" \
     data.prompt_key=${PROMPT_KEY} \
@@ -137,6 +143,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.radio_clip=${RADIO_CLIP} \
     actor_rollout_ref.actor.clip_ratio_high=${CLIP_RATIO_HIGH} \
     actor_rollout_ref.actor.use_oct_cofficient=${USE_OCT_COEFFICIENT} \
+    +actor_rollout_ref.actor.use_oct_cofficient_advantage_shaping=${USE_OCT_COEFFICIENT_ADVANTAGE_SHAPING} \
     actor_rollout_ref.actor.apply_mode=${APPLY_MODE} \
     actor_rollout_ref.actor.no_positive_penalty=${NO_POSITIVE_PENALTY} \
     actor_rollout_ref.actor.group_smooth=${GROUP_SMOOTH} \
