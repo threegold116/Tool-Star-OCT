@@ -382,10 +382,12 @@ class vLLMRolloutWithSearch(vLLMRollout):
             
             # THREEGOLDCHANGE:增加对工具调用的统计
             valid_action, is_search, is_python = [], [], []
+            void_turn = []
             for i in range(len(curr_inputs)):   
                 valid_action.append(0)
                 is_search.append(0)
                 is_python.append(0)
+                void_turn.append(0)
             # THREEGOLDCHANGE
 
             # collect the result mask of each rollout
@@ -601,8 +603,9 @@ class vLLMRolloutWithSearch(vLLMRollout):
                         # output is too long
                         curr_inputs[idx] += output_ids
                         result_mask_list[idx] += [1] * len(output_ids)
-                        if len(curr_inputs[idx]) - len(init_inputs[idx]) < self.config.response_length:
-                            new_active_indices.append(idx) #Follow ARPO setting
+                        void_turn[idx] += 1
+                        # if len(curr_inputs[idx]) - len(init_inputs[idx]) < self.config.response_length:
+                        #     new_active_indices.append(idx) #Follow ARPO setting
 
                 # batch process the search requests
                 if search_queries:
@@ -728,7 +731,8 @@ class vLLMRolloutWithSearch(vLLMRollout):
             #THREEGOLDCHANGE:增加对工具调用的统计
             'valid_action': torch.tensor(valid_action, device=ori_input_ids.device),
             'is_search': torch.tensor(is_search, device=ori_input_ids.device),
-            'is_python': torch.tensor(is_python, device=ori_input_ids.device)
+            'is_python': torch.tensor(is_python, device=ori_input_ids.device),
+            'void_turn': torch.tensor(void_turn, device=ori_input_ids.device),
             #THREEGOLDCHANGE
         }, batch_size=batch_size)        
 
@@ -789,10 +793,12 @@ class vLLMRolloutWithSearch(vLLMRollout):
             
             # THREEGOLDCHANGE:增加对工具调用的统计
             valid_action, is_search, is_python = [], [], []
+            void_turn = []
             for i in range(len(curr_inputs)):   
                 valid_action.append(0)
                 is_search.append(0)
                 is_python.append(0)
+                void_turn.append(0)
             # THREEGOLDCHANGE
 
             # collect the result mask of each rollout

@@ -16,7 +16,9 @@ FSDP PPO Trainer with Ray-based single controller.
 This trainer supports model-agonistic model initialization with huggingface
 """
 
+from http.client import responses
 import os
+from urllib import response
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -998,13 +1000,33 @@ class RayPPOTrainer(object):
                             batch.batch['reward_baselines'] = reward_baseline_tensor
 
                             del gen_baseline_batch, gen_baseline_output
-
+                    # THREEGOLDCHANGE: progressive calling times
+                    if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+                        breakpoint()
+                    # THREEGOLDCHANG
                     batch.non_tensor_batch['uid'] = np.array([str(uuid.uuid4()) for _ in range(len(batch.batch))],
                                                              dtype=object)
                     # repeat to align with repeated responses in rollout
                     batch = batch.repeat(repeat_times=self.config.actor_rollout_ref.rollout.n, interleave=True)
                     batch = batch.union(gen_batch_output)
 
+                    # THREEGOLDCHANGE
+                    if self.config.algorithm.void_turn_mask:
+                        if "loss_mask" not in batch.batch:
+                            responses = batch.batch['responses']
+                            response_length = responses.size(1)
+                            attention_mask = batch.batch['attention_mask']
+                            response_mask = attention_mask[:, -response_length:]
+                            batch.batch["loss_mask"] = response_mask.clone()
+                        else:
+                            loss_mask = batch.batch["loss_mask"]
+                        loss_mask = loss_mask * (1-batch.batch["void_turn"].reshape(-1,1))
+                        batch.batch["loss_mask"] = loss_mask
+                        
+                        
+                    # THREEGOLDCHANGE
+                    
+                    
                     # balance the number of valid tokens on each dp rank.
                     # Note that this breaks the order of data inside the batch.
                     # Please take care when you implement group based adv computation such as GRPO and rloo

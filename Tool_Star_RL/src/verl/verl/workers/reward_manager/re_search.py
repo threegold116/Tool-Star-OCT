@@ -76,6 +76,7 @@ class ReSearchRewardManagerWithSave():
             # THREEGOLDCHANGE:增加对工具调用的统计
             is_search = data.batch["is_search"][i]
             is_python =data.batch["is_python"][i]
+            void_turn =data.batch["void_turn"][i]
             abality = data_item.non_tensor_batch['ability']
             # THREEGOLDCHANGE
             
@@ -107,6 +108,7 @@ class ReSearchRewardManagerWithSave():
                     'reason': reason,
                     "is_search": is_search.item(),
                     "is_python": is_python.item(),
+                    "void_turn":void_turn.item(),
                     "is_multi_tool": self.is_multi_tool, #TODO:增加对cost的统计
                 }
                 save_file.write(json.dumps(save_json_line, ensure_ascii=False) + '\n')

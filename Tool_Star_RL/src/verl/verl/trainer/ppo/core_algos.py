@@ -21,7 +21,7 @@ implement PPO
 import numpy as np
 import torch
 from collections import defaultdict
-
+import os
 import verl.utils.torch_functional as verl_F
 
 # THREEGOLDCHANGE:存储OCT的相关参数
@@ -280,7 +280,8 @@ def agg_loss(loss_mat: torch.Tensor, loss_mask: torch.Tensor, loss_agg_mode: str
         seq_losses = torch.sum(loss_mat * loss_mask, dim=-1)  # token-sum
         loss = torch.mean(seq_losses)  # seq-mean
     elif loss_agg_mode == "seq-mean-token-mean":
-        seq_losses = torch.sum(loss_mat * loss_mask, dim=-1) / torch.sum(loss_mask, dim=-1)  # token-mean
+        print(f"WARNING: loss_mask_sum_zero_num={torch.sum(torch.sum(loss_mask, dim=-1)==0)}")
+        seq_losses = torch.sum(loss_mat * loss_mask, dim=-1) / (torch.sum(loss_mask, dim=-1)+1e-8)  # token-mean
         loss = torch.mean(seq_losses)  # seq-mean
     elif loss_agg_mode == "seq-mean-token-sum-norm":
         seq_losses = torch.sum(loss_mat * loss_mask, dim=-1)
@@ -409,6 +410,9 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
     # # URL http://joschu.net/blog/kl-approx.html.
     if kl_penalty == 'low_var_kl':
         kl = ref_logprob - logprob
+        #THREEGOLDCHANGE:follow https://github.com/volcengine/verl/blob/1c99f4727ed184937e87c5b363ae69c0e79b8049/verl/trainer/ppo/core_algos.py#L1464 and https://github.com/volcengine/verl/issues/891
+        if os.environ.get("KL_PENALTY_CLAMP")=="1": #TODO:修改为config设置
+            kl = torch.clamp(kl, min=-20, max=20) 
         ratio = torch.exp(kl)
         kld = (ratio - kl - 1).contiguous()
         return torch.clamp(kld, min=-10, max=10)

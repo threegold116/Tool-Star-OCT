@@ -125,7 +125,8 @@ def masked_mean(values, mask, axis=None):
     # s = masked_sum(values, mask, axis)
     # return s / (mask.sum(axis=axis) + 1e-8)
     #THREEGOLDCHANGE
-    return (values * mask).sum(axis=axis) / mask.sum(axis=axis)
+    # return (values * mask).sum(axis=axis) / mask.sum(axis=axis)
+    return (values * mask).sum(axis=axis) / (mask.sum(axis=axis) + 1e-8)
 
 
 def masked_var(values, mask, unbiased=True):

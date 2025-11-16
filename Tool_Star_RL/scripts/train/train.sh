@@ -46,6 +46,7 @@ NORMLIZATION_MODE="group_normlization"
 USE_OCT_COEFFICIENT_ADVANTAGE_SHAPING=False
 ENTROPY_COEFF=0.001
 FIX_COST=False
+VOID_TURN_MASK=False
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --prompt_key) PROMPT_KEY="$2"; shift 2;;
@@ -83,6 +84,7 @@ while [[ $# -gt 0 ]]; do
         --use_oct_cofficient) USE_OCT_COEFFICIENT="$2"; shift 2;;
         --kl_loss_coef) KL_LOSS_COEF="$2"; shift 2;;
         --loss_agg_mode) LOSS_AGG_MODE="$2"; shift 2;;
+        --void_turn_mask) VOID_TURN_MASK="$2"; shift 2;;
         --oct_penalty) OCT_PENALTY="$2"; shift 2;;
         --no_positive_penalty) NO_POSITIVE_PENALTY="$2"; shift 2;;
         --apply_mode) APPLY_MODE="$2"; shift 2;;
@@ -124,6 +126,7 @@ python3 -m verl.trainer.main_ppo \
     algorithm.oct_penalty=${OCT_PENALTY} \
     algorithm.optim_cost_estimate=${OPTIM_COST_ESTIMATE} \
     +algorithm.normlization_mode=${NORMLIZATION_MODE} \
+    +algorithm.void_turn_mask=${VOID_TURN_MASK} \
     data.train_files="$TRAIN_FILES" \
     data.val_files="$TEST_FILES" \
     data.prompt_key=${PROMPT_KEY} \

@@ -17,7 +17,7 @@ Single Process Actor
 
 import itertools
 from typing import Iterable, Tuple
-
+import os
 import torch
 from torch import nn
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
@@ -311,6 +311,8 @@ class DataParallelPPOActor(BasePPOActor):
                 append_to_dict(metrics, data)
 
             grad_norm = self._optimizer_step()
+            if not torch.isfinite(grad_norm) and "4" in os.environ.get('RAY_DEBUG_MODE', '0'):
+                breakpoint()
             data = {'actor/grad_norm': grad_norm.detach().item()}
             append_to_dict(metrics, data)
         self.actor_optimizer.zero_grad()
