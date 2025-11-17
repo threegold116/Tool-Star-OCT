@@ -1,49 +1,11 @@
 import json
 import pandas as pd
 import openai
+import re
 import asyncio
 import os
 from analyse_llm_serve import llm_evaluate_equivalence_batch
-os.environ["ALIYUN_MODEL_NAME"]="Qwen2.5-72B-Instruct-GPTQ-Int4"
-parquet_files = [
-    "/home/sxjiang/myproject/agent/Tool-Star-OCT/Tool_Star_RL/mix_grpo/grpo_mix_train_shuffle.parquet"
-]
-dataframes = []
-for parquet_file in parquet_files:
-    # read parquet files and cache
-    dataframe = pd.read_parquet(parquet_file)
-    dataframes.append(dataframe)
-rl_data = pd.concat(dataframes)
-math_item=0
-qa_item=0
-items=[]
-question_list = []
-for idx in range(len(rl_data)):
-    data_item = rl_data.iloc[idx].to_dict()
-    # print(data_item.keys())
-    answer = data_item["reward_model"]["ground_truth"]
-    question = data_item["question"]
-    question_list.append(question)
-    # if len(answer)==1:
-    #     print(answer)
-    if data_item["ability"]=="math":
-        math_item+=1
-    if data_item["ability"]=="qa":
-        qa_item+=1
-    items.append(data_item)
-print(f"total items: {len(items)}, total unique questions: {len(set(question_list))}")
-for idx in range(500):
-    data_item = rl_data.iloc[idx].to_dict()
-    # print(data_item.keys())
-    answer = data_item["reward_model"]["ground_truth"]
-    question = data_item["question"]
-    # if len(answer)==1:
-    #     print(answer)
-    if data_item["ability"]=="math":
-        math_item+=1
-    if data_item["ability"]=="qa":
-        qa_item+=1
-    items.append(data_item)
+
 #1. 判断可能无法verify的问题
 prompt_template='''
 You are a data labeling assistant. Determine whether the given QA sample can be automatically evaluated.
@@ -87,7 +49,7 @@ Respond only with "yes" or "no" without any other text.
 '''
 prompt_template='''
 Decision Rules:
-Output "yes" if the sample can be automatically graded using exact math, token-F1, or math verification. Output "no" if it cannot.
+Output "yes" if the sample can be automatically graded using exact string match, token-F1, or math verification. Output "no" if it cannot.
 
 Not auto-gradable conditions:
 1. The answer is long or explanatory (contains reasoning, justification, or more than 10 words).
@@ -99,44 +61,102 @@ Not auto-gradable conditions:
 7. The question involves future predictions, hypothetical scenarios, or speculative answers.
 
 Output format:
-Output only "yes" or "no". Do not include explanations, reasoning, or extra text.
+Output only "yes" or "no" in \\boxed{{}}, include explanations.
 
-Input:
+Question: Explain why the sky is blue.
+Labeled Answer: The sky appears blue because...
+Output: **Judge**: \\boxed{{no}}. **Explanation**: The answer is long and explanatory.
+
 Question: {q}
 Labeled Answer: {a}
-
 Output:
 '''
-prompt_list = []
-for idx in range(500):
-    data_item = rl_data.iloc[idx].to_dict()
-    # print(data_item.keys())
-    answer = data_item["reward_model"]["ground_truth"]
-    question = data_item["question"]
-    # if len(answer)==1:
-    #     print(answer)
-    prompt = prompt_template.format(q=question,a=answer)
-    if prompt in prompt_list:
-        print("Duplicate")
-        print(prompt)
-        print(len(prompt_list))
-        exit()
-    prompt_list.append(prompt)
+
+
+if __name__ == "__main__":
+    # 1.设置环境变量，便于llm_server使用
+    os.environ["ALIYUN_MODEL_NAME"]="Qwen3-30B-A3B-Instruct-2507"
+
+    # 2.读取parquet文件
+    parquet_files = [
+        "/home/sxjiang/myproject/agent/Tool-Star-OCT/Tool_Star_RL/mix_grpo/grpo_mix_train_shuffle.parquet"
+    ]
+    dataframes = []
+    for parquet_file in parquet_files:
+        # read parquet files and cache
+        dataframe = pd.read_parquet(parquet_file)
+        dataframes.append(dataframe)
+    rl_data = pd.concat(dataframes)
+    math_item=0
+    qa_item=0
+    items=[]
+    question_list = []
+
+    # 2.获取类别,转为字典
+    for idx in range(len(rl_data)):
+        data_item = rl_data.iloc[idx].to_dict()
+        # print(data_item.keys())
+        answer = data_item["reward_model"]["ground_truth"]
+        question = data_item["question"]
+        question_list.append(question)
+        # if len(answer)==1:
+        #     print(answer)
+        if data_item["ability"]=="math":
+            math_item+=1
+        if data_item["ability"]=="qa":
+            qa_item+=1
+        items.append(data_item)
+    print(f"total items: {len(items)}, total unique questions: {len(set(question_list))}")
+
+    # 3.构造prompt列表，并去重复
+    prompt_list = []
+    items = []
+    for idx in range(len(rl_data)):
+        data_item = rl_data.iloc[idx].to_dict()
+        # print(data_item.keys())
+        answer = data_item["reward_model"]["ground_truth"]
+        question = data_item["question"]
+        # if len(answer)==1:
+        #     print(answer)
+        prompt = prompt_template.format(q=question,a=answer)
+        if prompt in prompt_list:
+            print("Duplicate")
+        else:
+            prompt_list.append(prompt)
+            items.append(data_item)
     
-llm_results = asyncio.run(llm_evaluate_equivalence_batch(
-            prompts=prompt_list,
-            extract_answer=False
-        ))
-wrong_questions = []
-for idx in range(len(llm_results)):
-    items[idx]["llm_results"] = llm_results[idx]
-    items[idx]["llm_prompt"] = prompt_template.format(q=items[idx]["question"],a=items[idx]["reward_model"]["ground_truth"])
-    if llm_results[idx].lower() == "no":
-        wrong_questions.append(items[idx])
-with open("llm_results.json","w") as f:
-    json.dump(items,f,indent=4,ensure_ascii=False)
+    # 4.推理得到结果
+    llm_results = asyncio.run(llm_evaluate_equivalence_batch(
+                prompts=prompt_list,
+                extract_answer=False
+            ))
+    wrong_questions = []
 
-with open("llm_results_wrong.json","w") as f:
-    json.dump(wrong_questions,f,indent=4,ensure_ascii=False)
+    # 5.保存至文件    
+    for idx in range(len(llm_results)):
+        items[idx]["llm_results"] = llm_results[idx]
+        items[idx]["llm_prompt"] = prompt_template.format(q=items[idx]["question"],a=items[idx]["reward_model"]["ground_truth"])
+        pattern = r'\\boxed\{(.*?)\}'
+        match = re.search(pattern, llm_results[idx])
+        if match:
+            extracted_answer = match.group(1).strip().lower()
+        if extracted_answer.lower()== "no":
+            wrong_questions.append(items[idx])
 
+    # 6.保存为parquet文件
+    new_items = []
+    for idx in range(min(len(items),len(llm_results))):
+        pattern = r'\\boxed\{(.*?)\}'
+        match = re.search(pattern, llm_results[idx])
+        if match:
+            extracted_answer = match.group(1).strip().lower()
+        if extracted_answer.lower() == "yes":
+            new_items.append(items[idx])
+    new_df = pd.DataFrame(new_items)
+    new_df.to_parquet("rl_data_auto_verify_qwen3_32b.parquet",index=False)
 
+    with open("llm_results_qwen3_32b.json","w") as f:
+        json.dump(items,f,indent=4,ensure_ascii=False)
+
+    with open("llm_results_wrong_qwen3_32b.json","w") as f:
+        json.dump(wrong_questions,f,indent=4,ensure_ascii=False)

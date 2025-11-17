@@ -956,7 +956,7 @@ if __name__ == "__main__":
         'repetition_penalty': 1.1,
         'n': 1,
         # 'stop': ['```python'],
-        'seed': 7777,
+        'seed': 1234,
         'include_stop_str_in_output': True,
     }
     print(f"params:{args}")

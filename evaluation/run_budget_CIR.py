@@ -165,8 +165,11 @@ Please integrate natural language reasoning with programs to solve the problem a
 """
         elif self.prompt_type == 'CIR':
             self.prompt_template = """
-Please provide a solution to the following problem by integrating natural language reasoning with Python codes. Begin by explaining your thought process step by step, and then implement the solution in Python. Ensure the code is clear, well-documented, and follows best practices. Finally, present the final answer enclosed within \\boxed{} for clarity.
+Please solve the following problem step by step. During your reasoning process, if needed, you can choose to write python code to enhance your reasoning. The code executor will run your code and provide the execution results back to you to support your reasoning process. Please put the final answer within \\boxed{}.
 """
+            """
+Please provide a solution to the following problem by integrating natural language reasoning with Python codes. Begin by explaining your thought process step by step, and then implement the solution in Python. Ensure the code is clear, well-documented, and follows best practices. Finally, present the final answer enclosed within \\boxed{} for clarity.
+            """
         elif self.prompt_type == 'math':
             self.prompt_template = """
 You are a helpful assistant that can solve the given question step by step with the help of the python interpreter tool. \

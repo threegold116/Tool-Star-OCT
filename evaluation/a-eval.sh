@@ -30,14 +30,14 @@ run_evaluation() {
         echo "--------------------------------"
     done
     for DATASET_NAME in "${DATASET_NAMEs[@]}"; do
-        python run_budget.py \
+        python run_budget_CIR.py \
             --model_path "$MODEL_PATH" \
             --dataset_name "$DATASET_NAME" \
             --task "$TASK" \
             --gpu_use 0.85 \
             --max_input_len $MAX_INPUT_LEN \
             --max_response_length $MAX_RESPONSE_LENGTH \
-            --prompt_type code_search_research \
+            --prompt_type CIR \
             --output_path "/home/sxjiang/myproject/agent/Tool-Star-OCT/evaluation/result/$DATASET_NAME/$MODE/$MODEL/result.json" \
             --counts 500 \
             --batch_size 100 \
@@ -46,10 +46,11 @@ run_evaluation() {
             --python_budget 5 \
             --search_budget 2 \
             --all_wiki 0 \
-            --resume_evaluate
+            # --resume_evaluate
 
     done
 }
+
 budget_limit_run_evaluation() {
     local MODEL_PATH=$1
     local MODEL=$2
@@ -1356,9 +1357,309 @@ BUDGET=10
 # ####################################################################################################################
 # 2025-09-21
 
+# MODE=budget_no_limit_run
+# MODEL=ReSearch-7b_origin_prompt
+# MODEL_PATH=/home/sxjiang/model/ReSearch-Qwen-7B-Instruct
+# DATASET_NAMEs=(OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+##############################
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_7b
+# MODEL_PATH=/home/sxjiang/model/Qwen2.5-7B-ARPO
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_em_score_seq_mean_smooth_origin_global_step_78
+# MODEL_PATH=/home/sxjiang/myproject/agent/ARPO-OCT/transfer_checkpoints/ARPO_7B_global_16_init_8_beam_2_random_0_arpo_0.2_one_epoch_entropy_oct_downprogressive_em_score_seq_mean_specific_smooth-origin-global_step_78
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_7b_origin
+# MODEL_PATH=/home/sxjiang/model/Tool-Star-Qwen-7B
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_new_global_step_78
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_smooth_multiply-global_step_78
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_3b
+# MODEL_PATH=/home/sxjiang/model/Qwen2.5-3B-ARPO
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_3b_oct_clip_radio_gradclip_02_two_epoch_down_progressive_seq_mean_smooth_global_step_156
+# MODEL_PATH=/home/sxjiang/myproject/agent/ARPO-OCT/transfer_checkpoints/ARPO_3B_global_16_init_8_beam_2_random_0_arpo_0.2_two_epoch_entropy_oct_downprogressive_em_score_seq_mean_specific_smooth-global_step_156
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_origin_gpu18
+# MODEL_PATH=/home/sxjiang/model/Tool-Star-Qwen-3B
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_oct_clip_radio_gradclip_02_two_epoch_down_progressive_seq_mean_new_add_global_step_110
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_two_epoch_no_warm_up_down_progressive_seq_mean_smooth_add-global_step_110
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=qwen2p5_instruct_3b
+# MODEL_PATH=/home/sxjiang/model/Qwen2.5-3B-Instruct
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=qwen2p5_instruct_7b
+# MODEL_PATH=/home/sxjiang/model/Qwen2.5-7B-Instruct
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=auto-tir_7b_prompt
+# MODEL_PATH=/home/sxjiang/model/AutoTIR-Qwen2.5-7B-Instruct
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=Search-R1_3b_origin_prompt
+# MODEL_PATH=/home/sxjiang/model/SearchR1-nq_hotpotqa_train-qwen2.5-3b-it-em-grpo
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=Search-R1_7b_origin_prompt
+# MODEL_PATH=/home/sxjiang/model/SearchR1-nq_hotpotqa_train-qwen2.5-7b-it-em-ppo
+# DATASET_NAMEs=(mintqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=ReSearch-7b_origin_prompt
+# MODEL_PATH=/home/sxjiang/model/ReSearch-Qwen-7B-Instruct
+# DATASET_NAMEs=(mintqa)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+##############################
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_7b
+# MODEL_PATH=/home/sxjiang/model/Qwen2.5-7B-ARPO
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_em_score_seq_mean_smooth_origin_global_step_78
+# MODEL_PATH=/home/sxjiang/myproject/agent/ARPO-OCT/transfer_checkpoints/ARPO_7B_global_16_init_8_beam_2_random_0_arpo_0.2_one_epoch_entropy_oct_downprogressive_em_score_seq_mean_specific_smooth-origin-global_step_78
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_3b
+# MODEL_PATH=/home/sxjiang/model/Qwen2.5-3B-ARPO
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=ARPO_3b_oct_clip_radio_gradclip_02_two_epoch_down_progressive_seq_mean_smooth_global_step_156
+# MODEL_PATH=/home/sxjiang/myproject/agent/ARPO-OCT/transfer_checkpoints/ARPO_3B_global_16_init_8_beam_2_random_0_arpo_0.2_two_epoch_entropy_oct_downprogressive_em_score_seq_mean_specific_smooth-global_step_156
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_7b_origin_gpu18
+# MODEL_PATH=/home/sxjiang/model/Tool-Star-Qwen-7B
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_7b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_new_global_step_78_gpu18
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_smooth_multiply-global_step_78
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# ####################################################################################################################
+# 2025-09-23
+
+# MODE=budget_no_limit_run
+# MODEL=torl_qwen_instruct_7b
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-zero-torl-200step
+# DATASET_NAMEs=(OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+##################################
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_origin_gpu18
+# MODEL_PATH=/home/sxjiang/model/Tool-Star-Qwen-3B
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_oct_clip_radio_gradclip_02_two_epoch_down_progressive_seq_mean_new_add_global_step_110
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_two_epoch_no_warm_up_down_progressive_seq_mean_smooth_add-global_step_110
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=qwen2p5_instruct_3b
+# MODEL_PATH=/home/sxjiang/model/Qwen2.5-3B-Instruct
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=qwen2p5_instruct_7b
+# MODEL_PATH=/home/sxjiang/model/Qwen2.5-7B-Instruct
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=Search-R1_3b_origin_prompt
+# MODEL_PATH=/home/sxjiang/model/SearchR1-nq_hotpotqa_train-qwen2.5-3b-it-em-grpo
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=Search-R1_7b_origin_prompt
+# MODEL_PATH=/home/sxjiang/model/SearchR1-nq_hotpotqa_train-qwen2.5-7b-it-em-ppo
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=ReSearch-7b_origin_prompt
+# MODEL_PATH=/home/sxjiang/model/ReSearch-Qwen-7B-Instruct
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=auto-tir_7b_prompt
+# MODEL_PATH=/home/sxjiang/model/AutoTIR-Qwen2.5-7B-Instruct
+# DATASET_NAMEs=(squad)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+
+###############
+
+# MODE=budget_no_limit_run
+# MODEL=torl_qwen_instruct_7b_step150
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-zero-torl-150step
+# DATASET_NAMEs=(gsm8k)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=cir_qwen_instruct_7b_step150
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-Zero-CIR-global_step_150
+# DATASET_NAMEs=(aime25 math gsm8k OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=cir_qwen_instruct_7b_step150
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-Zero-CIR-global_step_150
+# DATASET_NAMEs=(musique bamboogle 2wiki beerqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# ####################################################################################################################
+# 2025-09-26
+
+# MODE=budget_no_limit_run
+# MODEL=cir_qwen_instruct_7b_new_step140
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-7B-Instruct-Zero-CIR-New-global_step_140
+# DATASET_NAMEs=(musique bamboogle 2wiki beerqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(aime25 math gsm8k OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# ####################################################################################################################
+# 2025-09-28
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_smooth_multiply_times_global_step_78
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_smooth_multiply_times-global_step_78
+# DATASET_NAMEs=(beerqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_oct_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_smooth_multiply__no_optim_cost_estimate_global_step_78
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_smooth_multiply_no_optim_cost_estimate-global_step_78
+# DATASET_NAMEs=(beerqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# MODE=budget_no_limit_run
+# MODEL=tool_star_qwen_3b_clip_radio_gradclip_02_one_epoch_down_progressive_seq_mean_no_oct_global_step_78
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_down_progressive_seq_mean_no_oct-global_step_78
+# DATASET_NAMEs=(beerqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# ####################################################################################################################
+# 2025-10-01
+
+# MODE=budget_no_limit_run
+# MODEL=cir_qwen_instruct_3b_new_step140
+# MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-Zero-CIR-New-global_step_140
+# DATASET_NAMEs=(musique bamboogle 2wiki beerqa)
+# TASK=qa
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+# DATASET_NAMEs=(aime25 math gsm8k OlymBench-math)
+# TASK=math
+# run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+
 MODE=budget_no_limit_run
-MODEL=ReSearch-7b_origin_prompt
-MODEL_PATH=/home/sxjiang/model/ReSearch-Qwen-7B-Instruct
-DATASET_NAMEs=(OlymBench-math)
+MODEL=cir_qwen_instruct_3b_new_step120
+MODEL_PATH=/home/sxjiang/myproject/agent/Tool-Star-OCT/transfer_checkpoints/Qwen2.5-3B-Instruct-final_sft_edition10-52-grpo_debug-bz_128-clip_ratio_0.2_one_epoch_no_warm_up_no_progressive_seq_mean-no_oct_first_oct_second-global_step_78
+DATASET_NAMEs=(gsm8k aime25 math OlymBench-math)
 TASK=math
+run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
+
+DATASET_NAMEs=(musique bamboogle 2wiki beerqa)
+TASK=qa
 run_evaluation "$MODEL_PATH" "$MODEL" "$TASK" "$MODE" "${DATASET_NAMEs[@]}"
