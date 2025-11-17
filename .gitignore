@@ -24,6 +24,7 @@ case.json
 **/*.json
 **/tempCodeRunnerFile.py
 **/*.sh
+**/*.parquet
 **/*.png
 **/analyse/**
 **/test.py
