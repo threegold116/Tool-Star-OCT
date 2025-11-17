@@ -19,6 +19,8 @@ case.json
 **/debug.sh
 **/*.yaml
 **/*.log
+**/*.csv
+**/*.sh
 **/*.json
 **/tempCodeRunnerFile.py
 **/*.sh
