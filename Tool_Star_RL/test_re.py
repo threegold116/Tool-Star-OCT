@@ -1,0 +1,5 @@
+import re
+
+pattern = re.compile(r"(<[\w]+>)")
+matches = pattern.findall("er in the Pro12, Rotherham Titans in the RFU Championship and London Irish in the English Premiership. Sheridan has also represented Ireland under-18s and under-20s at international level. At 6'4' and 108 kg Sheridan is a physical presence with the ability to play at both inside and outside centre. Born in Birmingham, Sheridan was educated at St. Patrick's Classical School in Navan, Ireland. He spent four years in the Leinster Academy as\n</result> <think>  \n\nFrom the search results, I can see that Eamonn Sheridan is an Irish rugby union player who competes in the Pro14 and was born on 14 May 1989.\n\nTherefore, the birth day of the Irish rugby union player who competed in the Pro14 is 14 May.</think>\n\n <answer><placeholder><box>14 May</box>")
+print(set(matches))

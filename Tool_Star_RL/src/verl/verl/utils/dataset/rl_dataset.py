@@ -72,6 +72,7 @@ class RLHFDataset(Dataset):
                  return_raw_chat=False,
                  apply_chat=True,
                  prompt_template_name=None,
+                 fix_cost=False,
                  truncation='error'):
         if not isinstance(parquet_files, (List, ListConfig)):
             parquet_files = [parquet_files]
@@ -95,7 +96,7 @@ class RLHFDataset(Dataset):
         self.return_raw_chat = return_raw_chat
         self.chat_template_func = chat_template_func
         self.truncation = truncation
-
+        self.fix_cost = fix_cost
         # whether to store the dataset in state_dict()
         # default not store
         self.serialize_dataset = False
@@ -153,15 +154,20 @@ class RLHFDataset(Dataset):
         Note that we also return the raw_input_ids so that it can be combined with other chat template
         """
         row_dict = self.dataframe.iloc[item].to_dict()
-
+        cost_dict = None
         chat = row_dict.pop(self.prompt_key)
         #THREEGOLDCHANGE:增加随机Budget
         if self.prompt_template_name == 're_search_template_with_budget_sys':
-            python_cost = random.randint(1, 10)
-            search_cost = random.randint(1, 10)
+            if not self.fix_cost:
+                python_cost = random.randint(1, 10)
+                search_cost = random.randint(1, 10)
+            else:
+                python_cost = 4
+                search_cost = 5
             prompt_template = self.prompt_template.replace('[python_cost]', str(python_cost)).replace('[search_cost]', str(search_cost))
             row_dict['python_cost'] = torch.tensor(python_cost)
             row_dict['search_cost'] = torch.tensor(search_cost)
+            cost_dict = {'python_cost': python_cost, 'search_cost': search_cost}
         else:
             prompt_template = self.prompt_template
         #THREEGOLDCHANGE:增加随机Budget

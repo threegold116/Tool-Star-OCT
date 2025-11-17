@@ -21,7 +21,7 @@ class ReSearchRewardManagerWithSave():
     """The reward manager.
     """
 
-    def __init__(self, tokenizer, num_examine, compute_score=None, save_path=None,mix_rules=False,qa_rule="f1_score",is_multi_tool=False) -> None:
+    def __init__(self, tokenizer, num_examine, compute_score=None, save_path=None,mix_rules=False,qa_rule="f1_score",math_rule="em_score",is_multi_tool=False,binary_f1_threshold=0.5) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.compute_score = compute_score or _default_compute_score
@@ -29,7 +29,9 @@ class ReSearchRewardManagerWithSave():
         # THREEGOLDCHANGE:增加mix rules和qa_mode
         self.mix_rules = mix_rules
         self.qa_rule = qa_rule
+        self.math_rule = math_rule
         self.is_multi_tool = is_multi_tool
+        self.binary_f1_threshold = binary_f1_threshold
     def __call__(self, data: DataProto, curr_save_path=None):
         """We will expand this function gradually based on the available datasets"""
 
@@ -74,6 +76,7 @@ class ReSearchRewardManagerWithSave():
             # THREEGOLDCHANGE:增加对工具调用的统计
             is_search = data.batch["is_search"][i]
             is_python =data.batch["is_python"][i]
+            void_turn =data.batch["void_turn"][i]
             abality = data_item.non_tensor_batch['ability']
             # THREEGOLDCHANGE
             
@@ -87,7 +90,8 @@ class ReSearchRewardManagerWithSave():
                 abality=abality,
                 mix_rules=self.mix_rules,
                 qa_rule=self.qa_rule,
-                is_multi_tool=self.is_multi_tool
+                is_multi_tool=self.is_multi_tool,
+                binary_f1_threshold=self.binary_f1_threshold
             )
             if isinstance(score, tuple):
                 score, reason = score
@@ -104,7 +108,8 @@ class ReSearchRewardManagerWithSave():
                     'reason': reason,
                     "is_search": is_search.item(),
                     "is_python": is_python.item(),
-                    "is_multi_tool": self.is_multi_tool,
+                    "void_turn":void_turn.item(),
+                    "is_multi_tool": self.is_multi_tool, #TODO:增加对cost的统计
                 }
                 save_file.write(json.dumps(save_json_line, ensure_ascii=False) + '\n')
 

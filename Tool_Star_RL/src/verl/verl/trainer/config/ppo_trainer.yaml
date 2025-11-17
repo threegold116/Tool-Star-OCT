@@ -13,6 +13,8 @@ data:
   apply_chat: True  # when training from base, turn False, and check whether the prompt_key is right
   prompt_template_name: null  # the template adapted to string prompt, find name in verl/utils/dataset/template.py
   shuffle: True
+  # THREEGOLDCHANGE
+  fix_cost: False
 
 actor_rollout_ref:
   hybrid_engine: True
@@ -38,10 +40,14 @@ actor_rollout_ref:
     use_kl_loss: False # True for GRPO
     kl_loss_coef: 0.001 # for grpo
     kl_loss_type: low_var_kl # for grpo
+    loss_agg_mode: token-mean
     #THREEGOLDCHANGE
     use_oct_cofficient: False # True for OCT
     oct_coef: 1 # for OCT(alpha)
     oct_smooth: ${actor_rollout_ref.rollout.max_calling_times} # same with max_calling_times
+    no_positive_penalty: True # True for OCT
+    apply_mode: multiply
+    group_smooth: False
     #THREEGOLDCHANGE
     ppo_epochs: 1
     shuffle: False
@@ -100,10 +106,11 @@ actor_rollout_ref:
     # number of responses (i.e. num sample times)
     n: 1 # > 1 for grpo
     search_url: null
+    #THREEGOLDCHANGE
     search_mode: "wikipedia"
     top_n: 3
     max_calling_times: 3
-
+    #THREEGOLDCHANGE
 
 
 critic:
@@ -162,9 +169,13 @@ reward_model:
   use_dynamic_bsz: ${critic.use_dynamic_bsz}
   forward_max_token_len_per_gpu: ${critic.forward_max_token_len_per_gpu}
   reward_manager: naive
+  #THREEGOLDCHANGE
   mix_rules: False
+  math_rule: em_score
   qa_rule: f1_score
   is_multi_tool: False
+  binary_f1_threshold: 0.5
+  #THREEGOLDCHANGE
 algorithm:
   gamma: 1.0
   lam: 1.0
@@ -172,6 +183,7 @@ algorithm:
   kl_penalty: kl  # how to estimate kl divergence
   #THREEGOLDCHANGE
   oct_penalty: times  # how to estimate oct divergence
+  optim_cost_estimate: True # True for OCT
   #THREEGOLDCHANGE
   kl_ctrl:
     type: fixed
@@ -198,4 +210,6 @@ trainer:
   default_local_dir: checkpoints/${trainer.project_name}/${trainer.experiment_name}
   val_before_train: True
   rollout_save_path: null
+  #THREEGOLDCHANGE
   progressive_calling_times_stages: 3
+  #THREEGOLDCHANGE

@@ -21,7 +21,7 @@ implement PPO
 import numpy as np
 import torch
 from collections import defaultdict
-
+import os
 import verl.utils.torch_functional as verl_F
 
 # THREEGOLDCHANGE:存储OCT的相关参数
@@ -31,10 +31,13 @@ class OctController:
     https://arxiv.org/pdf/2504.14870
     """
 
-    def __init__(self, init_cofficient, init_smooth,tokenizer):
+    def __init__(self, init_cofficient, init_smooth,tokenizer,no_positive_penalty=True,apply_mode="multiply",group_smooth=False):
         self.cofficient = init_cofficient
         self.smooth = init_smooth
         self.tokenizer = tokenizer
+        self.no_positive_penalty = no_positive_penalty
+        self.apply_mode = apply_mode
+        self.group_smooth = group_smooth
 
     # def update(self, current_cot, n_steps):
     #     target = self.target
@@ -128,7 +131,8 @@ def compute_gae_advantage_return(token_level_rewards: torch.Tensor, values: torc
 def compute_grpo_outcome_advantage(token_level_rewards: torch.Tensor,
                                    eos_mask: torch.Tensor,
                                    index: torch.Tensor,
-                                   epsilon: float = 1e-6):
+                                   epsilon: float = 1e-6,
+                                   normlization_mode: str = "group_normlization"):
     """
     Compute advantage for GRPO, operating only on Outcome reward 
     (with only one scalar reward for each response).
@@ -150,7 +154,10 @@ def compute_grpo_outcome_advantage(token_level_rewards: torch.Tensor,
     id2score = defaultdict(list)
     id2mean = {}
     id2std = {}
-
+    batch2mean = torch.mean(scores)
+    batch2std = torch.std(scores)
+    # THREEGOLDCHANGE
+    
     with torch.no_grad():
         bsz = scores.shape[0]
         for i in range(bsz):
@@ -165,7 +172,18 @@ def compute_grpo_outcome_advantage(token_level_rewards: torch.Tensor,
             else:
                 raise ValueError(f"no score in prompt index: {idx}")
         for i in range(bsz):
-            scores[i] = (scores[i] - id2mean[index[i]]) / (id2std[index[i]] + epsilon)
+            if "no_std" in normlization_mode:
+                if "batch_normlization" in normlization_mode:
+                    scores[i] = (scores[i] - batch2mean) 
+                else:
+                    scores[i] = (scores[i] - id2mean[index[i]]) 
+            else:
+                if "batch_normlization" in normlization_mode:
+                    scores[i] = (scores[i] - batch2mean) / (batch2std+epsilon)
+                else:
+                    scores[i] = (scores[i] - id2mean[index[i]]) / (id2std[index[i]] + epsilon)
+                    
+                    
         scores = scores.unsqueeze(-1).tile([1, response_length]) * eos_mask
 
     return scores, scores
@@ -240,9 +258,46 @@ def compute_rewards(token_level_scores, old_log_prob, ref_log_prob, kl_ratio):
     kl = old_log_prob - ref_log_prob
     return token_level_scores - kl * kl_ratio
 
+
+def agg_loss(loss_mat: torch.Tensor, loss_mask: torch.Tensor, loss_agg_mode: str):
+    """
+    Aggregate the loss matrix into a scalar.
+
+    Args:
+        loss_mat: `(torch.Tensor)`:
+            shape: (bs, response_length)
+        loss_mask: `(torch.Tensor)`:
+            shape: (bs, response_length)
+        loss_agg_mode: (str) choices:
+            method to aggregate the loss matrix into a scalar.
+    Returns:
+        loss: `a scalar torch.Tensor`
+            aggregated loss
+    """
+    if loss_agg_mode == "token-mean":
+        loss = verl_F.masked_mean(loss_mat, loss_mask)
+    elif loss_agg_mode == "seq-mean-token-sum":
+        seq_losses = torch.sum(loss_mat * loss_mask, dim=-1)  # token-sum
+        loss = torch.mean(seq_losses)  # seq-mean
+    elif loss_agg_mode == "seq-mean-token-mean":
+        print(f"WARNING: loss_mask_sum_zero_num={torch.sum(torch.sum(loss_mask, dim=-1)==0)}")
+        seq_losses = torch.sum(loss_mat * loss_mask, dim=-1) / (torch.sum(loss_mask, dim=-1)+1e-8)  # token-mean
+        loss = torch.mean(seq_losses)  # seq-mean
+    elif loss_agg_mode == "seq-mean-token-sum-norm":
+        seq_losses = torch.sum(loss_mat * loss_mask, dim=-1)
+        loss = torch.sum(seq_losses) / loss_mask.shape[-1]  # The divisor
+        # (loss_mask.shape[-1]) should ideally be constant
+        # throughout training to well-replicate the DrGRPO paper.
+        # TODO: Perhaps add user-defined normalizer argument to
+        # agg_loss to ensure divisor stays constant throughout.
+    else:
+        raise ValueError(f"Invalid loss_agg_mode: {loss_agg_mode}")
+
+    return loss
+
 # THREEGOLDCHANGE: add clip higher
 def compute_policy_loss(old_log_prob, log_prob, advantages, eos_mask, cliprange,cliprange_low=None,
-    cliprange_high=None,radio_clip=False):
+    cliprange_high=None,radio_clip=False, loss_agg_mode='token-mean'):
     """Adapted from https://github.com/huggingface/trl/blob/main/trl/trainer/ppo_trainer.py#L1122
 
     Args:
@@ -278,8 +333,10 @@ def compute_policy_loss(old_log_prob, log_prob, advantages, eos_mask, cliprange,
 
     pg_losses = -advantages * ratio
     pg_losses2 = -advantages * torch.clamp(ratio, 1.0 - cliprange_low, 1.0 + cliprange_high)
-
-    pg_loss = verl_F.masked_mean(torch.max(pg_losses, pg_losses2), eos_mask)
+    # THREEGOLDCHANGE: follow the implementation of GRPO in token-loss-agg-mode
+    # pg_loss = verl_F.masked_mean(torch.max(pg_losses, pg_losses2), eos_mask)
+    pg_loss = agg_loss(torch.max(pg_losses, pg_losses2), eos_mask, loss_agg_mode=loss_agg_mode)
+    # THREEGOLDCHANGE
     pg_clipfrac = verl_F.masked_mean(torch.gt(pg_losses2, pg_losses).float(), eos_mask)
     return pg_loss, pg_clipfrac, ppo_kl
 
@@ -353,6 +410,9 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
     # # URL http://joschu.net/blog/kl-approx.html.
     if kl_penalty == 'low_var_kl':
         kl = ref_logprob - logprob
+        #THREEGOLDCHANGE:follow https://github.com/volcengine/verl/blob/1c99f4727ed184937e87c5b363ae69c0e79b8049/verl/trainer/ppo/core_algos.py#L1464 and https://github.com/volcengine/verl/issues/891
+        if os.environ.get("KL_PENALTY_CLAMP")=="1": #TODO:修改为config设置
+            kl = torch.clamp(kl, min=-20, max=20) 
         ratio = torch.exp(kl)
         kld = (ratio - kl - 1).contiguous()
         return torch.clamp(kld, min=-10, max=10)
@@ -365,19 +425,24 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
 
 
 
-def oct_budget_penalty(data,oct_smooth):
+
+def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=False,optim_cost_estimate=True):
     # 1.get_strings
     tool_calling_costs = []
     search_times = data.batch.get("is_search",None)
     python_times = data.batch.get("is_python",None)
     search_cost = data.batch.get("search_cost",None)
     python_cost = data.batch.get("python_cost",None)
-    
+    max_calling_times = 0
+    max_calling_times = 0
     for i in range(len(data)):
         tool_calling_costs.append(search_cost[i]*search_times[i]+python_cost[i]*python_times[i])
+        max_calling_times = max(max_calling_times,search_times[i]+python_times[i])
+        max_calling_times = max(max_calling_times,search_times[i]+python_times[i])
 
     # 2.group_by_index
     index = data.non_tensor_batch['uid']
+    ability = data.non_tensor_batch.get("ability",None)
     id2calling_costs = defaultdict(list)
     token_level_scores = data.batch['token_level_scores']
     id2min_calling_costs = {}
@@ -405,12 +470,28 @@ def oct_budget_penalty(data,oct_smooth):
             else:
                 return 2*optim_cost*calling_cost/(optim_cost+calling_cost)
         for i in range(bsz): # 4. compute oct_scores
-            if torch.sum(token_level_scores[i])<=0:
+            if len(id2calling_costs[index[i]])==0:#说明当前组没有最优路径
                 oct_scores[i] = torch.tensor(1.0)
                 continue
-            optim_cost = id2min_calling_costs[index[i]] #n
+            if torch.sum(token_level_scores[i])<=0 and no_positive_penalty:#如果不对负值增加惩罚
+                oct_scores[i] = torch.tensor(1.0)
+                continue
+            if optim_cost_estimate:
+                optim_cost = id2min_calling_costs[index[i]] #n         
+            else:
+                optim_cost = 0   
             calling_cost = tool_calling_costs[i] #m
-            oct_smooth_budget = oct_smooth*max(python_cost[i],search_cost[i]) 
+            if ability is None:
+                oct_smooth_budget = oct_smooth*max(python_cost[i],search_cost[i]) 
+            else:
+                if ability[i]=="qa":
+                    oct_smooth_budget = oct_smooth*search_cost[i]
+                elif ability[i]=="math":
+                    oct_smooth_budget = oct_smooth*python_cost[i]
+                else:
+                    raise f"the ability is not illeagl"
+            if max(id2calling_costs[index[i]])>0 and group_smooth:
+                oct_smooth_budget = min(max(id2calling_costs[index[i]]),oct_smooth_budget)
             map_costs = map_to_2n(calling_cost=calling_cost,optim_cost=optim_cost)
             if map_costs==0 and optim_cost==0:
                 oct_scores[i] = torch.tensor(1.0)
@@ -418,20 +499,29 @@ def oct_budget_penalty(data,oct_smooth):
                 oct_scores[i] = torch.cos(calling_cost*torch.pi/(2*calling_cost+oct_smooth_budget))
             else:
                 oct_scores[i] = torch.sin(map_costs*torch.pi/(2*optim_cost))
-    return oct_scores, calling_costs_sum/bsz
-
-
+            #TODO:如果用加减法实现惩罚，会导致其他index的token_level_scores也发生变化 #WARNING
+            # if not no_positive_penalty: #如果对负值增加惩罚
+            #     if torch.sum(token_level_scores[i])>0: # torch.sum(token_level_scores[i])=1 oct_scores[i]=0.9,after oct torch.sum(token_level_scores[i])=0.9
+            #         #通过减法实现大于0的轨迹乘惩罚因子的形式
+            #         oct_scores[i] = torch.sum(token_level_scores[i]) - oct_scores[i] * torch.sum(token_level_scores[i])      
+            #     if torch.sum(token_level_scores[i])<=0: 
+            #         #通过减法实现小于0的轨迹加惩罚因子的形式
+            #         oct_scores[i] = 1 - oct_scores[i]
+    return oct_scores, calling_costs_sum/bsz,max_calling_times
 
 def oct_times_penalty(data,oct_smooth):
     # 1.get_strings
     calling_times = []
+    max_calling_times = 0
     valid_actions = data.batch.get("valid_action",None)
     for i in range(len(data)):
         calling_times.append(valid_actions[i])
+        max_calling_times = max(max_calling_times,valid_actions[i])
 
     # 2.group_by_index
     index = data.non_tensor_batch['uid']
     id2calling_times = defaultdict(list)
+    token_level_scores = data.batch['token_level_scores']
     id2min_calling_times = {}
     oct_scores = torch.zeros((data.batch.batch_size[0]), dtype=torch.float32)
     calling_times_sum = 0
@@ -439,7 +529,9 @@ def oct_times_penalty(data,oct_smooth):
         bsz = data.batch.batch_size[0]
         for i in range(bsz):
             calling_times_sum += calling_times[i]
-            id2calling_times[index[i]].append(calling_times[i])
+            #只取score>0的calling times
+            if torch.sum(token_level_scores[i])>0:
+                id2calling_times[index[i]].append(calling_times[i])
         for idx in id2calling_times:
             if len(id2calling_times[idx]) == 1:
                 id2min_calling_times[idx] = id2calling_times[idx][0]
@@ -455,13 +547,16 @@ def oct_times_penalty(data,oct_smooth):
             else:
                 return 2*optim_time*calling_time/(optim_time+calling_time)
         for i in range(bsz): # 4. compute oct_scores
+            if torch.sum(token_level_scores[i])<=0:
+                oct_scores[i] = torch.tensor(1.0)
+                continue
             optim_time = id2min_calling_times[index[i]] #n
             calling_time = calling_times[i] #m
             map_times = map_to_2n(calling_time=calling_time,optim_time=optim_time)
             if map_times==0 and optim_time==0:
                 oct_scores[i] = torch.tensor(1.0)
             elif optim_time==0:
-                oct_scores[i] = torch.cos(torch.tensor(calling_time*torch.pi/(2*calling_time+oct_smooth)))
+                oct_scores[i] = torch.cos(calling_time*torch.pi/(2*calling_time+oct_smooth))
             else:
-                oct_scores[i] = torch.sin(torch.tensor(map_times*torch.pi/(2*optim_time)))
-    return oct_scores, calling_times_sum/bsz
+                oct_scores[i] = torch.sin(map_times*torch.pi/(2*optim_time))
+        return oct_scores, calling_times_sum/bsz, max_calling_times
