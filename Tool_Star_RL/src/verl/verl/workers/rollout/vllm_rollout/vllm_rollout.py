@@ -646,6 +646,8 @@ class vLLMRolloutWithSearch(vLLMRollout):
                         result = self.tokenizer.decode(result_ids)
                         # THREEGOLDCHANGE
                         # update the output, add the search result
+                        if self.config.add_hint:
+                            result = result+f"\nYou have called the tool {is_search[idx] + is_python[idx]} times. Please be careful not to exceed the maximum allowed ({self.config.get('max_calling_times', 3)})."
                         output_ids = self.tokenizer.encode(f" <result>\n{result}\n</result>")
                         curr_inputs[idx] += output_ids
                         result_mask_list[idx] += [0] * len(output_ids)
@@ -660,6 +662,8 @@ class vLLMRolloutWithSearch(vLLMRollout):
                             result_ids = result_ids[:self.config.max_obs_length]
                         result = self.tokenizer.decode(result_ids)
                         # THREEGOLDCHANGE
+                        if self.config.add_hint:
+                            result = result+f"\nYou have called the tool {is_search[idx] + is_python[idx]} times. Please be careful not to exceed the maximum allowed ({self.config.get('max_calling_times', 3)})."
                         output_ids = self.tokenizer.encode(f" <result>\n{result}\n</result>")
                         curr_inputs[idx] += output_ids
                         result_mask_list[idx] += [0] * len(output_ids)

@@ -47,6 +47,10 @@ USE_OCT_COEFFICIENT_ADVANTAGE_SHAPING=False
 ENTROPY_COEFF=0.001
 FIX_COST=False
 VOID_TURN_MASK=False
+KL_LOSS_CLAMP=False
+KL_LOSS_TYPE="low_var_kl"
+ADD_HINT=False
+COST_FUNC="sin"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --prompt_key) PROMPT_KEY="$2"; shift 2;;
@@ -97,6 +101,10 @@ while [[ $# -gt 0 ]]; do
         --fix_cost) FIX_COST="$2"; shift 2;;
         --normlization_mode) NORMLIZATION_MODE="$2"; shift 2;;
         --use_oct_cofficient_advantage_shaping) USE_OCT_COEFFICIENT_ADVANTAGE_SHAPING="$2"; shift 2;;
+        --kl_loss_clamp) KL_LOSS_CLAMP="$2"; shift 2;;
+        --kl_loss_type) KL_LOSS_TYPE="$2"; shift 2;;
+        --add_hint) ADD_HINT="$2"; shift 2;;
+        --cost_func) COST_FUNC="$2"; shift 2;;
         *)
             echo "unknown argument '$1'" >&2
             exit 1;;
@@ -126,6 +134,7 @@ python3 -m verl.trainer.main_ppo \
     algorithm.oct_penalty=${OCT_PENALTY} \
     algorithm.optim_cost_estimate=${OPTIM_COST_ESTIMATE} \
     +algorithm.normlization_mode=${NORMLIZATION_MODE} \
+    +algorithm.cost_func=${COST_FUNC} \
     +algorithm.void_turn_mask=${VOID_TURN_MASK} \
     data.train_files="$TRAIN_FILES" \
     data.val_files="$TEST_FILES" \
@@ -148,7 +157,8 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.loss_agg_mode=${LOSS_AGG_MODE} \
     actor_rollout_ref.actor.kl_loss_coef=${KL_LOSS_COEF} \
     actor_rollout_ref.actor.entropy_coeff=${ENTROPY_COEFF} \
-    actor_rollout_ref.actor.kl_loss_type=low_var_kl \
+    actor_rollout_ref.actor.kl_loss_type=${KL_LOSS_TYPE} \
+    +actor_rollout_ref.actor.kl_loss_clamp=${KL_LOSS_CLAMP} \
     actor_rollout_ref.actor.radio_clip=${RADIO_CLIP} \
     actor_rollout_ref.actor.clip_ratio_high=${CLIP_RATIO_HIGH} \
     actor_rollout_ref.actor.use_oct_cofficient=${USE_OCT_COEFFICIENT} \
@@ -168,6 +178,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.n=${ROLLOUT_N} \
     actor_rollout_ref.rollout.search_url=${SEARCH_URL} \
     actor_rollout_ref.rollout.max_calling_times=${MAX_CALLING_TIMES} \
+    +actor_rollout_ref.rollout.add_hint=${ADD_HINT} \
     actor_rollout_ref.ref.log_prob_max_token_len_per_gpu=$((4*(MAX_PROMPT_LENGTH+MAX_RESPONSE_LENGTH))) \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
     reward_model.reward_manager=${REWARD_MANAGER} \

@@ -87,6 +87,77 @@ def get_kl_controller(config):
     return kl_ctrl
 
 
+def compute_policy_loss_gspo(
+    old_log_prob: torch.Tensor,
+    log_prob: torch.Tensor,
+    advantages: torch.Tensor,
+    response_mask: torch.Tensor,
+    loss_agg_mode: str = "seq-mean-token-mean",
+    clip_ratio_low: float = 0.2,
+    clip_ratio_high: float = 0.2,
+    rollout_is_weights: torch.Tensor | None = None,
+):
+    """
+    Compute the clipped policy objective and related metrics for GSPO.
+
+    See https://arxiv.org/pdf/2507.18071 for more details.
+
+    Args:
+        old_log_prob (torch.Tensor):
+            Log-probabilities of actions under the old policy, shape (batch_size, response_length).
+        log_prob (torch.Tensor):
+            Log-probabilities of actions under the current policy, shape (batch_size, response_length).
+        advantages (torch.Tensor):
+            Advantage estimates for each action, shape (batch_size, response_length).
+        response_mask (torch.Tensor):
+            Mask indicating which tokens to include in the loss, shape (batch_size, response_length).
+        loss_agg_mode (str, optional):
+            Aggregation mode for `agg_loss`. For GSPO, it is recommended to use "seq-mean-token-mean".
+    """
+
+    clip_ratio_low = clip_ratio_low if clip_ratio_low is not None else clip_ratio
+    clip_ratio_high = clip_ratio_high if clip_ratio_high is not None else clip_ratio
+
+    negative_approx_kl = log_prob - old_log_prob
+
+    # compute sequence-level importance ratio:
+    # si(θ) = (π_θ(yi|x)/π_θold(yi|x))^(1/|yi|) =
+    # exp [(1/|y_i|) * Σ_t log(π_θ(y_i,t|x,y_i,<t)/π_θold(y_i,t|x,y_i,<t))]
+    seq_lengths = torch.sum(response_mask, dim=-1).clamp(min=1)
+    negative_approx_kl_seq = torch.sum(negative_approx_kl * response_mask, dim=-1) / seq_lengths
+
+    # Combined ratio at token level:
+    # s_i,t(θ) = sg[s_i(θ)] · π_θ(y_i,t|x, y_i,<t) / sg[π_θ(y_i,t|x, y_i,<t)]
+    # In log space: log(s_i,t(θ)) = sg[log(s_i(θ))] + log_prob - sg[log_prob]
+    log_seq_importance_ratio = log_prob - log_prob.detach() + negative_approx_kl_seq.detach().unsqueeze(-1)
+    log_seq_importance_ratio = torch.clamp(log_seq_importance_ratio, max=10.0)  # clamp for numerical stability
+
+    # finaly exp() to remove log
+    seq_importance_ratio = torch.exp(log_seq_importance_ratio)
+
+    pg_losses1 = -advantages * seq_importance_ratio
+    pg_losses2 = -advantages * torch.clamp(seq_importance_ratio, 1 - clip_ratio_low, 1 + clip_ratio_high)
+    pg_losses = torch.maximum(pg_losses1, pg_losses2)
+
+    # Apply rollout correction weights if provided
+    if rollout_is_weights is not None:
+        pg_losses = pg_losses * rollout_is_weights
+
+    # for GSPO, we need to aggregate the loss at the sequence level (seq-mean-token-mean)
+    pg_loss = agg_loss(loss_mat=pg_losses, loss_mask=response_mask, loss_agg_mode="seq-mean-token-mean")
+
+    # For compatibility, return zero for pg_clipfrac_lower (not used in standard GSPO)
+    pg_clipfrac = verl_F.masked_mean(torch.gt(pg_losses2, pg_losses1).float(), response_mask)
+    pg_clipfrac_lower = torch.tensor(0.0, device=pg_loss.device)
+
+    ppo_kl = verl_F.masked_mean(-negative_approx_kl, response_mask)
+    pg_metrics = {
+        "actor/pg_clipfrac": pg_clipfrac.detach().item(),
+        "actor/ppo_kl": ppo_kl.detach().item(),
+        "actor/pg_clipfrac_lower": pg_clipfrac_lower.detach().item(),
+    }
+    return pg_loss, pg_metrics
+
 def compute_gae_advantage_return(token_level_rewards: torch.Tensor, values: torch.Tensor, eos_mask: torch.Tensor,
                                  gamma: torch.Tensor, lam: torch.Tensor):
     """Adapted from https://github.com/huggingface/trl/blob/main/trl/trainer/ppo_trainer.py
@@ -386,7 +457,7 @@ def compute_value_loss(vpreds, returns, values, eos_mask, cliprange_value):
     return vf_loss, vf_clipfrac
 
 
-def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_penalty) -> torch.FloatTensor:
+def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_penalty, kl_loss_clamp=False) -> torch.FloatTensor:
     """Compute KL divergence given logprob and ref_logprob.
     Copied from https://github.com/huggingface/trl/blob/main/trl/trainer/ppo_trainer.py#L1104
 
@@ -411,7 +482,7 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
     if kl_penalty == 'low_var_kl':
         kl = ref_logprob - logprob
         #THREEGOLDCHANGE:follow https://github.com/volcengine/verl/blob/1c99f4727ed184937e87c5b363ae69c0e79b8049/verl/trainer/ppo/core_algos.py#L1464 and https://github.com/volcengine/verl/issues/891
-        if os.environ.get("KL_PENALTY_CLAMP")=="1": #TODO:修改为config设置
+        if kl_loss_clamp:
             kl = torch.clamp(kl, min=-20, max=20) 
         ratio = torch.exp(kl)
         kld = (ratio - kl - 1).contiguous()
@@ -426,7 +497,7 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
 
 
 
-def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=False,optim_cost_estimate=True):
+def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=False,optim_cost_estimate=True,cost_func="sin"):
     # 1.get_strings
     tool_calling_costs = []
     search_times = data.batch.get("is_search",None)
@@ -492,13 +563,22 @@ def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=Fal
                     raise f"the ability is not illeagl"
             if max(id2calling_costs[index[i]])>0 and group_smooth:
                 oct_smooth_budget = min(max(id2calling_costs[index[i]]),oct_smooth_budget)
-            map_costs = map_to_2n(calling_cost=calling_cost,optim_cost=optim_cost)
-            if map_costs==0 and optim_cost==0:
-                oct_scores[i] = torch.tensor(1.0)
-            elif optim_cost==0:
-                oct_scores[i] = torch.cos(calling_cost*torch.pi/(2*calling_cost+oct_smooth_budget))
-            else:
-                oct_scores[i] = torch.sin(map_costs*torch.pi/(2*optim_cost))
+            if cost_func=="sin":
+                map_costs = map_to_2n(calling_cost=calling_cost,optim_cost=optim_cost)
+                if map_costs==0 and optim_cost==0:
+                    oct_scores[i] = torch.tensor(1.0)
+                elif optim_cost==0:
+                    oct_scores[i] = torch.cos(calling_cost*torch.pi/(2*calling_cost+oct_smooth_budget))
+                else:
+                    oct_scores[i] = torch.sin(map_costs*torch.pi/(2*optim_cost))
+            elif cost_func=="line":
+                map_costs = map_to_2n(calling_cost=calling_cost,optim_cost=optim_cost)
+                if map_costs==0 and optim_cost==0:
+                    oct_scores[i] = torch.tensor(1.0)
+                elif optim_cost==0:
+                    oct_scores[i] = torch.tensor(1 - calling_cost/oct_smooth_budget)
+                else:
+                    oct_scores[i] = torch.tensor(1 - (map_costs-optim_cost)/optim_cost)
             #TODO:如果用加减法实现惩罚，会导致其他index的token_level_scores也发生变化 #WARNING
             # if not no_positive_penalty: #如果对负值增加惩罚
             #     if torch.sum(token_level_scores[i])>0: # torch.sum(token_level_scores[i])=1 oct_scores[i]=0.9,after oct torch.sum(token_level_scores[i])=0.9

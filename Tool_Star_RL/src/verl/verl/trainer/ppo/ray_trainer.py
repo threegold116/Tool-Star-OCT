@@ -117,7 +117,7 @@ def apply_kl_penalty(data: DataProto, kl_ctrl: core_algos.AdaptiveKLController, 
 
     return data, metrics
 #THREEGOLDCHANGE:计算oct奖励
-def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct',optim_cost_estimate=True,shaping_mode="reward_shaping"):
+def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct',optim_cost_estimate=True,shaping_mode="reward_shaping", cost_func="sin"):
     """在token-level的score上添加对应的oct因子
 
     Args:
@@ -147,7 +147,7 @@ def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_p
         oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
         metrics = {'rollout/avg_call_times': avg_call_times,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
     elif oct_penalty == 'budget':
-        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty,group_smooth=oct_ctrl.group_smooth,optim_cost_estimate=optim_cost_estimate)  # (batch_size, response_length)
+        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty,group_smooth=oct_ctrl.group_smooth,optim_cost_estimate=optim_cost_estimate,cost_func=cost_func)  # (batch_size, response_length)
         print(f"old: {old}")
         if apply_mode=="add":
             oct_token_level_scores = token_level_scores.clone()
@@ -1073,7 +1073,8 @@ class RayPPOTrainer(object):
                             batch, oct_metrics = apply_oct_penalty(batch,
                                                                  oct_ctrl=self.oct_ctrl,
                                                                  oct_penalty=self.config.algorithm.oct_penalty,
-                                                                 optim_cost_estimate=self.config.algorithm.optim_cost_estimate
+                                                                 optim_cost_estimate=self.config.algorithm.optim_cost_estimate,
+                                                                 cost_func=self.config.algorithm.cost_func
                                                                  )
                             metrics.update(oct_metrics) #TODO: 增加对calling_times的logging
                         else:
@@ -1101,7 +1102,8 @@ class RayPPOTrainer(object):
                                                                  oct_ctrl=self.oct_ctrl,
                                                                  oct_penalty=self.config.algorithm.oct_penalty,
                                                                  optim_cost_estimate=self.config.algorithm.optim_cost_estimate,
-                                                                 shaping_mode='advantage_shaping'
+                                                                 shaping_mode='advantage_shaping',
+                                                                 cost_func=self.config.algorithm.cost_func
                                                                  )
                             metrics.update(oct_metrics) #TODO: 增加对calling_times的logging
 

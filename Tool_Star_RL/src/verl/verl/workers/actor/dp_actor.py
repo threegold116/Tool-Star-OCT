@@ -288,7 +288,8 @@ class DataParallelPPOActor(BasePPOActor):
                     # compute kl loss
                     kld = core_algos.kl_penalty(logprob=log_prob,
                                                 ref_logprob=ref_log_prob,
-                                                kl_penalty=self.config.kl_loss_type)
+                                                kl_penalty=self.config.kl_loss_type,
+                                                kl_loss_clamp=self.config.get('kl_loss_clamp', False))
                     kl_loss = masked_mean(kld, response_mask)
 
                     policy_loss = policy_loss + kl_loss * self.config.kl_loss_coef
