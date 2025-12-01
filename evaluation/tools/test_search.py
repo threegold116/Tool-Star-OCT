@@ -23,6 +23,7 @@ def langsearch(query, top_n=5, bing_subscription_key=BING_API_KEY, bing_endpoint
     }
 
     response = requests.request("POST", bing_endpoint, headers=headers, data=payload)
+    print(response)
     # print(response.text)
     # print(response.json())
     return response.json()
@@ -68,12 +69,12 @@ def deep_search_snippet(search_query, top_k=10, use_jina=False, jina_api_key="em
     # print(relevant_info)
     # print("--------------------------------Search Bing Result--------------------------------")
 
-    # result = ""
-    # for info in relevant_info:
-    #     # info['snippet'] = formatted_documents
-    #     snippet = info['snippet']
-    #     clean_snippet = re.sub('<[^<]+?>', '', snippet)  # Removes HTML tags
-    #     result+=clean_snippet
+    result = ""
+    for info in results["data"]:
+        # info['snippet'] = formatted_documents
+        snippet = info['snippet']
+        clean_snippet = re.sub('<[^<]+?>', '', snippet)  # Removes HTML tags
+        result+=clean_snippet
 
     extracted_info = results
 
@@ -98,7 +99,7 @@ def batch_search(query, top_n=5):
     return result_list
 
 if __name__ == "__main__":
-    query = "2023年拳头游戏Pride Month合作音乐艺术家 全球总决赛相关游戏角色?"
+    query = "find the least common multiple of 12 and 6"
     top_n = 5
     result = deep_search_snippet(query)
     print(result)

@@ -1,0 +1,10 @@
+Don Santos, Lead Singer
+John Doe, Guitarist
+Jane Smith, Bassist
+Mike Brown, Drummer
+
+New Lineup:
+Alex Johnson, Lead Singer (replaced Don Santos)
+John Doe, Guitarist
+Jane Smith, Bassist
+Mike Brown, Drummer

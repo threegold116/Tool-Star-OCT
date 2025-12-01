@@ -20,6 +20,12 @@ search_cache = {}
 if os.path.exists(search_cache_file):
     try:
         print(f"load search cache from {search_cache_file}")
+        cache_timestamp_files = os.listdir(os.path.join(os.path.dirname(os.path.abspath(__file__)),"cache"))
+        cache_timestamp_files.remove("search_cache.json")
+        cache_timestamp_files.sort(key=lambda x: int(x.split(".")[0].split("_")[-1]))
+        for file in cache_timestamp_files[:-3]:
+            print(f"remove old search cache from {os.path.join(os.path.dirname(os.path.abspath(__file__)),'cache',file)}")
+            os.remove(os.path.join(os.path.dirname(os.path.abspath(__file__)),"cache",file))
         with open(search_cache_file, "r", encoding='utf-8') as f:
             search_cache = json.load(f)
     except Exception as e:
@@ -28,6 +34,11 @@ if os.path.exists(search_cache_file):
         cache_timestamp_files.sort(key=lambda x: int(x.split(".")[0].split("_")[-1]))
         latest_search_cache_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),"cache",cache_timestamp_files[-1])
         print(f"load latest search cache from {latest_search_cache_file}")
+        for file in cache_timestamp_files[:-3]:
+            print(f"remove old search cache from {os.path.join(os.path.dirname(os.path.abspath(__file__)),'cache',file)}")
+            os.remove(os.path.join(os.path.dirname(os.path.abspath(__file__)),"cache",file))
+        print(f"after remove old search cache, the cache files is {os.listdir(os.path.join(os.path.dirname(os.path.abspath(__file__)),'cache'))}")
+        
         with open(latest_search_cache_file, "r", encoding='utf-8') as f:
             search_cache = json.load(f)
 else:

@@ -55,6 +55,12 @@ class Inference():
         self.counts = counts
         self.questions = []
         self.answers = []
+        self.budget_idx = budget_idx
+        print(f"budget_idx: {self.budget_idx}")
+        if self.budget_idx >=0:
+            print(f"budget_idx: {self.budget_idx}")
+            print(f"new python_budget: {budgets[self.budget_idx][0]}, new search_budget: {budgets[self.budget_idx][1]}")
+            self.python_budget, self.search_budget = budgets[self.budget_idx]
         if resume_evaluate and self.resume_data_check():
             print("all evaluated, exit!")
             exit()
@@ -65,11 +71,8 @@ class Inference():
         self.use_rollback = use_rollback
         self.use_refiner = use_refiner
         self.prompt_template = ''
-        self.budget_idx = budget_idx
         self.python_budget = python_budget
         self.search_budget = search_budget
-        if self.budget_idx > 0:
-            self.python_budget, self.search_budget = budgets[self.budget_idx]
         self.max_python_times = 3000
         self.max_search_times = 3000
         self.max_calling_times = max_calling_times
@@ -93,6 +96,41 @@ For example, <think> This is the reasoning process. </think> <search> search que
 <think> This is the reasoning process. </think> <python> python code here </python> <result> python interpreter result here </result> \
 <think> This is the reasoning process. </think> <answer> The final answer is \\[ \\boxed{answer here} \\] </answer>. \
 In the last part of the answer, the final exact answer is enclosed within \\boxed{} with latex format.
+"""
+        elif self.prompt_type == 'code_search_multi_tool':
+            self.prompt_template = """
+You are a helpful assistant that can solve the given question step by step with the help of the wikipedia search tool and python interpreter tool. \
+Given a question, you need to first think about the reasoning process in the mind and then provide the answer. \
+During thinking, you can invoke the wikipedia search tool to search and python interpreter tool to calculate the math problem for fact information about specific topics if needed. \
+You can use both tools in conjunction to enhance your problem-solving capabilities. \
+The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags respectively, \
+and the search query and result are enclosed within <search> </search> and <result> </result> tags respectively. \
+For example, <think> This is the reasoning process. </think> <search> search query here </search> <result> search result here </result> \
+<think> This is the reasoning process. </think> <python> python code here </python> <result> python interpreter result here </result> \
+<think> This is the reasoning process. </think> <answer> The final answer is \\[ \\boxed{answer here} \\] </answer>. \
+In the last part of the answer, the final exact answer is enclosed within \\boxed{} with latex format.
+"""
+        elif self.prompt_type == 'no-tool-inference':
+            self.prompt_template = """
+You are a helpful assistant that solves questions directly.
+"""
+        elif self.prompt_type == 'no-tool-inference2':
+            self.prompt_template = """
+You are a helpful assistant that solves questions step by step using only your internal knowledge. \
+You are strictly prohibited from using any external tools, resources, or invoking any search engines or calculators. \
+Given a question, you must rely solely on your internal reasoning to provide a clear and concise answer. \
+The reasoning process and answer should be enclosed within <think> </think> \
+and <answer> </answer> tags respectively. Do not use any search engines, calculators, or other tools. For example, \
+<think> This is the reasoning process. </think> \
+<answer> The final answer is \\[ \\boxed{answer here} \\] </answer>.
+"""
+        elif self.prompt_type == 'code_search_autotir':
+            self.prompt_template = """
+You are a helpful assistant that can solve the given question step by step with the help of tools like Wikipedia search and Python code execution. Given a question, you need to first think about the reasoning process in the mind and then provide the answer. During thinking, You may invoke the Wikipedia search tool for factual information or use Python code execution for calculation when needed. The reasoning process is enclosed within <think> </think>, and the answer is enclosed within <answer> </answer> tags. If Wikipedia search is used, the search query and result are enclosed in <search> </search> and <result> </result> tags respectively. If Python code execution is needed, the code and results are enclosed within <code> </code> and <result> </result> tags respectively. Example: <think> This is the reasoning process. </think> <search> search query here </search> <result> search result here </result> <think> This is the reasoning process based on search result. </think> <answer> The final answer is \\boxed{answer here} </answer>. Or with Python code execution: <think> This is the reasoning process. </think> <code> python code here </code> <result> code result here </result> <think> This is the reasoning process based on code result. </think> <answer> The final answer is \\boxed{answer here} </answer>. If no tools are needed: <think> This is the reasoning process. </think> <answer> The final answer is \\boxed{answer here} </answer>. In the last part of the answer, the final exact answer is enclosed within \\boxed{} with latex format.         
+"""
+        elif self.prompt_type == 'code_search_research':
+            self.prompt_template = """
+You are a helpful assistant that can solve the given question step by step with the help of the wikipedia search tool. Given a question, you need to first think about the reasoning process in the mind and then provide the answer. During thinking, you can invoke the wikipedia search tool to search for fact information about specific topics if needed. The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags respectively, and the search query and result are enclosed within <search> </search> and <result> </result> tags respectively. For example, <think> This is the reasoning process. </think> <search> search query here </search> <result> search result here </result> <think> This is the reasoning process. </think> <answer> The final answer is \\boxed{answer here} </answer>. In the last part of the answer, the final exact answer is enclosed within \\boxed{} with latex format.            
 """
         elif self.prompt_type == 'code_search_with_budget':
             self.prompt_template = """
@@ -147,6 +185,8 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
         self.load_datas()
         res = []
         total_examples = min(len(self.questions), self.counts)
+        self.questions=[]
+        self.answers=[]
         if os.path.exists(self.output_path):
             with open(self.output_path, "r") as f:
                 old_res = json.load(f)
@@ -162,7 +202,7 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                     res.append(line)
             print(f"total examples: {total_examples}")
             print(f"resume data check, {len(res)} examples has been evaluated, {total_examples - len(res)} examples left to evaluate")
-            if len(res) == total_examples:
+            if len(res) >= total_examples:
                 print(f"all data have been evaluated")
                 return  True
         return False
@@ -178,7 +218,7 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                 old_res = json.load(f)
             new_questions = []
             new_answers = []
-            print(f"resume evaluate from {self.output_path}")
+            # print(f"resume evaluate from {self.output_path}")
             for line in old_res:
                 if line["finished_reason"]=="":
                     if "question" in line.keys():
@@ -186,15 +226,15 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                     else:
                         new_question = line["Prompt"].split("<|im_end|>\n<|im_start|>user\n")[-1].replace("<|im_end|>\n<|im_start|>assistant\n","")
                     new_questions.append(new_question)
-                    print(f"resume question:{new_question}")
+                    # print(f"resume question:{new_question}")
                     new_answers.append(line["answer"])
-                elif line["finished_reason"]=="length_limit":
+                elif line["finished_reason"]=="length_limit" and "budget_limit" not in self.output_path:
                     if "question" in line.keys():
                         new_question = line["question"]
                     else:
                         new_question = line["Prompt"].split("<|im_end|>\n<|im_start|>user\n")[-1].replace("<|im_end|>\n<|im_start|>assistant\n","")
                     new_questions.append(new_question)
-                    print(f"resume question:{new_question}")
+                    # print(f"resume question:{new_question}")
                     new_answers.append(line["answer"])
                 elif line.get("search_error_empty_times",0)>0:
                     if "question" in line.keys():
@@ -202,7 +242,7 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                     else:
                         new_question = line["Prompt"].split("<|im_end|>\n<|im_start|>user\n")[-1].replace("<|im_end|>\n<|im_start|>assistant\n","")
                     new_questions.append(new_question)
-                    print(f"resume question:{new_question}")
+                    # print(f"resume question:{new_question}")
                     new_answers.append(line["answer"])
                 else:
                     res.append(line)
@@ -260,23 +300,32 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
             debug_rounds = [0 for _ in range(len(prompts))]
             refine_rounds = [0 for _ in range(len(prompts))]
             curr_max_tokens = [self.max_response_length] * len(concat_prompts_outputs)
+            
+            # 在这里设置一下parms_config的seed，需要手动设置
+            # import random
+            # self.params_config.seed = random.randint(0, 2**10 - 1)
+            
             while generating:
                 input_prompts = [concat_prompts_outputs[i] for i in generating]
                 active_max_tokens = [curr_max_tokens[i] for i in generating]
-                self.params_config.stop = ['</python>', '</search>','</answer>']
+                self.params_config.stop = ['</python>', '</search>', '</answer>', '</code>']
                 self.params_config.detokenize = True
                 self.params_config.max_tokens = max(active_max_tokens)
                 #THREEGOLDCHANGE:from detokenizer to post_process_tokens
                 t1 = time.time()
+                
+                # import random
+                # self.params_config.seed = random.randint(0, 2**10 - 1)    这样没用，每次运行都会设置相同的随机数
+                
+                print(self.params_config)
                 initial_outputs2 = self.model.generate(
                     input_prompts,
                     self.params_config,
-                    use_tqdm=False,
-                    
+                    use_tqdm=False, 
                 )
                 t2 = time.time()
-                print(f"total generate: {len(input_prompts)} max prompt length: {max([len(input_prompt) for input_prompt in input_prompts])} detokenize one turn generate time: {t2 - t1}")
-                print(self.params_config)                
+                print(f"total generate: {len(input_prompts)}, max prompt length: {max([len(input_prompt) for input_prompt in input_prompts])}, detokenize one turn generate time: {t2 - t1}")
+                # print(self.params_config)                
                 # self.params_config.stop = None
                 # self.params_config.detokenize = False
                 # self.params_config.max_tokens = max(active_max_tokens)
@@ -306,7 +355,11 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                 # outputs = [get_new_output_str(output.outputs[0].token_ids) for output in initial_outputs]
                 #THREEGOLDCHANGE
                 outputs = [output.outputs[0].text for output in initial_outputs2]
-                stop_reasons = [output.outputs[0].stop_reason for output in initial_outputs2]
+                ### 这里的outputs可能为空
+                
+                ### 这里的outputs可能为空
+                vllm_finish_reasons = [output.outputs[0].finish_reason for output in initial_outputs2]
+                vllm_stop_reasons = [output.outputs[0].stop_reason for output in initial_outputs2]
                 python_indices = []
                 search_indices = []
                 achieve_max_budget_indices = []
@@ -314,9 +367,29 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                 text_generating_indices = [] #在超过最大调用次数之后继续输出一次
                 
                 for i in range(len(outputs)):
-                    if "code_search" in self.prompt_type:
+                    if "code_search" in self.prompt_type or self.prompt_type == 'no-tool-inference':
                         if outputs[i].strip().endswith('</python>'):
                             #THREEGOLDCHANGE
+                            if calling_rounds[generating[i]] >= self.max_calling_times:
+                                text_generating_indices.append((generating[i], outputs[i]))
+                                other_indices.append((generating[i], outputs[i]))
+                                finished_reason[generating[i]] = "achieve_max_calling_times"
+                                print(f"batch {batch_idx} data {i} finished reason: {finished_reason[generating[i]]}")
+                            elif self.python_budget+calling_budegets[generating[i]] > self.max_tool_budget: #THREEGOLDCHANGE
+                                text_generating_indices.append((generating[i], outputs[i]))
+                                other_indices.append((generating[i], outputs[i]))
+                                finished_reason[generating[i]] = "achieve_max_tool_budget"
+                                print(f"batch {batch_idx} data {i} finished reason: {finished_reason[generating[i]]}")
+                            elif python_rounds[generating[i]] >= self.max_python_times:
+                                text_generating_indices.append((generating[i], outputs[i]))
+                                finished_reason[generating[i]] = "achieve_max_python_times"
+                                other_indices.append((generating[i], outputs[i]))
+                            else:
+                                python_indices.append((generating[i], outputs[i]))
+                                python_rounds[generating[i]] += 1
+                                calling_rounds[generating[i]] += 1
+                                calling_budegets[generating[i]] += 1*self.python_budget
+                        elif outputs[i].strip().endswith('</code>'):
                             if calling_rounds[generating[i]] >= self.max_calling_times:
                                 text_generating_indices.append((generating[i], outputs[i]))
                                 other_indices.append((generating[i], outputs[i]))
@@ -364,7 +437,12 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                             print(f"batch {batch_idx} data {i} finished reason: {finished_reason[generating[i]]}")
                         else:
                             other_indices.append((generating[i], outputs[i]))
-                            finished_reason[generating[i]] = "length_limit"
+                            if vllm_finish_reasons[i]=="stop" and vllm_stop_reasons[i] is None:
+                                finished_reason[generating[i]] = "abnormal_finish_with_eos"
+                            elif vllm_finish_reasons[i]=="length":
+                                finished_reason[generating[i]] = "length_limit"
+                            else:
+                                finished_reason[generating[i]] = "abnormal_finish_with_unknown"
                             print(f"batch {batch_idx} data {i} finished reason: {finished_reason[generating[i]]}")
                     elif self.prompt_type == 'search': #TODO:针对其他prompt的修改
                         if outputs[i].strip().endswith('</search>'):
@@ -444,7 +522,7 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                                         concat_prompts_outputs[idx] += f'<result>\n{report}\n</result>'
                     
                 if search_indices:
-                    print('search begin')
+                    print('#############search begin#############')
                     search_contents = []
                     for i, content in search_indices:
                         search_contents.append(
@@ -683,6 +761,22 @@ In the last part of the answer, the final exact answer is enclosed within \\boxe
                     answer = data['answer']
                     self.questions.append(question)
                     self.answers.append(answer)
+        elif 'gpqa' in data_path:
+            with open(data_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    data = json.loads(line)
+                    question = data['question']
+                    answer = data['answer']
+                    self.questions.append(question)
+                    self.answers.append(answer)
+        elif 'OlymMATH' in data_path:
+            with open(data_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    data = json.loads(line)
+                    question = data['problem']
+                    answer = data['answer']
+                    self.questions.append(question)
+                    self.answers.append(answer)
         else:
             with open(data_path, 'r', encoding='utf-8') as f:
                 for line in f:
@@ -837,12 +931,13 @@ if __name__ == "__main__":
     params_config = {
         'temperature': args.temperature,
         'max_tokens': args.max_response_length,
-        'top_p': 0.8,
+        'top_p': 0.95,
         'top_k': 20,
         'min_p': 0.0,
         'repetition_penalty': 1.1,
         'n': 1,
         # 'stop': ['```python'],
+        'seed': 7777,
         'include_stop_str_in_output': True,
     }
     print(f"params:{args}")

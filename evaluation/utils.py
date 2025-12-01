@@ -21,7 +21,7 @@ def batch_search(query: Union[str, List[str]], top_n=10) -> List[str]:
     if len(query) == 0:
         return 'invalid query'
 
-    url = f'http://0.0.0.0:8000/batch_search'
+    url = f'http://0.0.0.0:8010/batch_search'
     if isinstance(query, str):
         query = [query]
     data = {'query': query, 'top_n': top_n}
@@ -111,9 +111,24 @@ def remove_boxed(s):
 
 def extract_python_content(text: str) -> str:
     try:
-        start_tag = '<python>'
-        end_tag = '</python>'
-        assert text.strip().endswith(end_tag)
+        if text.strip().endswith('</python>'):
+            start_tag = '<python>'
+            end_tag = '</python>'
+        # 新增对</code>的判断
+        elif text.strip().endswith('</code>'):
+            start_tag = '<code>'
+            end_tag = '</code>'
+        else:
+            # 新增对```python代码块的支持
+            import re
+            # 匹配 ```python ... ``` 格式的代码块
+            pattern = r'```python\n(.*?)\n```'
+            match = re.search(pattern, text, re.DOTALL)
+            if match:
+                return match.group(1).strip()
+
+            return ""
+        
         end_pos = text.rindex(end_tag)
         start_pos = text.rindex(start_tag, 0, end_pos)
         return text[start_pos + len(start_tag):end_pos].strip()
